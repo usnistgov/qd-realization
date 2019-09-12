@@ -232,6 +232,13 @@ for iterateNumberOfRowsArraysOfPlanes = 1:numberOfRowsArraysOfPlanes
             [output,indexOutput,switchQD] = QDGenerator(orderOfReflection,...
                 output,arrayOfMaterials,iterateNumberOfRowsArraysOfPlanes,MaterialLibrary,distance,...
                 frequency,indexOutput,dod,doa,velocityTx,velocityTemp,indexMultipath,indexReference);
+            
+            % Trying new qdGenerator
+            % myoutput = qdGenerator(output(indexOutput-1,:),...
+            %     arrayOfMaterials, MaterialLibrary, frequency, velocityTemp);
+            % figure
+            % scatter(myoutput(:,8)*1e9, myoutput(:,9)); hold on
+            % scatter(myoutput(4,8)*1e9, myoutput(4,9)); hold off
         end
     end
     
