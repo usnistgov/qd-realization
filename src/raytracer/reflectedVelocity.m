@@ -1,4 +1,4 @@
-function [velocityReflected]=reflectedVelocity(velocityTx, plane)
+function velocityReflected = reflectedVelocity(velocity, plane)
 %Input/output -
 %vtx: Velocity of Tx
 %Plane: Plane on which the Tx is reflecting
@@ -38,23 +38,15 @@ function [velocityReflected]=reflectedVelocity(velocityTx, plane)
 % developed by NIST employees is not subject to copyright protection within the United
 % States.
 %
-% Modified by: Mattia Lecci <leccimat@dei.unipd.it>, Used MATLAB functions instead of custom ones
+% Modified by: Mattia Lecci <leccimat@dei.unipd.it> Updated algorithm
 
 
-vector = plane(1:3);
-dp = dot(velocityTx,vector);
+normalToPlane = plane(1:3);
+n = normalToPlane / norm(normalToPlane); % normalize 
 
-if dp~=0
-    vectorAlongNormal=(-1*dp).*vector;
-    theta=acos(dp/norm(velocityTx));
-    vectorOrthogonal=cross(vector,cross(velocityTx,vector));
-    if norm(vectorOrthogonal)~=0
-        vectorOrthogonal=vectorOrthogonal./norm(vectorOrthogonal);
-    end
-    vectorOrthogonal=(dp*tan(theta)).*vectorOrthogonal;
-    velocityReflected=vectorOrthogonal+vectorAlongNormal;
-else
-    velocityReflected=velocityTx;
-end
+vperp = dot(n,velocity) * n;
+vpar = velocity - vperp;
+
+velocityReflected = vpar - vperp;
 
 end
