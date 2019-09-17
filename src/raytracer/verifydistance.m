@@ -63,8 +63,8 @@ if switch1 ~= 1
     Point3 = CADop(i, 7:9);
     % checks whether projection of center (Tx) on to plane of triangle lies within
     % triangle and sphere
-    switch_triangle = PointInTriangle(Point,Point1,Point2,Point3);
-    if d1 <= r && switch_triangle == 1
+    switch_triangle = pointInTriangle(Point,Point1,Point2,Point3);
+    if d1 <= r && switch_triangle
         switch1 = 1;
     elseif d1 <= r && switch_triangle == 0
         

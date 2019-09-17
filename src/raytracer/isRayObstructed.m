@@ -15,7 +15,7 @@ for i = 1:size(cadData,1)
     
     intersection = planeIntersectSegment(planeEq, p1, p2);
     if ~isempty(intersection) &&...
-            PointInTriangle(intersection, vertex1, vertex2, vertex3)
+            pointInTriangle(intersection, vertex1, vertex2, vertex3)
         isObstructed = true;
         return
     end

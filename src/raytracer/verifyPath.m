@@ -80,7 +80,7 @@ for i = 1:size(CADOutput,1)
             (isVerifyMobility && dotIntersects == 0)
         % Switch is boolean whether the intersection point lies within
         % triangle described by CAD file
-        switch1 = PointInTriangle(pointIntersection,Point1,Point2,Point3);
+        switch1 = pointInTriangle(pointIntersection,Point1,Point2,Point3);
     end
     
     if condition1 == 0 && any(plane ~= plane1) && any(plane ~= plane2)

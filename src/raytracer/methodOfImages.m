@@ -24,7 +24,7 @@ if isempty(intersection)
     return
 end
 % else: valid intersection with triangle's plane
-isInsideTriangle = PointInTriangle(intersection, triang(1:3), triang(4:6), triang(7:9));
+isInsideTriangle = pointInTriangle(intersection, triang(1:3), triang(4:6), triang(7:9));
 if isInsideTriangle
     intersections(recursionDepth, :) = intersection;
 else

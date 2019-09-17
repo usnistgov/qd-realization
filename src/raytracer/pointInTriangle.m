@@ -1,12 +1,12 @@
-function [PointInTriangle]=PointInTriangle(point1,a,b,c)
-%PointInTriangle verifies whether the point lies in the triangle
+function isInTriangle = pointInTriangle(point1,a,b,c)
+%POINTINTRIANGLE verifies whether the point lies in the triangle
 % ref: http://blackpawn.com/texts/pointinpoly/
 % Inputs-
 % a,b,c: arrays which denote vertices of a triangle
 % point1: point to be verified
 %
 % Ouput-
-% PointInTriangle: boolean
+% isInTriangle: boolean
 
 
 % -------------Software Disclaimer---------------
@@ -43,25 +43,27 @@ function [PointInTriangle]=PointInTriangle(point1,a,b,c)
 %
 % Modified by: Mattia Lecci <leccimat@dei.unipd.it>, Used MATLAB functions instead of custom ones
 
-v0=c-a;
-v1=b-a;
-v2=point1-a;
+v0 = c - a;
+v1 = b - a;
+v2 = point1 - a;
 
-dot00=dot(v0,v0);
-dot01=dot(v0,v1);
-dot02=dot(v0,v2);
-dot11=dot(v1,v1);
-dot12=dot(v1,v2);
+dot00 = dot(v0, v0);
+dot01 = dot(v0, v1);
+dot02 = dot(v0, v2);
+dot11 = dot(v1, v1);
+dot12 = dot(v1, v2);
 
-invDenom=1/((dot00*dot11)-(dot01*dot01));
-u=((dot11 * dot02) - (dot01 * dot12)) * invDenom;
-v = ((dot00 * dot12) - (dot01 * dot02)) * invDenom;
+invDenom = 1 / (dot00*dot11 - dot01*dot01);
+u = (dot11*dot02 - dot01*dot12) * invDenom;
+v = (dot00*dot12 - dot01*dot02) * invDenom;
 
 % Check if point is in triangle
-if ((round(u,4) >= 0) && (round(v,4) >= 0) && (u + v < 1))
-    PointInTriangle=1;
+if round(u,4) >= 0 &&...
+        round(v,4) >= 0 &&...
+        u + v < 1
+    isInTriangle = 1;
 else
-    PointInTriangle=0;
+    isInTriangle = 0;
 end
 
 end
