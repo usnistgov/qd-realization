@@ -7,6 +7,12 @@ intersections = methodOfImages(txPos, rxPos, cadData, triangIdxList, 1);
 if isempty(intersections)
     % do something
     exists = false;
+    dod = NaN;
+    doa = NaN;
+    multipath = NaN;
+    rayLength = NaN;
+    dopplerFactor = NaN;
+    pathGain = NaN;
     return
 end
 
@@ -53,12 +59,15 @@ for i = 1:nRays
         bounceTriangIdx = triangIdxList([i-1, i]);
     end
     
-    exists = isRayObstructed(p1,p2,cadData,bounceTriangIdx);
-    if ~exists
+    isObstructed = isRayObstructed(p1,p2,cadData,bounceTriangIdx);
+    if isObstructed
         % Early stopping if ray does not exist
+        exists = false;
         return
     end
 end
+
+exists = true;
 
 end
 
