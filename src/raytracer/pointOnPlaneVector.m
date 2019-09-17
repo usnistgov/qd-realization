@@ -40,7 +40,10 @@ function [point]=pointOnPlaneVector(point1,vector, plane)
 
 
 normal = plane(1:3);
-t = -(dot(point1,normal) + plane(4)) / dot(normal,vector);
+
+num = (point1 * normal.') + plane(4);
+den = normal * vector.';
+t = -num / den;
 
 point = point1 + t*vector;
 

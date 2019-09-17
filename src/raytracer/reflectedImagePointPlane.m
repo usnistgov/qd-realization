@@ -39,7 +39,10 @@ function [reflectedPoint]=reflectedImagePointPlane(point, plane)
 
 
 vector = plane(1:3);
-t = -2 * (dot(vector,point) + plane(4)) / dot(vector,vector);
+
+num = (vector * point.') + plane(4);
+denom = vector * vector.';
+t = -2 * num / denom;
 reflectedPoint = point + t*vector;
 
 end
