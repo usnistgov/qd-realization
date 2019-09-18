@@ -163,20 +163,6 @@ end
 % reflected). At every time step the positions of all nodes are updated
 
 for iterateTimeDivision = 0:numberOfTimeDivisions
-    if mobilitySwitch == 1
-        
-        if paramCfg.switchVisuals == 1
-            set(0, 'CurrentFigure', f1)
-            clf
-            view([9 90])
-
-            if switchMaterial
-                set(0, 'CurrentFigure',  f1)
-            end
-        end
-        
-    end
-    
     if mobilityType == 1
         if numberOfNodes == 2
             [nodeLoc,Tx,Rx,vtx, vrx, nodeVelocities] = LinearMobility...
@@ -224,21 +210,7 @@ for iterateTimeDivision = 0:numberOfTimeDivisions
                 CADop, Rx, Tx, output, vtx, vrx, 0,...
                 [1, 0], switchMaterial, mobilitySwitch, numberOfNodes,...
                 paramCfg.carrierFrequency);
-            if paramCfg.switchVisuals && switchLOS
-                set(0, 'CurrentFigure', f1)
-                % Plotting QD graph
-                if switchMaterial
-                    set(0, 'CurrentFigure', f1)
-                    if mobilitySwitch == 1 && numberOfNodes == 2
-                        %clf
-                        view([9 90])
-                    end
-                    pts = [Tx; Rx];
-                    % Plot LOS for raytracing visuals (f1)
-                    plot3(pts(:, 1), pts(:, 2), pts(:, 3),'k',...
-                        'LineStyle', '-.', 'LineWidth', 3.5);
-                end
-            end
+            
             if paramCfg.switchSaveVisualizerFiles &&...
                     switchLOS &&...
                     iterateTx < iterateRx
@@ -295,72 +267,7 @@ for iterateTimeDivision = 0:numberOfTimeDivisions
                 elseif size(outputTemporary) > 0
                     output = outputTemporary;
                 end
-                if paramCfg.switchVisuals
-                    set(0, 'CurrentFigure', f1)
-
-
-                    %Plots CAD file from CADop
-                    if iterateTx == 1 && iterateRx == 2 
-                        for i = 1:size(CADop,1)
-
-                            hold on
-                            v1 = [CADop(i, 1), CADop(i, 2), CADop(i, 3)];...
-                                v2=[CADop(i, 4), CADop(i, 5), CADop(i, 6)...
-                                ]; v3=[CADop(i, 7), CADop(i, 8), ...
-                                CADop(i, 9)];
-
-                            triangle = 1. * [v1(:), v2(:), v3(:), v1(:)];
-
-                            h=fill3(triangle(1, :), triangle(2, :),...
-                                triangle(3, :), [0.5 0.5 0.5]);
-                            h.FaceAlpha = 0.1;
-                            h.EdgeAlpha = 0.5;
-                            set(h, 'edgecolor', [1 1 1], 'LineWidth', 0.5);
-
-                        end
-                    end
-
-                    % plots multipath function output on to CAD model
-                    sizeMultipath1 = size(multipath1);
-                    if sizeMultipath1(1) >0
-                        for i = 1:count
-
-                            iterateOrderOfReflection = multipath1(i, 1);
-                            for j = 1:iterateOrderOfReflection + 1
-                                P1 = [multipath1(i, j * 3 - 1),...
-                                    multipath1(i, j * 3),...
-                                    multipath1(i, j * 3 + 1)];
-                                P2 = [multipath1(i, j * 3 + 2),...
-                                    multipath1(i, j * 3 + 3),...
-                                    multipath1(i, j * 3 + 4)];
-
-                                % Their vertial concatenation is what you want
-                                pts = [P1; P2];
-
-                                % Alternatively, you could use plot3:
-                                hold on
-
-                                if iterateOrderOfReflection<4
-                                    plot3(pts(:, 1),  pts(:, 2), ...
-                                        pts(:, 3), 'k', 'LineWidth', ...
-                                        lineArray(iterateOrderOfReflection))
-                                else
-                                    plot3(pts(:, 1), pts(:, 2),...
-                                        pts(:, 3), colorArray(4), ...
-                                        'LineWidth', 0.8)
-
-                                end
-                            end
-                        end
-                        view([9 90])
-                    end
-
-                    % Plots nodes
-                    scatter3(Tx(1), Tx(2), Tx(3), 100, 'k', '.');
-                    text(Tx(1), Tx(2), Tx(3), 'Tx', 'Fontsize', 6);
-                    rx1 = scatter3(Rx(1), Rx(2), Rx(3), 100, 'k', '.');
-                    text(Rx(1), Rx(2), Rx(3), 'Rx', 'Fontsize', 6);
-                end                     
+                                     
             end
             
             % The ouput from previous iterations is stored in files
