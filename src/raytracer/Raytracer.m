@@ -1,4 +1,4 @@
-function [outputPath] = Raytracer(paraCfgInput,nodeCfgInput)
+function outputPath = Raytracer(paramCfg,nodeCfg)
 % Inputs:
 % RootFolderPath - it is the current location of the folder where the function is called from
 % environmentFileName - it is the CAD file name
@@ -65,43 +65,30 @@ function [outputPath] = Raytracer(paraCfgInput,nodeCfgInput)
 
 
 %% Input Parameters Management
-environmentFileName = paraCfgInput.environmentFileName;
-generalizedScenario = paraCfgInput.generalizedScenario;
-indoorSwitch = paraCfgInput.indoorSwitch;
-inputScenarioName = paraCfgInput.inputScenarioName;
-mobilitySwitch = paraCfgInput.mobilitySwitch;
-mobilityType = paraCfgInput.mobilityType;
-numberOfNodes = paraCfgInput.numberOfNodes;
-numberOfTimeDivisions = paraCfgInput.numberOfTimeDivisions;
-selectPlanesByDist = paraCfgInput.selectPlanesByDist;
-referencePoint = paraCfgInput.referencePoint;
-switchQDGenerator = paraCfgInput.switchQDGenerator;
-switchRandomization = paraCfgInput.switchRandomization;
-switchVisuals = paraCfgInput.switchVisuals;
-totalNumberOfReflections = paraCfgInput.totalNumberOfReflections;
-totalTimeDuration = paraCfgInput.totalTimeDuration;
+mobilitySwitch = paramCfg.mobilitySwitch;
+mobilityType = paramCfg.mobilityType;
+numberOfNodes = paramCfg.numberOfNodes;
+numberOfTimeDivisions = paramCfg.numberOfTimeDivisions;
+switchRandomization = paramCfg.switchRandomization;
 
-nodeLoc = nodeCfgInput.nodeLoc;
-nodeAntennaOrientation = nodeCfgInput.nodeAntennaOrientation;
-nodePolarization = nodeCfgInput.nodePolarization;
-nodePosition = nodeCfgInput.nodePosition;
-nodeVelocities = nodeCfgInput.nodeVelocities;
+nodeLoc = nodeCfg.nodeLoc;
+nodeVelocities = nodeCfg.nodeVelocities;
 
 % Input checking
-if paraCfgInput.switchQDGenerator == 1 &&...
-        paraCfgInput.carrierFrequency ~= 60e9
+if paramCfg.switchQDGenerator &&...
+        paramCfg.carrierFrequency ~= 60e9
     warning(['Please, note that diffuse scattering model is only ',...
         'valid for fc=60 GHz'])
 end
 
 % List of paths
-inputPath = strcat(inputScenarioName, '/Input');
-outputPath = strcat(inputScenarioName, '/Output');
+inputPath = strcat(paramCfg.inputScenarioName, '/Input');
+outputPath = strcat(paramCfg.inputScenarioName, '/Output');
 
 ns3Path = strcat(outputPath, '/Ns3');
 qdFilesPath = strcat(ns3Path, '/QdFiles');
 
-if paraCfgInput.switchSaveVisualizerFiles == 1
+if paramCfg.switchSaveVisualizerFiles
     visualizerPath = strcat(outputPath, '/Visualizer');
     
     nodePositionsPath = strcat(visualizerPath, '/NodePositions');
@@ -114,7 +101,7 @@ if ~isfolder(qdFilesPath)
     mkdir(qdFilesPath)
 end
 
-if paraCfgInput.switchSaveVisualizerFiles == 1
+if paramCfg.switchSaveVisualizerFiles
     
     if ~isfolder(nodePositionsPath)
         mkdir(nodePositionsPath)
@@ -131,93 +118,29 @@ end
 % Init output files
 fids = getQdFilesIds(qdFilesPath,numberOfNodes);
 
-%% ------------ Original Raytracer --------------
 
 Tx = nodeLoc(1,:);
 Rx = nodeLoc(2,:);
 vtx = nodeVelocities(1,:);
 vrx = nodeVelocities(2,:);
-
-
-if switchVisuals == 1
-    f1 = figure;
-    set(gcf, 'units', 'normalized', 'outerposition', [0 0 1 1]);
-    view([9 90]) % change view for f1 here
-    hold on
-end
-
-colorArray = ['selectPlanesByDistInput', 'c', 'g', 'y', 'y', 'b', 'k'];
-lineArray = [1.8, 0.3];
-
-%-----------------Polarization Part Omitted------------------------------%
-% Polarization_switch=0;
-% switch_cp=0;
-% Polarization_tx = [0,1];
-% Polarization_rx = [0,1];
-%-----------------Polarization Part Omitted------------------------------%
 AntennaOrientationTx = [1, 0, 0; 0, 1, 0; 0, 0, 1];
-
 AntennaOrientationRx = [1, 0, 0; 0, 1, 0; 0, 0, 1];
-multipath1 = [];
-output = [];
+
 MaterialLibrary = importMaterialLibrary('raytracer/Material_library.txt');
-%-----------------Polarization Part Omitted------------------------------%
-% number_of_nodes=2;
-% switch_randomization=0;
-% switch_distance_limitation=0;
-% selectPlanesByDistInput=10;
-% if switch_distance_limitation==0
-%     selectPlanesByDistInput=0;
-% end
-% if Polarization_switch==1
-%     if switch_cp==1
-%         try
-%             switch_cp=(Polarization_tx(2,2)==Polarization_tx(2,2));
-%             switch_cp=(Polarization_rx(2,2)==Polarization_rx(2,2));
-%         catch
-%             switch_cp=0;
-%         end
-%     end
-% else
-%     switch_cp=0;
-% end
-%-----------------Polarization Part Omitted------------------------------%
 
-% indoorSwitchInput = 1;
+% Extracting CAD file and storing in an XMl file, CADFile.xml
+[CADop, switchMaterial] = getCadOutput(paramCfg.environmentFileName,...
+    inputPath, MaterialLibrary, paramCfg.referencePoint,...
+    paramCfg.selectPlanesByDist, paramCfg.indoorSwitch);
 
-% environmentFileName = 'Box.xml';       % courtesy - http://amf.wikispaces.com/AMF+test+files
-
-%Reference point is the center of limiting sphere. 
-% referencePoint = Tx;
-
-% This is selection of planes/nodes by distance. selectPlanesByDistInput = 0 means that there is
-% no limitation. 
-% selectPlanesByDistInput = 0;
-
-%% Extracting CAD file and storing in an XMl file, CADFile.xml
-[CADop, switchMaterial] = getCadOutput(environmentFileName,...
-    inputPath, MaterialLibrary, referencePoint, selectPlanesByDist, indoorSwitch);
-
-if paraCfgInput.switchSaveVisualizerFiles == 1
+if paramCfg.switchSaveVisualizerFiles
     % Save output file with room coordinates for visualization
     RoomCoordinates = CADop(:, 1:9);
     csvwrite(sprintf('%s/RoomCoordinates.csv',roomCoordinatesPath),...
         RoomCoordinates);
 end
-% channel model figure activates only when material data is present
-% if switchMaterial==1 && switchVisualsInput == 1
-%     f2=figure;
-%     %For f2 to be displayed in full screen
-%     set(gcf,'units','normalized','outerposition',[0 0 1 1])
-% end
 
-% node_map is a 2D matrix which holds the permutations of different pairs
-% of Tx and Rx.
-
-str = cell(numberOfNodes, numberOfNodes);
-
-
-%% Randomization
+% Randomization
 %if number of nodes is greater than 1 or switch_randomization is set to 1,
 %the program generates nodes randomly. If one has more than 2 nodes but
 %know the exact locations of nodes, then disable this if statement and
@@ -227,8 +150,8 @@ str = cell(numberOfNodes, numberOfNodes);
 TxInitial = Tx;
 RxInitial = Rx;
 % t - total time period, n - number of divisions
-if mobilitySwitch == 1
-    timeDivisionValue = totalTimeDuration / numberOfTimeDivisions;
+if mobilitySwitch
+    timeDivisionValue = paramCfg.totalTimeDuration / paramCfg.numberOfTimeDivisions;
 else
     numberOfTimeDivisions = 0;
     timeDivisionValue = 0;
@@ -242,12 +165,12 @@ end
 for iterateTimeDivision = 0:numberOfTimeDivisions
     if mobilitySwitch == 1
         
-        if switchVisuals == 1
+        if paramCfg.switchVisuals == 1
             set(0, 'CurrentFigure', f1)
             clf
             view([9 90])
 
-            if switchMaterial == 1 
+            if switchMaterial
                 set(0, 'CurrentFigure',  f1)
             end
         end
@@ -272,10 +195,10 @@ for iterateTimeDivision = 0:numberOfTimeDivisions
     elseif mobilityType == 2
         [nodeLoc, nodeVelocities] = NodeExtractor...
             (numberOfNodes,  switchRandomization, ...
-            iterateTimeDivision, nodeLoc, nodeVelocities, nodePosition, timeDivisionValue);
+            iterateTimeDivision, nodeLoc, nodeVelocities, nodeCfg.nodePosition, timeDivisionValue);
     end
     
-    if paraCfgInput.switchSaveVisualizerFiles == 1 && mobilitySwitch >=0
+    if paramCfg.switchSaveVisualizerFiles && mobilitySwitch >=0
         csvwrite(sprintf('%s/NodePositionsTrc%d.csv',...
             nodePositionsPath, iterateTimeDivision),...
             nodeLoc);
@@ -287,48 +210,24 @@ for iterateTimeDivision = 0:numberOfTimeDivisions
         for iterateRx = iterateTx+1:numberOfNodes
             
             output = [];
-            if (numberOfNodes >= 2 || switchRandomization == 1)
+            if numberOfNodes >= 2 || switchRandomization
                 Tx = nodeLoc(iterateTx, :);
                 Rx = nodeLoc(iterateRx, :);
 
                 vtx = nodeVelocities(iterateTx, :);
                 vrx = nodeVelocities(iterateRx, :);
-%                 elseif (numberOfNodesInput == 2 && iterateTx == 2)
-%                     RxTemp = Rx;
-%                     Rx = Tx;
-%                     Tx = RxTemp;
-                    
-%-----------------Polarization Part Omitted------------------------------%                    
-%                     if Polarization_switch==1 && switch_cp==0
-%                         Polarization_tx = [nodePolarization(iterateTx,1),...
-%                             nodePolarization(iterateTx,2)];
-%                         AntennaOrientationTx=[nodeAntennaOrientation(iterateTx,1,1),...
-%                             nodeAntennaOrientation(iterateTx,1,2),nodeAntennaOrientation(iterateTx,1,3);...
-%                             nodeAntennaOrientation(iterateTx,2,1),nodeAntennaOrientation(iterateTx,2,2),...
-%                             nodeAntennaOrientation(iterateTx,2,3);nodeAntennaOrientation(iterateTx,3,1),...
-%                             nodeAntennaOrientation(iterateTx,3,2),nodeAntennaOrientation(iterateTx,3,3)];
-%                         Polarization_rx = [nodePolarization(iterateRx,1),...
-%                             nodePolarization(iterateRx,2)];
-%                         AntennaOrientationRx=[nodeAntennaOrientation(iterateRx,1,1),...
-%                             nodeAntennaOrientation(iterateRx,1,2),nodeAntennaOrientation(iterateRx,1,3);...
-%                             nodeAntennaOrientation(iterateRx,2,1),nodeAntennaOrientation(iterateRx,2,2),...
-%                             nodeAntennaOrientation(iterateRx,2,3);nodeAntennaOrientation(iterateRx,3,1),...
-%                             nodeAntennaOrientation(iterateRx,3,2),nodeAntennaOrientation(iterateRx,3,3)];
-%                     end
-%-----------------Polarization Part Omitted------------------------------%
-
             end
                 
-            %% LOS Path generation
+            % LOS Path generation
             % Plot the figure outside
             [switchLOS, output] = LOSOutputGenerator(iterateTimeDivision, ...
                 CADop, Rx, Tx, output, vtx, vrx, 0,...
                 [1, 0], switchMaterial, mobilitySwitch, numberOfNodes,...
-                paraCfgInput.carrierFrequency);
-            if switchVisuals == 1 && switchLOS == 1
+                paramCfg.carrierFrequency);
+            if paramCfg.switchVisuals && switchLOS
                 set(0, 'CurrentFigure', f1)
                 % Plotting QD graph
-                if switchMaterial == 1
+                if switchMaterial
                     set(0, 'CurrentFigure', f1)
                     if mobilitySwitch == 1 && numberOfNodes == 2
                         %clf
@@ -340,8 +239,8 @@ for iterateTimeDivision = 0:numberOfTimeDivisions
                         'LineStyle', '-.', 'LineWidth', 3.5);
                 end
             end
-            if paraCfgInput.switchSaveVisualizerFiles == 1 &&...
-                    switchLOS == 1 &&...
+            if paramCfg.switchSaveVisualizerFiles &&...
+                    switchLOS &&...
                     iterateTx < iterateRx
                 
                 multipath1 = [Tx,Rx];
@@ -351,16 +250,16 @@ for iterateTimeDivision = 0:numberOfTimeDivisions
 
             end
                 
-            %% Higher order reflections (Non LOS)
-            for iterateOrderOfReflection = 1:totalNumberOfReflections
+            % Higher order reflections (Non LOS)
+            for iterateOrderOfReflection = 1:paramCfg.totalNumberOfReflections
                 numberOfReflections = iterateOrderOfReflection;
                         
                 [ArrayOfPoints, ArrayOfPlanes, number,...
-                    index, indexPlanes, arrayOfMaterials,...
-                    indexMaterials] = treetraversal(CADop,...
+                    ~, ~, arrayOfMaterials,...
+                    ~] = treetraversal(CADop,...
                     numberOfReflections, numberOfReflections,...
                     0, 1, 1, 1, Rx, Tx, [], [],...
-                    switchMaterial, [], 1,generalizedScenario);
+                    switchMaterial, [], 1, paramCfg.generalizedScenario);
                         
                 number = number - 1;
                         
@@ -368,43 +267,19 @@ for iterateTimeDivision = 0:numberOfTimeDivisions
                     vtx = [0, 0, 0];
                     vrx = vtx;
                 end
-%-----------------Polarization Part Omitted------------------------------%
-                %  See multipath for more info
-%                         if Polarization_switch==1 && switch_cp==0 &&...
-%                                 switchRandomizationInput==1
-%                             Polarization_tx = [...
-%                                 nodePolarization(iterateTx,1),...
-%                                 nodePolarization(iterateTx,2)];
-%                             AntennaOrientationTx = [...
-%                                 nodeAntennaOrientation(iterateTx,1,1),nodeAntennaOrientation(iterateTx,1,2),...
-%                                 nodeAntennaOrientation(iterateTx,1,3);nodeAntennaOrientation(iterateTx,2,1),...
-%                                 nodeAntennaOrientation(iterateTx,2,2),nodeAntennaOrientation(iterateTx,2,3);...
-%                                 nodeAntennaOrientation(iterateTx,3,1),nodeAntennaOrientation(iterateTx,3,2),...
-%                                 nodeAntennaOrientation(iterateTx,3,3)];
-%                             Polarization_rx = [...
-%                                 nodePolarization(iterateRx,1),...
-%                                 nodePolarization(iterateRx,2)];
-%                             AntennaOrientationRx = [...
-%                                 nodeAntennaOrientation(iterateRx,1,1),nodeAntennaOrientation(iterateRx,1,2),...
-%                                 nodeAntennaOrientation(iterateRx,1,3);nodeAntennaOrientation(iterateRx,2,1),...
-%                                 nodeAntennaOrientation(iterateRx,2,2),nodeAntennaOrientation(iterateRx,2,3);...
-%                                 nodeAntennaOrientation(iterateRx,3,1),nodeAntennaOrientation(iterateRx,3,2),...
-%                                 nodeAntennaOrientation(iterateRx,3,3)];
-%                         end
-%-----------------Polarization Part Omitted------------------------------%
-
-                [QD, switchQD, outputTemporary, multipathTemporary,...
-                    count, countQD] = multipath(...
+                
+                [~, ~, outputTemporary, multipathTemporary,...
+                    count, ~] = multipath(...
                     ArrayOfPlanes, ArrayOfPoints, Rx, Tx, ...
                     CADop, number, ...
                     MaterialLibrary, arrayOfMaterials, ...
                     switchMaterial, vtx, vrx, ...
                     0, [1, 0], ...
                     AntennaOrientationTx, [1, 0], ...
-                    AntennaOrientationRx, 0, switchQDGenerator,paraCfgInput.carrierFrequency);
+                    AntennaOrientationRx, 0,...
+                    paramCfg.switchQDGenerator,paramCfg.carrierFrequency);
                         
-                %Plots channel model if material switch is 1
-                if paraCfgInput.switchSaveVisualizerFiles == 1 &&...
+                if paramCfg.switchSaveVisualizerFiles &&...
                         iterateTx < iterateRx &&...
                         size(multipathTemporary,1) ~= 0
                     
@@ -416,13 +291,11 @@ for iterateTimeDivision = 0:numberOfTimeDivisions
                 end
                         
                 if size(output) > 0
-                    output = [output;outputTemporary];
-                    multipath1 = multipathTemporary;
+                    output = [output; outputTemporary];
                 elseif size(outputTemporary) > 0
                     output = outputTemporary;
-                    multipath1 = multipathTemporary;
                 end
-                if switchVisuals == 1
+                if paramCfg.switchVisuals
                     set(0, 'CurrentFigure', f1)
 
 
@@ -494,61 +367,14 @@ for iterateTimeDivision = 0:numberOfTimeDivisions
             % whose names are TxiRxj.txt. i,j is the link
             % between ith node as Tx and jth as Rx.
             writeQdFileOutput(output, fids(iterateTx,iterateRx),...
-                paraCfgInput.qdFilesFloatPrecision);
+                paramCfg.qdFilesFloatPrecision);
             writeQdFileOutput(reverseOutputTxRx(output), fids(iterateRx,iterateTx),...
-                paraCfgInput.qdFilesFloatPrecision);
-
-
-%                 if Mobility_switch~=1
-%                     savefig(f1,strcat(outputPath, '/', 'Rays',num2str(iter)));
-%                     savefig(f2,strcat(outputPath, '/', 'Rays-QD',num2str(iter)));
-%                 end
+                paramCfg.qdFilesFloatPrecision);
 
         end
     end
     
-    %  set(0,'CurrentFigure',f3)
-    %  F(time_division+1)=getframe(gcf);
-    %  movie(f3,F,1);
-    %
-    %       v1 = VideoWriter('movie.avi');
-    %        v1.FrameRate=3;
-    %       open(v1)
-    %       writeVideo(v1,F)
-
 end
-
-% close all
-%% Makes video of CAD model based multipath and channel model
-% %Changed
-%         if Mobility_switch==1
-%       fig=figure;
-%       movie(f1,F,1);
-%
-%       v1 = VideoWriter('movie.avi');
-%        v1.FrameRate=3;
-%       open(v1)
-%       writeVideo(v1,F)
-%       close(v1)
-%       if switch_material==1
-%           set(0,'CurrentFigure',f2)
-%           fig=figure;
-%       movie(f2,fr1,1);
-%
-%       v2 = VideoWriter('movie_QD.avi');
-%        v2.FrameRate=3;
-%       open(v2)
-%       writeVideo(v2,fr1)
-%       close(v2)
-%       end
-%       set(0,'CurrentFigure',f1)
-%
-%         end
-
-
-%  clearvars -except number_of_iteration wb
-
-%  close all
 
 closeQdFilesIds(fids);
 
