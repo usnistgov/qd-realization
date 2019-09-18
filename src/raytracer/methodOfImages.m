@@ -18,7 +18,7 @@ else % need more reflections
     end
 end
 
-intersection = planeIntersectSegment(plane,txPosReflected,prevIntersection);
+intersection = planeIntersectsSegment(plane, txPosReflected, prevIntersection, true);
 if isempty(intersection)
     intersections = [];
     return
