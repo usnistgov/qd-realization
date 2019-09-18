@@ -193,7 +193,6 @@ for iterateTimeDivision = 0:numberOfTimeDivisions
     for iterateTx = 1:numberOfNodes
         for iterateRx = iterateTx+1:numberOfNodes
             
-            output = [];
             if numberOfNodes >= 2 || switchRandomization
                 Tx = nodeLoc(iterateTx, :);
                 Rx = nodeLoc(iterateRx, :);
@@ -203,7 +202,7 @@ for iterateTimeDivision = 0:numberOfTimeDivisions
             end
                 
             % LOS Path generation
-            [output, multipath1] = computeLosOutput(Rx, Tx, vrx, vtx,...
+            [output, rayVertices] = computeLosOutput(Rx, Tx, vrx, vtx,...
                 CADop, paramCfg.carrierFrequency);
             
             if paramCfg.switchSaveVisualizerFiles &&...
@@ -212,7 +211,7 @@ for iterateTimeDivision = 0:numberOfTimeDivisions
                 
                 csvwrite(sprintf('%s/MpcTx%dRx%dRefl%dTrc%d.csv',...
                     mpcCoordinatesPath, iterateTx-1, iterateRx-1, 0, iterateTimeDivision),...
-                    multipath1); 
+                    rayVertices); 
 
             end
                 
@@ -221,30 +220,29 @@ for iterateTimeDivision = 0:numberOfTimeDivisions
             for iterateOrderOfReflection = 1:paramCfg.totalNumberOfReflections
                 triangReflIdxList = generateReflectionList(triangReflIdxList, CADop);
                 
-                if mobilitySwitch == -1
+                if mobilitySwitch == -1 % ??
                     vtx = [0, 0, 0];
                     vrx = vtx;
                 end
                 
-                [outputTemporary, multipathTemporary] = mymultipath(Rx, Tx, vrx,vtx,...
+                [outputTmp, rayVertices] = mymultipath(Rx, Tx, vrx,vtx,...
                     triangReflIdxList,CADop,MaterialLibrary,...
                     paramCfg.switchQDGenerator,switchMaterial,paramCfg.carrierFrequency);
                         
                 if paramCfg.switchSaveVisualizerFiles &&...
                         iterateTx < iterateRx &&...
-                        size(multipathTemporary,1) ~= 0
+                        size(rayVertices,1) ~= 0
                     
-                    multipath1 = multipathTemporary(1:count, 2:size(multipathTemporary,2));
                     csvwrite(sprintf('%s/MpcTx%dRx%dRefl%dTrc%d.csv',...
                         mpcCoordinatesPath, iterateTx-1, iterateRx-1,...
                         iterateOrderOfReflection, iterateTimeDivision),...
-                        multipath1);
+                        rayVertices(:, 2:end));
                 end
                         
                 if size(output) > 0
-                    output = [output; outputTemporary];
-                elseif size(outputTemporary) > 0
-                    output = outputTemporary;
+                    output = [output; outputTmp];
+                elseif size(outputTmp) > 0
+                    output = outputTmp;
                 end
                                      
             end
