@@ -68,7 +68,7 @@ function [switchLOS, output] = LOSOutputGenerator(timeDivision,...
 % of Tx and Rx
 dod=Rx-Tx;
 %delay is the total length of multipath
-delay=norm(dod);
+d=norm(dod);
 % Direction of arrival (DoA) is negative of DoD
 doa=-dod;
 % Calculating Doppler factor for LOS
@@ -91,9 +91,9 @@ if switch3==1 % if DoA exists
     %doa - direction of arrival
     output1(5:7) = doa;
     %Time delay
-    output1(1,8)=delay/c;
+    output1(1,8)=d/c;
     %Path gain
-    output1(1,9) = 20*log10(lambda/(4*pi*delay));
+    output1(1,9) = 20*log10(lambda/(4*pi*d));
     %Aod azimuth
     output1(10) = mod(atan2d(dod(2),dod(1)), 360);
     %Aod elevation
@@ -117,7 +117,7 @@ if switch3==1 % if DoA exists
     output1(21) = 0;
     %Cross polarization path gain
     if switchCP==1
-        output1(19) = 20*log10(lambda/(4*pi*delay));
+        output1(19) = 20*log10(lambda/(4*pi*d));
     else
         output1(19) = 0;
     end
