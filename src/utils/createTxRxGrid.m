@@ -24,7 +24,8 @@ triangles = CADcoord(:,1:9);
 
 lRoom = contains(mainPath,'L-Room');
 if randomSampling
-    nSteps = 2000;
+    paraCfg = parameterCfg(mainPath);
+    nSteps = paraCfg.numberOfTimeDivisions;
     [txPosSteps,rxPosSteps] = createGrid(triangles,randomSampling,nSteps,txPos,lRoom);
 else
     [txPosSteps,rxPosSteps] = createGrid(triangles,randomSampling,[],txPos,lRoom);
@@ -66,10 +67,10 @@ if visualize
     figure()
     % scatter3(rxPosSteps(:,1),rxPosSteps(:,2),rxPosSteps(:,3),[],'k')
     % hold on
-    scatter3(rxPosStepsIn(:,1),rxPosStepsIn(:,2),rxPosStepsIn(:,3),10,'k')
+    scatter3(rxPosStepsIn(:,1),rxPosStepsIn(:,2),rxPosStepsIn(:,3),10,'k','filled')
     hold on
-    scatter3(rxPosStepsOut(:,1),rxPosStepsOut(:,2),rxPosStepsOut(:,3),10,'r')
-    scatter3(txPosSteps(:,1),txPosSteps(:,2),txPosSteps(:,3),25,'b')
+    scatter3(rxPosStepsOut(:,1),rxPosStepsOut(:,2),rxPosStepsOut(:,3),10,'r','filled')
+    scatter3(txPosSteps(:,1),txPosSteps(:,2),txPosSteps(:,3),25,'b','filled')
     trisurf(Tri,X,Y,Z,'FaceAlpha',0.2)
 end
 end
