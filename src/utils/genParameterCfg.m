@@ -120,7 +120,7 @@ writetable(cfgParamsTab,fullfile(inputPath,'paraCfgCurrent.txt'),'FileType','tex
 end
 function defaultMobilityType = getDefaultMobilityType(scenarioNameStr, mobilitySwitch)
 if ~mobilitySwitch
-    defaultMobilityType = 1;
+    defaultMobilityType = 2;
     return
 end
 
