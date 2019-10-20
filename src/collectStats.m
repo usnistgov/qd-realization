@@ -28,13 +28,13 @@ scenarioPath = fullfile('statsScenarios',scenario);
 
 load = true;
 if load
-    loadFolder = "10-17-2019 17-26-22";
+    loadFolder = "10-18-2019 14-06-25";
     currFolder = fullfile(scenarioPath,loadFolder);
     sprintf("Loading files from %s.",currFolder);
 else
     % save every execution in a different folder
     currFolder = fullfile(scenarioPath,datestr(now,'mm-dd-yyyy HH-MM-SS'));
-    print("Creating new scenario in %s",currFolder);
+    sprintf("Creating new scenario in %s",currFolder);
     
     %% config parameters
     inputPath = fullfile(currFolder,'Input');
@@ -56,43 +56,78 @@ end
 outputPath = fullfile(currFolder,'Output','Ns3','QdFiles',sprintf('Tx%dRx%d.txt',txId,rxId));
 output = readQdFile(outputPath);
 
-stats = struct();
-% path gain
-feature = "pathGain";
-if ~isfield(output,feature)
-    error('%s must be a field of Tx%sRx%s.txt',feature,txId,rxId);
+if ~isfield(output,"pathGain") || ~isfield(output,"delay") || ~isfield(output,"aodAz") || ~isfield(output,"aodEl")...
+        || ~isfield(output,"aodAz") || ~isfield(output,"aoaEl")
+    error('Missing field in Tx%sRx%s.txt',txId,rxId);
 end
-pathGain = extractfield(output,feature);
-stats.(feature) = pathGain;
 
-% delta path gain
-feature = "deltaPathGain";
-maxPathGain = max(pathGain);
-deltaPathGain = pathGain-maxPathGain;
-stats.(feature) = deltaPathGain;
+stats = struct(); % to collect the stats
 
-% delay
-feature = "delay";
-if ~isfield(output,feature)
-    error('%s must be a field of Tx%sRx%s.txt',feature,txId,rxId);
+nSteps = length(output);
+for i = 1:nSteps % row-by-row inspection to extract the stats
+    %%% path gain
+    pathGain = output(i).pathGain;
+    stats(i).pathGain = pathGain;
+    
+    totPathGain = sum(pathGain);
+    normPathGain = pathGain/totPathGain;
+    maxPathGain = max(pathGain);
+    
+    % delta path gain
+    deltaPathGain = pathGain-maxPathGain;
+    stats(i).deltaPathGain = deltaPathGain;
+
+    %%% delay
+    delay = output(i).delay;
+    stats(i).delay = delay;
+
+    % delay spread
+    meanDelay = mean(delay);
+    delaySpread = sqrt(sum(normPathGain.*(delay-meanDelay).^2)); % weigthed std w.r.t pathGain
+    stats(i).delaySpread = delaySpread;
+
+    %%% departure angles
+    % departure elevation angle
+    aodEl = output(i).aodEl;
+    stats(i).aodEl = aodEl;
+    
+    % departure elevation angle arithmetic spread
+    meanAodEl = mean(aodEl);
+    aodElAritSpread = sqrt(sum(normPathGain.*(aodEl-meanAodEl).^2));
+    stats(i).aodElAritSpread = aodElAritSpread;
+    
+    % departure elevation angle phase spread
+    phaseMeanAodEl = angle(sum(exp(1i*normPathGain.*aodEl)));
+    aodElPhaseSpread = sqrt(sum(normPathGain.*(aodEl-phaseMeanAodEl).^2));
+    stats(i).aodElPhaseSpread = aodElPhaseSpread;
+    
+    % departure azimuth angle
+    aodAz = output(i).aodAz;
+    stats(i).aodAz = aodAz;
+    
+    % departure azimuth angle arithmetic spread
+    meanAodAz = mean(aodAz);
+    aodAzAritSpread = sqrt(sum(normPathGain.*(aodAz-meanAodAz).^2));
+    stats(i).aodAzAritSpread = aodAzAritSpread;
+    
+    % arrival elevation angle
+    aoaEl = output(i).aoaEl;
+    stats(i).aoaEl = aoaEl;
+    
+    % arrival elevation angle arithmetic spread
+    meanAoaEl = mean(aoaEl);
+    aoaElAritSpread = sqrt(sum(normPathGain.*(aoaEl-meanAoaEl).^2));
+    stats(i).aoaElAritSpread = aoaElAritSpread;
+    
+    % arrival azimuth angle
+    aoaAz = output(i).aoaAz;
+    stats(i).aoaAz = aoaAz;
+    
+    % arrival azimuth angle arithmetic spread
+    meanAoaAz = mean(aoaAz);
+    aoaAzAritSpread = sqrt(sum(normPathGain.*(aoaAz-meanAoaAz).^2));
+    stats(i).aoaAzAritSpread = aoaAzAritSpread;
 end
-delay = extractfield(output,feature);
-stats.(feature) = delay;
-
-% delay spread
-feature = "delaySpread";
-delaySpread = std(delay); % TODO: weigthed std w.r.t pathGain
-stats.(feature) = delaySpread;
-
-% angle spread
-feature = "aodEl";
-if ~isfield(output,feature)
-    error('%s must be a field of Tx%sRx%s.txt',feature,txId,rxId);
-end
-aodEl = extractfield(output,feature);
-stats.(feature) = aodEl;
-
-
 %% plot statistics
 features = ["pathGain"]; % specify the metric to observe for the statistics
 
@@ -100,7 +135,7 @@ for feat = features
     if ~isfield(output,feat)
         error('feature must be a field of Tx%sRx%s.txt',txId,rxId);
     end
-    currFeature = extractfield(output,feature);
+    currFeature = stats.(feat);
     
     figure()
     subplot(1,2,1)
