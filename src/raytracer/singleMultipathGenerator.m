@@ -1,10 +1,12 @@
-function [booleanMultipathExistance,Intersection,directionOfDeparture,directionOfArrival,multipath,distance,dopplerFactor,...
-    PathLoss,PolarizationTx,phaseXDimension,phaseYDimension,AntennaOrientationTx,velocityTemporary]...
-    =singleMultipathGenerator(iterateNumberOfRowsArraysOfPlanes,orderOfReflection,indexMultipath,ArrayOfPlanes,...
-    ArrayOfPoints,ReflectedPoint,Rx,Tx,CADOutput,...
-    multipath,indexOrderOfReflection,velocityTx,velocityRx,PolarizationSwitchTemporary,PolarizationTx,...
-    AntennaOrientationTx,PolarizationRx,AntennaOrientationRx,...
-    nt_array,switchCP)
+function [booleanMultipathExistance, Intersection, directionOfDeparture,...
+    directionOfArrival, multipath, distance, dopplerFactor, PathLoss,...
+    PolarizationTx, phaseXDimension, phaseYDimension,...
+    AntennaOrientationTx, velocityTemporary] =...
+    singleMultipathGenerator(iterateNumberOfRowsArraysOfPlanes,...
+    orderOfReflection, indexMultipath, ArrayOfPlanes, ArrayOfPoints,...
+    ReflectedPoint, Rx, Tx, CADOutput, multipath, indexOrderOfReflection,...
+    velocityTx, velocityRx, PolarizationSwitchTemporary, PolarizationTx,...
+    AntennaOrientationTx, PolarizationRx, AntennaOrientationRx, nt_array, switchCP)
 % Refer to http://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=6503917&isnumber=6503052
 % Refer to "singleMultipathGenerator - Method of Images. ppt". The ppt has a slide show. Each
 % step is explained in the notes
@@ -90,29 +92,27 @@ function [booleanMultipathExistance,Intersection,directionOfDeparture,directionO
 %    vectorized code
 
 
-velocityTemporary=0;
-dopplerFactor=1;
 PathLoss=0;
 phaseXDimension=0;
 phaseYDimension=0;
-%Extracting plane equations from Array_of_planes
 
+% Extracting plane equations from Array_of_planes
 plane = ArrayOfPlanes(iterateNumberOfRowsArraysOfPlanes,...
     indexMultipath*4 + (-2:1));
 
-%For Higher order refelctions
-
+% For Higher order refelctions
 if indexMultipath >1
     plane2 = ArrayOfPlanes(iterateNumberOfRowsArraysOfPlanes,...
         (indexMultipath*4) + (-6:-3));
 end
+
 % Finding image in a particular plane
 ReflectedPoint=reflectedImagePointPlane(ReflectedPoint, plane);
 % Velocity of reflected image
 [velocityRx]=reflectedVelocity(velocityRx, plane);
+
 % For Higher order reflection recursion is applied
 if indexMultipath<orderOfReflection
-    %order_of_i=order_of_i+1;
     [booleanMultipathExistance,Intersection1,directionOfDeparture,...
         directionOfArrival,multipath,distance,dopplerFactor,PathLoss,...
         PolarizationTx,phaseXDimension,phaseYDimension,...
@@ -122,12 +122,11 @@ if indexMultipath<orderOfReflection
         ReflectedPoint,Rx,Tx,CADOutput,multipath,indexOrderOfReflection,...
         velocityTx,velocityRx,PolarizationSwitchTemporary,PolarizationTx,...
         AntennaOrientationTx,PolarizationRx,AntennaOrientationRx,nt_array,switchCP);
-    %[switch1,Intersection1,dod,doa,multipath]=Path(number,order_of_R,Array_of_planes,Array_of_points,Reflected,Rx,Tx,count); %Angle/path loss/clustering needed to be added in output
-    %% For the last vector of Multipath (DoD)
+    % For the last vector of Multipath (DoD)
 else
     
     directionOfDeparture=ReflectedPoint-Tx;
-    %delay is the total length of multipath
+    % delay is the total length of multipath
     distance=norm(directionOfDeparture);
     velocityTxAlongDirectionofDeparture=dot(velocityTx, -directionOfDeparture) / norm(directionOfDeparture);
     velocityRxAlongDirectionofDeparture=dot(velocityRx, -directionOfDeparture) / norm(directionOfDeparture);
@@ -140,21 +139,17 @@ else
     
     booleanMultipathExistance=1;
 end
-%%
+
 if booleanMultipathExistance==1
     vector=ReflectedPoint-Intersection1;
     Intersection=pointOnPlaneVector(ReflectedPoint,vector, plane);
+    
     % corner case where the previous intersection (Intersection) is equal to
     % source (Intersection1)
     if Intersection1==Intersection
         booleanMultipathExistance=0;
     end
-    %remove this - only for testing
-    % Intersection
-    %
     
-    % intersection of planes are stored in multipath. This will be used to
-    % construct maultipath
     multipath(indexOrderOfReflection,indexMultipath*3 + (2:4)) = Intersection;
     
     % Direction of arrival changes dynamically until the last recursion
@@ -170,9 +165,8 @@ if booleanMultipathExistance==1
     
     % To verify whether the intersection point is within triangle
     booleanMultipathExistance = booleanMultipathExistance &&...
-        pointInTriangle(Intersection,Point1,Point2,Point3) &&...
+        PointInTriangle(Intersection,Point1,Point2,Point3) &&...
         round(dot(ReflectedPoint-Intersection, Intersection1-Intersection),3) < 0;
-    
     
     if booleanMultipathExistance==1
         if indexMultipath >1 && indexMultipath <orderOfReflection
@@ -181,22 +175,24 @@ if booleanMultipathExistance==1
         elseif indexMultipath == 1
             condition1=-1;
             plane2=[0,0,0,0];
-        else
             
+        else
             condition1=1;
             
-            
         end
+        
         [booleanMultipathExistance] = verifyPath(Intersection,Intersection1,...
             directionOfArrival,plane,plane2,CADOutput,condition1,false);
-        
         PathLoss=0;
         phaseXDimension=0;
         phaseYDimension=0;
+        
     end
+    
 else
     Intersection=Intersection1;
     booleanMultipathExistance=0;
+    
 end
 
 % To verify whether DoA vector exists

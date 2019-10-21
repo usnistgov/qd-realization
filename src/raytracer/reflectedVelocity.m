@@ -1,4 +1,4 @@
-function velocityReflected = reflectedVelocity(velocity, plane)
+function velocityReflected = reflectedVelocity(velocityTx, plane)
 %Input/output -
 %vtx: Velocity of Tx
 %Plane: Plane on which the Tx is reflecting
@@ -44,9 +44,9 @@ function velocityReflected = reflectedVelocity(velocity, plane)
 normalToPlane = plane(1:3);
 n = normalToPlane / norm(normalToPlane); % normalize 
 
-speedAlongNormal = n * velocity.';
+speedAlongNormal = n * velocityTx.';
 vperp = speedAlongNormal * n;
-vpar = velocity - vperp;
+vpar = velocityTx - vperp;
 
 velocityReflected = vpar - vperp;
 
