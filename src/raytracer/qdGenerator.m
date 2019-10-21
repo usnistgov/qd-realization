@@ -17,8 +17,8 @@ function output = qdGenerator(dRayOutput, arrayOfMaterials,...
 % 20. phase (dopplerFactor*freq)
 % 21. 0 (?)
 
-
-warning('TODO: Add randomness to reflection loss of deterministic ray')
+% Add randomness to deterministic reflection loss
+dRayOutput(9) = getRandomPg0(dRayOutput, arrayOfMaterials, MaterialLibrary);
 
 % Pre/post cursors output
 outputPre = getQdOutput(dRayOutput, arrayOfMaterials, MaterialLibrary,...
@@ -32,6 +32,22 @@ end
 
 
 %% Utils
+function pg = getRandomPg0(dRayOutput, arrayOfMaterials, MaterialLibrary)
+warning('TODO: Add randomness to reflection loss of deterministic ray')
+
+% Baseline: deterministic path gain
+pg = dRayOutput(9);
+for i = 1:length(arrayOfMaterials)
+    matIdx = arrayOfMaterials(i);
+    
+    rl = MaterialLibrary.mu_RL(matIdx); % TODO: update with Rician RL
+    muRl = MaterialLibrary.mu_RL(matIdx);
+    pg = pg - (rl - muRl);
+end
+
+end
+
+
 function output = getQdOutput(dRayOutput, arrayOfMaterials, MaterialLibrary,...
     freq, vRel, prePostParam)
 params = getParams(arrayOfMaterials, MaterialLibrary, prePostParam);
@@ -39,16 +55,18 @@ params = getParams(arrayOfMaterials, MaterialLibrary, prePostParam);
 % delays
 tau0 = dRayOutput(8); % main cursor's delay
 
-interArrivalTime = rndExp(params.mul, params.nRays, 1); % [s]
+lambda = params.mul; % TODO: update with Rician distribution
+interArrivalTime = rndExp(lambda, params.nRays, 1); % [s]
 taus = tau0 + params.delayMultiplier*cumsum(interArrivalTime);
 % TODO: check if ray is arriving before LoS
 
 % path gains
-exponent = -abs(taus - tau0)/params.muy;
-s = randn(params.nRays, 1)*params.mus; % TODO: check pre/post, check mus dB/lin
-pgCursor = 10^(dRayOutput(9) / 10); % path gain of main cursor TODO: lin? db?
-pg = pgCursor / params.muk * exp(exponent + s); % TODO: something wrong with units
-pg = 10*log10(pg);
+Kdb = params.muk; % TODO: update with Rician distribution
+gamma = params.muy; % TODO: update with Rician distribution
+sigma_s = params.mus; % TODO: update with Rician distribution
+
+s = randn(params.nRays, 1) * sigma_s; % TODO: check pre/post, check mus dB/lin
+pg = dRayOutput(9) - Kdb - abs(taus - tau0)/gamma + s;
 % in dB: pg = pgCursorDb - params.mukDb + 10*log10(exp(1)) * (exponent+s);
 % PROBLEM: to avoid diffused components to have more power than main
 % cursor, s < params.mukDb / (10*log10(exp(1))) - exponent
@@ -73,6 +91,7 @@ dopplerDeltaFreq = vProjected / 3e8 * freq;
 
 % Combine results into output matrix
 % Copy D-ray outputs as some columns are repeated (e.g., reflection order)
+% TODO: use fillOutput
 output = repmat(dRayOutput, params.nRays, 1);
 % delay
 output(:,8) = taus;
