@@ -1,4 +1,4 @@
-function outputPath = Raytracer(paramCfg,nodeCfg)
+function outputPath = Raytracer(paraCfgInput, nodeCfgInput)
 % Inputs:
 % RootFolderPath - it is the current location of the folder where the function is called from
 % environmentFileName - it is the CAD file name
@@ -21,9 +21,9 @@ function outputPath = Raytracer(paramCfg,nodeCfg)
 % generalizedScenario - This boolean lets user say whether a scenario
 % conforms to a regular indoor or outdoor environment or it is a more
 % general scenario.
-% selectPlanesByDist - This is selection of planes/nodes by distance. 
-% r = 0 means that there is no limitation.  
-% referencePoint - Reference point is the center of limiting sphere 
+% selectPlanesByDist - This is selection of planes/nodes by distance.
+% r = 0 means that there is no limitation.
+% referencePoint - Reference point is the center of limiting sphere
 %
 % Outputs:
 % N/A
@@ -65,30 +65,30 @@ function outputPath = Raytracer(paramCfg,nodeCfg)
 
 
 %% Input Parameters Management
-mobilitySwitch = paramCfg.mobilitySwitch;
-mobilityType = paramCfg.mobilityType;
-numberOfNodes = paramCfg.numberOfNodes;
-numberOfTimeDivisions = paramCfg.numberOfTimeDivisions;
-switchRandomization = paramCfg.switchRandomization;
+mobilitySwitch = paraCfgInput.mobilitySwitch;
+mobilityType = paraCfgInput.mobilityType;
+numberOfNodes = paraCfgInput.numberOfNodes;
+numberOfTimeDivisions = paraCfgInput.numberOfTimeDivisions;
+switchRandomization = paraCfgInput.switchRandomization;
 
-nodeLoc = nodeCfg.nodeLoc;
-nodeVelocities = nodeCfg.nodeVelocities;
+nodeLoc = nodeCfgInput.nodeLoc;
+nodeVelocities = nodeCfgInput.nodeVelocities;
 
 % Input checking
-if paramCfg.switchQDGenerator &&...
-        paramCfg.carrierFrequency ~= 60e9
+if paraCfgInput.switchQDGenerator &&...
+        paraCfgInput.carrierFrequency ~= 60e9
     warning(['Please, note that diffuse scattering model is only ',...
         'valid for fc=60 GHz'])
 end
 
 % List of paths
-inputPath = strcat(paramCfg.inputScenarioName, '/Input');
-outputPath = strcat(paramCfg.inputScenarioName, '/Output');
+inputPath = strcat(paraCfgInput.inputScenarioName, '/Input');
+outputPath = strcat(paraCfgInput.inputScenarioName, '/Output');
 
 ns3Path = strcat(outputPath, '/Ns3');
 qdFilesPath = strcat(ns3Path, '/QdFiles');
 
-if paramCfg.switchSaveVisualizerFiles
+if paraCfgInput.switchSaveVisualizerFiles
     visualizerPath = strcat(outputPath, '/Visualizer');
     
     nodePositionsPath = strcat(visualizerPath, '/NodePositions');
@@ -101,7 +101,7 @@ if ~isfolder(qdFilesPath)
     mkdir(qdFilesPath)
 end
 
-if paramCfg.switchSaveVisualizerFiles
+if paraCfgInput.switchSaveVisualizerFiles
     
     if ~isfolder(nodePositionsPath)
         mkdir(nodePositionsPath)
@@ -127,11 +127,11 @@ vrx = nodeVelocities(2,:);
 MaterialLibrary = importMaterialLibrary('raytracer/Material_library.txt');
 
 % Extracting CAD file and storing in an XMl file, CADFile.xml
-[CADop, switchMaterial] = getCadOutput(paramCfg.environmentFileName,...
-    inputPath, MaterialLibrary, paramCfg.referencePoint,...
-    paramCfg.selectPlanesByDist, paramCfg.indoorSwitch);
+[CADop, switchMaterial] = getCadOutput(paraCfgInput.environmentFileName,...
+    inputPath, MaterialLibrary, paraCfgInput.referencePoint,...
+    paraCfgInput.selectPlanesByDist, paraCfgInput.indoorSwitch);
 
-if paramCfg.switchSaveVisualizerFiles
+if paraCfgInput.switchSaveVisualizerFiles
     % Save output file with room coordinates for visualization
     RoomCoordinates = CADop(:, 1:9);
     csvwrite(sprintf('%s/RoomCoordinates.csv',roomCoordinatesPath),...
@@ -149,7 +149,7 @@ TxInitial = Tx;
 RxInitial = Rx;
 % t - total time period, n - number of divisions
 if mobilitySwitch
-    timeDivisionValue = paramCfg.totalTimeDuration / paramCfg.numberOfTimeDivisions;
+    timeDivisionValue = paraCfgInput.totalTimeDuration / paraCfgInput.numberOfTimeDivisions;
 else
     numberOfTimeDivisions = 0;
     timeDivisionValue = 0;
@@ -179,33 +179,32 @@ for iterateTimeDivision = 0:numberOfTimeDivisions
     elseif mobilityType == 2
         [nodeLoc, nodeVelocities] = NodeExtractor...
             (numberOfNodes,  switchRandomization, ...
-            iterateTimeDivision, nodeLoc, nodeVelocities, nodeCfg.nodePosition, timeDivisionValue);
+            iterateTimeDivision, nodeLoc, nodeVelocities, nodeCfgInput.nodePosition, timeDivisionValue);
     end
     
-    if paramCfg.switchSaveVisualizerFiles && mobilitySwitch >=0
+    if paraCfgInput.switchSaveVisualizerFiles && mobilitySwitch >=0
         csvwrite(sprintf('%s/NodePositionsTrc%d.csv',...
             nodePositionsPath, iterateTimeDivision),...
             nodeLoc);
     end
     
     % Iterates through all the nodes
-    
     for iterateTx = 1:numberOfNodes
         for iterateRx = iterateTx+1:numberOfNodes
             
             if numberOfNodes >= 2 || switchRandomization
                 Tx = nodeLoc(iterateTx, :);
                 Rx = nodeLoc(iterateRx, :);
-
+                
                 vtx = nodeVelocities(iterateTx, :);
                 vrx = nodeVelocities(iterateRx, :);
             end
                 
             % LOS Path generation
             [output, rayVertices] = computeLosOutput(Rx, Tx, vrx, vtx,...
-                CADop, paramCfg.carrierFrequency);
+                CADop, paraCfgInput.carrierFrequency);
             
-            if paramCfg.switchSaveVisualizerFiles &&...
+            if paraCfgInput.switchSaveVisualizerFiles &&...
                     ~isempty(output) &&...
                     iterateTx < iterateRx
                 
@@ -217,7 +216,7 @@ for iterateTimeDivision = 0:numberOfTimeDivisions
                 
             % Higher order reflections (Non LOS)
             triangReflIdxList = [];
-            for iterateOrderOfReflection = 1:paramCfg.totalNumberOfReflections
+            for iterateOrderOfReflection = 1:paraCfgInput.totalNumberOfReflections
                 triangReflIdxList = generateReflectionList(triangReflIdxList, CADop);
                 
                 if mobilitySwitch == -1 % ??
@@ -227,9 +226,9 @@ for iterateTimeDivision = 0:numberOfTimeDivisions
                 
                 [outputTmp, rayVertices] = mymultipath(Rx, Tx, vrx,vtx,...
                     triangReflIdxList,CADop,MaterialLibrary,...
-                    paramCfg.switchQDGenerator,switchMaterial,paramCfg.carrierFrequency);
+                    paraCfgInput.switchQDGenerator,switchMaterial,paraCfgInput.carrierFrequency);
                         
-                if paramCfg.switchSaveVisualizerFiles &&...
+                if paraCfgInput.switchSaveVisualizerFiles &&...
                         iterateTx < iterateRx &&...
                         size(rayVertices,1) ~= 0
                     
@@ -238,7 +237,7 @@ for iterateTimeDivision = 0:numberOfTimeDivisions
                         iterateOrderOfReflection, iterateTimeDivision),...
                         rayVertices(:, 2:end));
                 end
-                        
+                
                 if size(output) > 0
                     output = [output; outputTmp];
                 elseif size(outputTmp) > 0
@@ -251,9 +250,9 @@ for iterateTimeDivision = 0:numberOfTimeDivisions
             % whose names are TxiRxj.txt. i,j is the link
             % between ith node as Tx and jth as Rx.
             writeQdFileOutput(output, fids(iterateTx,iterateRx),...
-                paramCfg.qdFilesFloatPrecision);
+                paraCfgInput.qdFilesFloatPrecision);
             writeQdFileOutput(reverseOutputTxRx(output), fids(iterateRx,iterateTx),...
-                paramCfg.qdFilesFloatPrecision);
+                paraCfgInput.qdFilesFloatPrecision);
 
         end
     end
