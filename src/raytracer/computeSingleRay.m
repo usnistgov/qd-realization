@@ -1,11 +1,11 @@
 function [exists, dod, doa, multipath, rayLength, dopplerFactor, pathGain]...
     = computeSingleRay(txPos, rxPos, txVel, rxVel, triangIdxList,...
-    cadData, materialLibrary, switchQd, switchMaterial, freq)
+    cadData, materialLibrary, switchMaterial, freq)
 
 intersections = methodOfImages(txPos, rxPos, cadData, triangIdxList, 1);
 
 if isempty(intersections)
-    % do something
+    % the ray does not exist
     exists = false;
     dod = NaN;
     doa = NaN;
@@ -28,7 +28,7 @@ rayLength = getRayLength(txPos, intersections, rxPos);
 friisPg = friisPathGain(rayLength,freq);
 if switchMaterial
     materialsList = cadData(triangIdxList, 14);
-    reflectionLosses = sum(materialLibrary.mu_RL(materialsList));
+    reflectionLosses = sum(materialLibrary.mu_RL(materialsList)); % TODO: update with Rician distribution
 else
     reflectionLosses = 0;
 end
