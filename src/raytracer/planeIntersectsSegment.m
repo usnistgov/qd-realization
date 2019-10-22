@@ -25,21 +25,24 @@ v = pEnd - pStart;
 n = plane(1:3);
 
 % numerator and denominator of intersection equation
-num = pStart * n.' + plane(4);
-den = n * v.';
+num = -(pStart * n.' + plane(4));
+den = n * v.'; % inner product of n and v
+% Fraction of segment vector where the intersection happens
+t = num / den;
 
-if checkDirection && den < 1e-9
+% If checkDirection, n and v should be aligned (going towards the positive
+% direction of the plane). Partially robust to numeric errors.
+% Also check for invalid intersection
+if (checkDirection && den < 1e-9) ||...
+        isinf(t) || isnan(t)
     intersection = [];
     t = [];
     
-else
-    t = -num / den;
+elseif t < 0 || t > 1
+    intersection = [];
     
-    if t < 0 || t > 1
-        intersection = [];
-    else
-        intersection = pStart + t*v;
-    end
+else
+    intersection = pStart + t*v;
     
 end
 
