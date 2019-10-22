@@ -48,9 +48,9 @@ save([inputPath,'/NodePosition1','.dat'],'txPosSteps','-ascii') % tx position
 
 save([inputPath,'/NodePosition2','.dat'],'rxPosSteps','-ascii') % rx positions
 
-csvwrite([inputPath,'/nodeVelocities','.dat'],velocities) % (fictious) velocities
+csvwrite(fullfile(inputPath,'nodeVelocities.dat'),velocities) % (fictious) velocities
 
-csvwrite([inputPath,'/nodes','.dat'],initPos) % (fictious) initial positions
+csvwrite(fullfile(inputPath,'nodes.dat'),initPos) % (fictious) initial positions
 
 %% plots
 if visualize
@@ -136,7 +136,7 @@ for j=1:lRoom+1
         grid = [grid;[xRange,yRange,zRange]];
     else
         % TODO: don't split samples in half
-        gridTmp = mins(j,:) + minOffset + (maxs(j,:)-maxOffset-(mins(j,:)+minOffset)).*rand(nSteps/2,3);
+        gridTmp = mins(j,:) + minOffset + (maxs(j,:)-maxOffset-(mins(j,:)+minOffset)).*rand(nSteps/(lRoom+1),3);
         grid = [grid;gridTmp];
     end
 end
