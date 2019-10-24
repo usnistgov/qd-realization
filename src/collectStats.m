@@ -17,7 +17,7 @@ clear
 close all
 clc
 
-addpath('raytracer', 'utils')
+addpath('raytracer', 'utils', 'utils/statsUtils')
 
 % specify node ID to select file to be loaded (default: txId=0, rxId=1)
 txId = 0;
@@ -61,94 +61,49 @@ if ~isfield(output,"pathGain") || ~isfield(output,"delay") || ~isfield(output,"a
     error('Missing field in Tx%sRx%s.txt',txId,rxId);
 end
 
-stats = struct(); % to collect the stats
+%% extract statistics
+statsFilePath = extractStats(output,currFolder);
+load(statsFilePath)
 
-nSteps = length(output);
-for i = 1:nSteps % row-by-row inspection to extract the stats
-    %%% path gain
-    pathGain = output(i).pathGain;
-    stats(i).pathGain = pathGain;
-    
-    totPathGain = sum(pathGain);
-    normPathGain = pathGain/totPathGain;
-    maxPathGain = max(pathGain);
-    
-    % delta path gain
-    deltaPathGain = pathGain-maxPathGain;
-    stats(i).deltaPathGain = deltaPathGain;
-
-    %%% delay
-    delay = output(i).delay;
-    stats(i).delay = delay;
-
-    % delay spread
-    meanDelay = mean(delay);
-    delaySpread = sqrt(sum(normPathGain.*(delay-meanDelay).^2)); % weigthed std w.r.t pathGain
-    stats(i).delaySpread = delaySpread;
-
-    %%% departure angles
-    % departure elevation angle
-    aodEl = output(i).aodEl;
-    stats(i).aodEl = aodEl;
-    
-    % departure elevation angle arithmetic spread
-    meanAodEl = mean(aodEl);
-    aodElAritSpread = sqrt(sum(normPathGain.*(aodEl-meanAodEl).^2));
-    stats(i).aodElAritSpread = aodElAritSpread;
-    
-    % departure elevation angle phase spread
-    phaseMeanAodEl = angle(sum(exp(1i*normPathGain.*aodEl)));
-    aodElPhaseSpread = sqrt(sum(normPathGain.*(aodEl-phaseMeanAodEl).^2));
-    stats(i).aodElPhaseSpread = aodElPhaseSpread;
-    
-    % departure azimuth angle
-    aodAz = output(i).aodAz;
-    stats(i).aodAz = aodAz;
-    
-    % departure azimuth angle arithmetic spread
-    meanAodAz = mean(aodAz);
-    aodAzAritSpread = sqrt(sum(normPathGain.*(aodAz-meanAodAz).^2));
-    stats(i).aodAzAritSpread = aodAzAritSpread;
-    
-    % arrival elevation angle
-    aoaEl = output(i).aoaEl;
-    stats(i).aoaEl = aoaEl;
-    
-    % arrival elevation angle arithmetic spread
-    meanAoaEl = mean(aoaEl);
-    aoaElAritSpread = sqrt(sum(normPathGain.*(aoaEl-meanAoaEl).^2));
-    stats(i).aoaElAritSpread = aoaElAritSpread;
-    
-    % arrival azimuth angle
-    aoaAz = output(i).aoaAz;
-    stats(i).aoaAz = aoaAz;
-    
-    % arrival azimuth angle arithmetic spread
-    meanAoaAz = mean(aoaAz);
-    aoaAzAritSpread = sqrt(sum(normPathGain.*(aoaAz-meanAoaAz).^2));
-    stats(i).aoaAzAritSpread = aoaAzAritSpread;
-end
 %% plot statistics
-features = ["pathGain"]; % specify the metric to observe for the statistics
+% select plot metrics
+features = ["pathGain","delay","aoaAz"]; % specify the metric to observe for the statistics
+if strcmp(features,"all") % if "all" all the stats will be plotted
+    features = fieldnames(stats);
+end
 
-for feat = features
-    if ~isfield(output,feat)
+% whether to save the figures or not
+savefigs = 1; 
+if savefigs 
+    endout=regexp(statsFilePath,filesep,'split');
+    statsFigFolder = endout{1:end-1}; % path where to save the plots
+end
+
+for featID = 1:length(features)
+    feat = features{featID};
+    
+    if ~isfield(stats,feat)
         error('feature must be a field of Tx%sRx%s.txt',txId,rxId);
     end
-    currFeature = stats.(feat);
+    currFeature = extractfield(stats,feat);
     
-    figure()
+    figure(featID)
     subplot(1,2,1)
     ecdf(currFeature)
-    xlabel('$x=$ Path Gain')
+    xlabel(sprintf('$x=$ %s',feat))
     ylabel('$F(x)$')
     % title('Path Gain distribution in a rectangular room. $N_{refl}=2$')
-
+    hold on
+    
     subplot(1,2,2)
-    histogram(currFeature)
-    xlabel('Path Gain')
+    histogram(currFeature,'Normalization','pdf')
+    xlabel(feat)
     ylabel('Count')
     % title('Path Gain distribution in a rectangular room. $N_{refl}=2$')
+    hold on
+    
+    fileName = fullfile(statsFigFolder,sprintf('%s.fig',feat));
+    savefig(fileName)
 end
 
 function []=generateRayTracerOutFiles(currPath)
