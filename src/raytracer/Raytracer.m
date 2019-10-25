@@ -179,7 +179,8 @@ for iterateTimeDivision = 0:numberOfTimeDivisions
     elseif mobilityType == 2
         [nodeLoc, nodeVelocities] = NodeExtractor...
             (numberOfNodes,  switchRandomization, ...
-            iterateTimeDivision, nodeLoc, nodeVelocities, nodeCfgInput.nodePosition, timeDivisionValue);
+            iterateTimeDivision, nodeLoc, nodeVelocities,...
+            nodeCfgInput.nodePosition, timeDivisionValue);
     end
     
     if paraCfgInput.switchSaveVisualizerFiles && mobilitySwitch >=0
@@ -204,10 +205,18 @@ for iterateTimeDivision = 0:numberOfTimeDivisions
             [output, rayVertices] = computeLosOutput(Rx, Tx, vrx, vtx,...
                 CADop, paraCfgInput.carrierFrequency);
             
+            if ~isempty(output)
+                % if LoS path exists, it is currently the only existing one
+                currentMaxPathGain = output(9);
+            else
+                % else, reset
+                currentMaxPathGain = -Inf;
+            end
+            
             if paraCfgInput.switchSaveVisualizerFiles &&...
                     ~isempty(output) &&...
                     iterateTx < iterateRx
-                
+                % Save MPC LoS file if ray is present
                 csvwrite(sprintf('%s/MpcTx%dRx%dRefl%dTrc%d.csv',...
                     mpcCoordinatesPath, iterateTx-1, iterateRx-1, 0, iterateTimeDivision),...
                     rayVertices); 
@@ -224,9 +233,12 @@ for iterateTimeDivision = 0:numberOfTimeDivisions
                     vrx = vtx;
                 end
                 
-                [outputTmp, rayVertices] = mymultipath(Rx, Tx, vrx,vtx,...
-                    triangReflIdxList,CADop,MaterialLibrary,...
-                    paraCfgInput.switchQDGenerator,switchMaterial,paraCfgInput.carrierFrequency);
+                [outputTmp, rayVertices, currentMaxPathGain] = mymultipath(...
+                    Rx, Tx, vrx, vtx, triangReflIdxList, CADop, MaterialLibrary,...
+                    paraCfgInput.switchQDGenerator, switchMaterial,...
+                    paraCfgInput.carrierFrequency,...
+                    paraCfgInput.minAbsolutePathGainThreshold,...
+                    paraCfgInput.minRelativePathGainThreshold, currentMaxPathGain);
                         
                 if paraCfgInput.switchSaveVisualizerFiles &&...
                         iterateTx < iterateRx &&...
@@ -244,6 +256,16 @@ for iterateTimeDivision = 0:numberOfTimeDivisions
                     output = outputTmp;
                 end
                                      
+            end
+            
+            % Clean up reflections with path gain lower than
+            % minRelativePathGainThreshold to avoid external simulator from
+            % computing useless additional steering vectors
+            % In fact, especially for the NLoS case, there is no guarantee
+            % that the strongest path will be found first
+            if ~isempty(output)
+                removeIdx = output(:,9) - currentMaxPathGain < paraCfgInput.minRelativePathGainThreshold;
+                output(removeIdx, :) = [];
             end
             
             % The ouput from previous iterations is stored in files

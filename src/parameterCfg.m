@@ -129,6 +129,18 @@ para = fieldToNum(para, 'carrierFrequency', [], 60e9);
 % Default: 6 digits
 para = fieldToNum(para, 'qdFilesFloatPrecision', [], 6);
 
+% Threshold for minimum absolute Path Gain.
+% Possible use cases: noise floor, receiver's sensitivity.
+% Considerations on link budget must be made externally to the QD simulator
+% Default: -Inf
+para = fieldToNum(para, 'minAbsolutePathGainThreshold', [], -Inf);
+
+% Threshold for minimum Path Gain relative to strongest path.
+% Tries to avoid computing and outputting rays with too little power to be
+% significant
+% Default: -Inf
+para = fieldToNum(para, 'minRelativePathGainThreshold', [], -Inf);
+
 end
 
 

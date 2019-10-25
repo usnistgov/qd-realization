@@ -1,6 +1,7 @@
-function [exists, dod, doa, multipath, rayLength, dopplerFactor, pathGain]...
-    = computeSingleRay(txPos, rxPos, txVel, rxVel, triangIdxList,...
-    cadData, materialLibrary, switchMaterial, freq)
+function [exists, dod, doa, multipath, rayLength, dopplerFactor, pathGain,...
+    currentMaxPathGain] = computeSingleRay(txPos, rxPos, txVel, rxVel,...
+    triangIdxList, cadData, materialLibrary, switchMaterial, freq,...
+    minAbsolutePathGainThreshold, minRelativePathGainThreshold, currentMaxPathGain)
 %COMPUTESINGLERAY Computes geometry and physics of a ray between txPos and
 %rxPos, bouncing over a give list of triangles
 
@@ -34,13 +35,7 @@ if isempty(intersections)
     return
 end
 
-% check if ray exists
-exists = verifyRayExists(txPos, intersections, rxPos, cadData, triangIdxList);
-
-% Extract info
-dod = intersections(1,:) - txPos;
-doa = intersections(end,:) - rxPos;
-multipath = getMultipathVector(txPos, intersections, rxPos);
+% Extract power-related information
 rayLength = getRayLength(txPos, intersections, rxPos);
 
 friisPg = friisPathGain(rayLength,freq);
@@ -52,7 +47,35 @@ else
 end
 pathGain = friisPg - reflectionLosses;
 
-dopplerFactor = getDopplerFactor(txPos, rxPos, txVel, rxVel, cadData, triangIdxList);
+% Check if ray exists
+if pathGain >= minAbsolutePathGainThreshold &&...
+    (pathGain - currentMaxPathGain) >= minRelativePathGainThreshold
+    exists = verifyRayExists(txPos, intersections, rxPos, cadData, triangIdxList);
+    
+else
+    exists = false;
+    
+end
+
+if exists
+    % Extract info
+    dod = intersections(1,:) - txPos;
+    doa = intersections(end,:) - rxPos;
+    multipath = getMultipathVector(txPos, intersections, rxPos);
+    dopplerFactor = getDopplerFactor(txPos, rxPos, txVel, rxVel, cadData, triangIdxList);
+    
+    if pathGain > currentMaxPathGain
+        % Update maximum path gain
+        currentMaxPathGain = pathGain;
+    end
+    
+else
+    dod = NaN;
+    doa = NaN;
+    multipath = NaN;
+    dopplerFactor = NaN;
+    
+end
 
 end
 
