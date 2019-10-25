@@ -31,7 +31,8 @@ for i = 1:size(cadData, 1)
     vertex3 = cadData(i, 7:9);
     
     [intersection, t] = planeIntersectsSegment(planeEq, p1, p2, false);
-    if t > 1e-9 && t < 1-1e-9 &&... % intersect, not just "touch"
+    if ~isempty(t) && ... % valid intersection with plane
+            t > 1e-9 && t < 1-1e-9 &&... % intersect, not just "touch"
             pointInTriangle(intersection, vertex1, vertex2, vertex3)
         isObstructed = true;
         return
