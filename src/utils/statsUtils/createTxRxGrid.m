@@ -13,19 +13,36 @@ function [] = createTxRxGrid(mainPath,randomSampling,txPos,visualize)
 % WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 % See the License for the specific language governing permissions and
 % limitations under the License.
+paraCfgInput = parameterCfg(mainPath);
+inputPath = fullfile(mainPath, 'Input');
 
 endout=regexp(mainPath,filesep,'split');
-cadPath = fullfile(endout{1:2},'cachedCadOutput.mat');
-CAD = load(cadPath); % load the CAD file
-CADcoord = CAD.CADop; % extract only the coordinates
+cadFolder = fullfile(endout{1:2});
+
+% check whether CAD exists or generate one
+try
+    CAD = load(fullfile(cadFolder,'cachedCadOutput.mat')); % load the CAD file
+    CADop = CAD.CADop; % extract only the coordinates
+catch
+    % get parameters required by getCadOutput() from paraCfgInput
+    selectPlanesByDist = paraCfgInput.selectPlanesByDist;
+    environmentFileName = paraCfgInput.environmentFileName;
+    referencePoint = paraCfgInput.referencePoint;
+    indoorSwitch = paraCfgInput.indoorSwitch;
+    MaterialLibrary = importMaterialLibrary('raytracer/Material_library.txt');
+    
+    % Extracting CAD file and storing in an XMl file, CADFile.xml
+    [CADop, ~] = getCadOutput(environmentFileName,...
+        cadFolder, MaterialLibrary, referencePoint, selectPlanesByDist, indoorSwitch);
+end
 
 % extract the (x,y,z) coordinates of the edges of the triangles
-triangles = CADcoord(:,1:9);
+triangles = CADop(:,1:9);
 
 lRoom = contains(mainPath,'L-Room');
 if randomSampling
-    paraCfg = parameterCfg(mainPath);
-    nSteps = paraCfg.numberOfTimeDivisions;
+    paraCfgInput = parameterCfg(mainPath);
+    nSteps = paraCfgInput.numberOfTimeDivisions;
     [txPosSteps,rxPosSteps] = createGrid(triangles,randomSampling,nSteps,txPos,lRoom);
 else
     [txPosSteps,rxPosSteps] = createGrid(triangles,randomSampling,[],txPos,lRoom);
@@ -42,8 +59,6 @@ initPos = [txInitPos;rxInitPos];
 
 %% save files
 % save every grid in a different folder
-inputPath = fullfile(mainPath, 'Input');
-
 save([inputPath,'/NodePosition1','.dat'],'txPosSteps','-ascii') % tx position
 
 save([inputPath,'/NodePosition2','.dat'],'rxPosSteps','-ascii') % rx positions
