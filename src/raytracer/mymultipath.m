@@ -46,7 +46,7 @@ for i = 1:triangListLen
     
     if pathExists
         deterministicRayOutput = fillOutput(reflOrder, dod, doa, rayLen,...
-            pathGain - 10, dopplerFactor, freq);
+            pathGain, dopplerFactor, freq);
         
         if switchQd
             % TODO: update QD model
