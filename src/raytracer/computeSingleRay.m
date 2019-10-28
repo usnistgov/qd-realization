@@ -1,6 +1,6 @@
 function [exists, dod, doa, multipath, rayLength, dopplerFactor, pathGain,...
     currentMaxPathGain] = computeSingleRay(txPos, rxPos, txVel, rxVel,...
-    triangIdxList, cadData, materialLibrary, switchMaterial, freq,...
+    triangIdxList, cadData, materialLibrary, switchQd, switchMaterial, freq,...
     minAbsolutePathGainThreshold, minRelativePathGainThreshold, currentMaxPathGain)
 %COMPUTESINGLERAY Computes geometry and physics of a ray between txPos and
 %rxPos, bouncing over a give list of triangles
@@ -41,9 +41,20 @@ rayLength = getRayLength(txPos, intersections, rxPos);
 friisPg = friisPathGain(rayLength,freq);
 if switchMaterial
     materialsList = cadData(triangIdxList, 14);
-    reflectionLosses = sum(materialLibrary.mu_RL(materialsList)); % TODO: update with Rician distribution
+    
+    if switchQd
+        % random reflection losses
+        warning('QD not supported yet. Please make sure to generate random RL onyl once')
+        
+    else
+        % deterministic reflection losses
+        reflectionLosses = sum(materialLibrary.mu_RL(materialsList)); % TODO: update with Rician distribution
+    
+    end
+    
 else
     reflectionLosses = 0;
+    
 end
 pathGain = friisPg - reflectionLosses;
 
