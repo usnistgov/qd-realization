@@ -203,7 +203,8 @@ for iterateTimeDivision = 0:numberOfTimeDivisions
                 
             % LOS Path generation
             [output, rayVertices] = computeLosOutput(Rx, Tx, vrx, vtx,...
-                CADop, paraCfgInput.carrierFrequency);
+                CADop, paraCfgInput.carrierFrequency,...
+                paraCfgInput.minAbsolutePathGainThreshold);
             
             if ~isempty(output)
                 % if LoS path exists, it is currently the only existing one

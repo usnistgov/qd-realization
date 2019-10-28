@@ -1,5 +1,5 @@
 function [output, multipath] = computeLosOutput(rxPos, txPos, rxVel, txVel,...
-    cadData, freq)
+    cadData, freq, minAbsolutePathGainThreshold)
 %COMPUTELOSOUTPUT Computes LoS ray
 
 
@@ -18,17 +18,19 @@ function [output, multipath] = computeLosOutput(rxPos, txPos, rxVel, txVel,...
 % See the License for the specific language governing permissions and
 % limitations under the License.
 
-isObstructed = isRayObstructed(rxPos, txPos, cadData, []);
-if isObstructed
-   output = [];
-   multipath = [];
-   
+dod = rxPos - txPos;
+rayLen = norm(dod);
+pathGain = friisPathGain(rayLen, freq);
+
+if pathGain < minAbsolutePathGainThreshold ||...
+        isRayObstructed(rxPos, txPos, cadData, [])
+    
+    output = [];
+    multipath = [];
+    
 else
     reflOrder = 0;
-    dod = rxPos - txPos;
     doa = -dod;
-    rayLen = norm(dod);
-    pathGain = friisPathGain(rayLen, freq);
     dopplerFactor = getDopplerFactor(txPos, rxPos, txVel, rxVel, [], []);
     
     output = fillOutput(reflOrder, dod, doa, rayLen, pathGain, dopplerFactor, freq);
