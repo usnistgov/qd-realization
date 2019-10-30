@@ -23,7 +23,7 @@ rayLen = norm(dod);
 pathGain = friisPathGain(rayLen, freq);
 
 if pathGain < minAbsolutePathGainThreshold ||...
-        isRayObstructed(rxPos, txPos, cadData, [])
+        isRayObstructed(rxPos, txPos, cadData, [], [])
     
     output = [];
     multipath = [];

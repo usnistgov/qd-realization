@@ -1,5 +1,6 @@
-function [CADop, switchMaterial] = getCadOutput(environmentFileName,...
-    inputPath, MaterialLibrary, referencePoint, selectPlanesByDist, indoorSwitch)
+function [CADop, switchMaterial, visibilityMatrix] = getCadOutput(...
+    environmentFileName, inputPath, MaterialLibrary, referencePoint,...
+    selectPlanesByDist, indoorSwitch)
 %GETCADOUTPUT Function to handle smart CAD file import. It tries to create
 % a .mat cache file containing the preprocessed CAD file, as importing a
 % raw CAD can be vary time consuming.
@@ -16,9 +17,9 @@ function [CADop, switchMaterial] = getCadOutput(environmentFileName,...
 % - selectPlanesByDist: see XMLREADER
 % - indoorSwitch: see XMLREADER
 %
-% OUTPUTS: Same outputs as XMLREADER
+% OUTPUTS: Same outputs as XMLREADER, and a sparse, symmetric visibilityMatrix
 %
-% SEE ALSO: XMLREADER
+% SEE ALSO: XMLREADER, GETSIVIBILITYMATRIX
 
 
 % Copyright (c) 2019, University of Padova, Department of Information
@@ -49,8 +50,21 @@ if exist(cacheFilePath, 'file')
     % If the cache is older than the env. file, it might have been changed
     % Load it only if cache is recent
     if cacheAttribs.datenum >= envirnomentAttribs.datenum
-        load(cacheFilePath,...
-            'CADop', 'switchMaterial');
+        vars = load(cacheFilePath);
+        
+        CADop = vars.CADop;
+        switchMaterial = vars.switchMaterial;
+        
+        % To ensure retrocompatibility, old CAD caches might not have
+        % visibilityMatrix. If so, compute it and update the cache.
+        if isfield(vars, 'visibilityMatrix')
+            visibilityMatrix = vars.visibilityMatrix;
+        else
+            visibilityMatrix = getVisibilityMatrix(CADop);
+            save(cacheFilePath,...
+                'CADop', 'switchMaterial', 'visibilityMatrix');
+        end
+        
         return
         
     else
@@ -75,8 +89,9 @@ end
 
 [CADop, switchMaterial] = xmlreader(tmpXmlFilePath,...
     MaterialLibrary, referencePoint, selectPlanesByDist, indoorSwitch);
+visibilityMatrix = getVisibilityMatrix(CADop);
 
 delete(tmpXmlFilePath);
-save(cacheFilePath, 'CADop', 'switchMaterial');
+save(cacheFilePath, 'CADop', 'switchMaterial', 'visibilityMatrix');
 
 end

@@ -1,7 +1,8 @@
 function [exists, dod, doa, multipath, rayLength, dopplerFactor, pathGain,...
     currentMaxPathGain] = computeSingleRay(txPos, rxPos, txVel, rxVel,...
-    triangIdxList, cadData, materialLibrary, switchQd, switchMaterial, freq,...
-    minAbsolutePathGainThreshold, minRelativePathGainThreshold, currentMaxPathGain)
+    triangIdxList, cadData, visibilityMatrix, materialLibrary,...
+    switchQd, switchMaterial, freq, minAbsolutePathGainThreshold,...
+    minRelativePathGainThreshold, currentMaxPathGain)
 %COMPUTESINGLERAY Computes geometry and physics of a ray between txPos and
 %rxPos, bouncing over a give list of triangles
 
@@ -61,7 +62,8 @@ pathGain = friisPg - reflectionLosses;
 % Check if ray exists
 if pathGain >= minAbsolutePathGainThreshold &&...
     (pathGain - currentMaxPathGain) >= minRelativePathGainThreshold
-    exists = verifyRayExists(txPos, intersections, rxPos, cadData, triangIdxList);
+    exists = verifyRayExists(txPos, intersections, rxPos,...
+        cadData, visibilityMatrix, triangIdxList);
     
 else
     exists = false;
@@ -92,7 +94,8 @@ end
 
 
 %% Utils
-function exists = verifyRayExists(txPos, intersections, rxPos, cadData, triangIdxList)
+function exists = verifyRayExists(txPos, intersections, rxPos,...
+    cadData, visibilityMatrix, triangIdxList)
 points = [txPos; intersections; rxPos];
 nRays = size(points,1) - 1;
 
@@ -111,7 +114,8 @@ for i = 1:nRays
         bounceTriangIdx = triangIdxList([i-1, i]);
     end
     
-    isObstructed = isRayObstructed(p1,p2,cadData,bounceTriangIdx);
+    isObstructed = isRayObstructed(p1, p2,...
+        cadData, visibilityMatrix, bounceTriangIdx);
     if isObstructed
         % Early stopping if ray does not exist
         exists = false;
