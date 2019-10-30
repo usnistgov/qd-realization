@@ -1,7 +1,7 @@
 function [output, multipath] = computeLosOutput(rxPos, txPos, rxVel, txVel,...
     cadData, freq)
 
-isObstructed = isRayObstructed(rxPos, txPos, cadData, []);
+isObstructed = isRayObstructed(rxPos, txPos, cadData, [], []);
 if isObstructed
    output = [];
    multipath = [];
