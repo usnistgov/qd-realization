@@ -17,6 +17,8 @@ if ~isfield(cfgParams,'environmentFileName')
     else
         cfgParams.environmentFileName=string(fileList{xmlFiles}); % convert to string for saving via table
     end
+else
+    cfgParams.environmentFileName = string(cfgParams.environmentFileName); % TODO: save as numeric
 end
 
 % Generalized Scenario
@@ -60,7 +62,9 @@ end
 % TODO: default value is arbitrary and not generic at all
 if ~isfield(cfgParams,'referencePoint')
     cfgParams.referencePoint = "[3,3,2]"; % TODO: save it as numeric
-end
+else
+    cfgParams.referencePoint = string(mat2str(cfgParams.referencePoint)); % TODO: save it as numeric
+end    
 
 % This is selection of planes/nodes by distance. r = 0 means that there is
 % no limitation (Default). 
