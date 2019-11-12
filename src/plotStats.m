@@ -13,16 +13,19 @@
 % See the License for the specific language governing permissions and
 % limitations under the License.
 
+close all
 folderList = ["Indoor1",fullfile("Camillo_NIST_60-GHz Lecture Room--MPCs_1551899818","data","TX1_measurements")];
+% folderList = ["L-Room4nodes-fewSamples","L-Room4nodes-fewSamples-rel10"];
+fileName = "stats";
 
 % select plot metrics
-features = ["pathGain","delay","aoaAz"]; % specify the metric to observe for the statistics
+features = ["SINR","SIR"]; % specify the metric to observe for the statistics
 if strcmp(features,"all") % if "all" all the stats will be plotted
     features = fieldnames(stats);
 end
 
 % whether to save the figures or not
-savefigs = 1;
+savefigs = 0;
 if savefigs
     endout=regexp(statsFilePath,filesep,'split');
     statsFigFolder = endout{1:end-1}; % path where to save the plots
@@ -30,11 +33,16 @@ end
 
 for folder = folderList
     
-    statsFilePath = fullfile(folder,"Stats","stats.mat");
-    load(statsFilePath)
+    statsFilePath = fullfile("networkScenarios",folder,"Stats",strcat(fileName,".mat"));
     
     for featID = 1:length(features)
         feat = features{featID};
+        
+        stats = load(statsFilePath,fileName);
+        for field = fieldnames(stats)
+            stats = stats.(fileName);
+        end
+%         stats = stats.networkOut;
         
         if ~isfield(stats,feat)
             error('feature must be a field of Tx%sRx%s.txt',txId,rxId);
@@ -56,7 +64,9 @@ for folder = folderList
         % title('Path Gain distribution in a rectangular room. $N_{refl}=2$')
         hold on
         
-        fileName = fullfile(statsFigFolder,sprintf('%s.fig',feat));
-        savefig(fileName)
+        if savefigs
+            fileName = fullfile(statsFigFolder,sprintf('%s.fig',feat));
+            savefig(fileName)
+        end
     end
 end

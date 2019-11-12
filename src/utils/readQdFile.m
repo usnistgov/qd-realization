@@ -61,7 +61,15 @@ while ~feof(fid)
     numRays = sscanf(line,'%d');
     
     if numRays == 0
-        % skip
+        out(i).numRays = 0;
+        out(i).delay = [];
+        out(i).pathGain = [];
+        out(i).phaseOffset = [];
+        out(i).aodEl = [];        
+        out(i).aodAz = [];
+        out(i).aoaEl = [];
+        out(i).aoaAz = [];
+        i = i+1;
         continue
     end
     
