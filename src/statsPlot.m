@@ -1,74 +1,84 @@
-scenario = 'L-Room4nodes-fewSamples';
-qdFiles = fullfile(scenario,'Output/Ns3/QdFiles/Tx0Rx1.txt');
+clear
+close all
+clc
 
-data = readQdFile(qdFiles);
+%% Input
+scenario = 'L-Room4nodes-fewSamples';
+% thresholdType = 'absolute';
+% thresholds = [-120, -110, -100, -90, -80];
+thresholdType = 'relative';
+thresholds = [-50, -40, -30, -25, -20, -10];
+qdFilename = 'Tx0Rx1.txt';
+
+%%
+qdFilepath = fullfile(scenario, 'Output/Ns3/QdFiles', qdFilename);
+simTime = nan(size(thresholds));
+
+for i = 1:length(thresholds)
+    % run simulation
+    forcedCfgParams = getForcedCfgParams(thresholdType, thresholds(i));
+    
+    t0 = tic;
+    launchRaytracer(scenario, forcedCfgParams);
+    simTime(i) = toc(t0);
+    
+    % prepare plots
+    paraCfg = parameterCfg(scenario);
+    paraCfg = applyForcedCfgParams(paraCfg, forcedCfgParams);
+    name = sprintf('abs %.0f dB, rel %.0f dB',...
+        paraCfg.minAbsolutePathGainThreshold,...
+        paraCfg.minRelativePathGainThreshold);
+    
+    data = readQdFile(qdFilepath);
+    
+    figure(1)
+    [y,x] = ecdf([data.pathGain]);
+    plot(x,y,'DisplayName', name); hold on
+
+    figure(2)
+    pgs = cellfun(@(x) x-max(x), {data.pathGain}, 'UniformOutput', false);
+    [y,x] = ecdf([pgs{:}]);
+    plot(x,y,'DisplayName', name); hold on
+
+end
 
 figure(1)
-[y,x] = ecdf([data.pathGain]);
-plot(x,y,'DisplayName','baseline')
-
-legend('show','Location','northwest')
+legend('show', 'Location', 'northwest')
 xlabel('PG [dB]')
 ylabel('CDF')
-hold on
+hold off
 
 figure(2)
-pgs = cellfun(@(x) x-max(x), {data.pathGain}, 'UniformOutput', false);
-[y,x] = ecdf([pgs{:}]);
-plot(x,y,'DisplayName','baseline')
-
-legend('show','Location','northwest')
+legend('show', 'Location', 'northwest')
 xlabel('$\Delta$PG [dB]')
 ylabel('CDF')
-hold on
+hold off
 
-%%
-scenario = 'L-Room4nodes-fewSamples-rel10';
-qdFiles = fullfile(scenario,'Output/Ns3/QdFiles/Tx0Rx1.txt');
+% speedup plot
+if thresholdType == "absolute"
+    figure(1)
+elseif thresholdType == "relative"
+    figure(2)
+else
+    error()
+end
 
-data = readQdFile(qdFiles);
-paraCfg = parameterCfg(scenario);
-name = sprintf('abs %.0f dB, rel %.0f dB',...
-    paraCfg.minAbsolutePathGainThreshold,...
-    paraCfg.minRelativePathGainThreshold);
-
-figure(3)
-[y,x] = ecdf([data.pathGain]);
-plot(x,y,'DisplayName',name)
-
-figure(4)
-pgs = cellfun(@(x) x-max(x), {data.pathGain}, 'UniformOutput', false);
-[y,x] = ecdf([pgs{:}]);
-plot(x,y,'DisplayName',name)
-
-%%
-PG = [-120, -110, -100, -90, -80];
-absThr = [24.887, 22.744;...
-    19.922, 18.045;...
-    14.524, 13.044;...
-    13.019, 11.703;...
-    12.378, 11.420];
-
-deltaPG = [-50, -40, -30, -25, -20, -10];
-relThr = [23.976, 21.945;...
-    24.063, 22.086;...
-    22.943, 21.057;...
-    21.370, 19.561;...
-    18.752, 17.099;...
-    16.293, 14.817];
-
-figure(1)
 yyaxis right
-% plot(PG, absThr(:,1), '-o', 'DisplayName', 'Tot sim. time')
-% plot(PG, absThr(:,2), '--o', 'DisplayName', 'Multipath time')
-% ylabel('Time [s]')
-plot(PG, absThr(1,1)./absThr(:,1), '-o', 'DisplayName', 'Total speedup')
+plot(thresholds, simTime(1)./simTime, '-o', 'DisplayName', 'Total speedup')
 ylabel('Speedup')
 
-figure(4)
-yyaxis right
-% plot(deltaPG, relThr(:,1), '-o', 'DisplayName', 'Tot sim. time')
-% plot(deltaPG, relThr(:,2), '--o', 'DisplayName', 'Multipath time')
-% ylabel('Time [s]')
-plot(deltaPG, relThr(1,1)./relThr(:,1), '-o', 'DisplayName', 'Total speedup')
-ylabel('Speedup')
+
+%% UTILS
+function forcedCfgParams = getForcedCfgParams(thresholdType, threshold)
+
+forcedCfgParams = struct();
+
+if thresholdType == "absolute"
+    forcedCfgParams.minAbsolutePathGainThreshold = threshold;
+elseif thresholdType == "relative"
+    forcedCfgParams.minRelativePathGainThreshold = threshold;
+else
+    error('Threshold type ''%s'' not recorgnized', thresholdType)
+end
+
+end
