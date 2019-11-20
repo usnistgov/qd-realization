@@ -18,7 +18,7 @@ function [output, multipath] = computeLosOutput(rxPos, txPos, rxVel, txVel,...
 % See the License for the specific language governing permissions and
 % limitations under the License.
 
-isObstructed = isRayObstructed(rxPos, txPos, cadData, []);
+isObstructed = isRayObstructed(rxPos, txPos, cadData, [], []);
 if isObstructed
    output = [];
    multipath = [];

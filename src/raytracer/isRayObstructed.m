@@ -1,4 +1,5 @@
-function isObstructed = isRayObstructed(p1, p2, cadData, triangIdxs)
+function isObstructed = isRayObstructed(p1, p2,...
+    cadData, visibilityMatrix, triangIdxs)
 %ISRAYOBSTRUCTED Check if the segment [p1,p2] is obstructed by any triangle
 %contained in the CAD file. Partially robust to numeric approximations.
 
@@ -18,12 +19,16 @@ function isObstructed = isRayObstructed(p1, p2, cadData, triangIdxs)
 % See the License for the specific language governing permissions and
 % limitations under the License.
 
-for i = 1:size(cadData, 1)
-    if any(i == triangIdxs)
-        % testing a triangle on which the bounce happened: not an
-        % obstruction
-        continue
-    end
+if isempty(triangIdxs)
+    % No reflections from triangles, thus check all possible obstructions
+    possibleObstructors = 1:size(cadData, 1);
+else
+    % Check obstructions only from triangles visible by all those involved
+    % in the path segment
+    possibleObstructors = find(all(visibilityMatrix(triangIdxs, :) > 0, 1));
+end
+
+for i = possibleObstructors
     
     planeEq = cadData(i, 10:13);
     vertex1 = cadData(i, 1:3);

@@ -1,4 +1,5 @@
-function triangIdxs = generateReflectionList(previousReflectionList,cadOp)
+function triangIdxs = generateReflectionList(previousReflectionList,...
+    cadOp, visibilityMatrix)
 %GENERATEREFLECTIONLIST Given the the reflection list of the lower order,
 %generates the next order reflection list.
 
@@ -30,12 +31,12 @@ end
 % else, start from last previous triangle
 triangIdxs = cell(prevListLen,1);
 for i = 1:prevListLen
-    % index of the last triangle generating the new subtree
+    % index of the last reflecting triangle
     lastTriangIdx = previousReflectionList(i,end);
-    % next reflection cannot happen on the same triangle
-    newListTriang = [1:lastTriangIdx-1, lastTriangIdx+1:nTriang].';
-    % add all new possible reflecting triangles to the current triangle
-    % list
+    % based on last reflection, list of next possible reflections
+    newListTriang = find(visibilityMatrix(:, lastTriangIdx));
+    % add new possible reflections to previousReflectionList(i,:)
+    % using cell arrays for convenience, later merged into a single matrix
     newListLen = size(newListTriang,1);
     triangIdxs{i} = [repmat(previousReflectionList(i,:), newListLen, 1),...
         newListTriang];
