@@ -4,10 +4,10 @@ clc
 
 %% Input
 scenario = 'L-Room4nodes-fewSamples';
-% thresholdType = 'absolute';
-% thresholds = [-120, -110, -100, -90, -80];
-thresholdType = 'relative';
-thresholds = [-50, -40, -30, -25, -20, -10];
+thresholdType = 'absolute';
+thresholds = [-120, -110, -100, -90, -80];
+% thresholdType = 'relative';
+% thresholds = [-50, -40, -30, -25, -20, -10];
 qdFilename = 'Tx0Rx1.txt';
 
 %%
@@ -15,11 +15,13 @@ qdFilepath = fullfile(scenario, 'Output/Ns3/QdFiles', qdFilename);
 simTime = nan(size(thresholds));
 
 for i = 1:length(thresholds)
+    fprintf('Simulation %2d/%2d: %s threshold = %.1f\n',...
+        i, length(thresholds), thresholdType, thresholds(i));
     % run simulation
     forcedCfgParams = getForcedCfgParams(thresholdType, thresholds(i));
     
     t0 = tic;
-    launchRaytracer(scenario, forcedCfgParams);
+    launchRaytracer(scenario, forcedCfgParams, 'verbose', 0);
     simTime(i) = toc(t0);
     
     % prepare plots
@@ -60,7 +62,7 @@ if thresholdType == "absolute"
 elseif thresholdType == "relative"
     figure(2)
 else
-    error()
+    error('Threshold type ''%s'' not recorgnized', thresholdType)
 end
 
 yyaxis right
