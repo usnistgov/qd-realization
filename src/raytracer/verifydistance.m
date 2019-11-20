@@ -38,7 +38,6 @@ function switch1 = verifydistance(r, Tx, CADop, i)
 %
 % Modified by: Mattia Lecci <leccimat@dei.unipd.it>, Used MATLAB functions instead of custom ones
 
-
 plane1 = CADop(i,10:13);
 switch1 = 0;
 
