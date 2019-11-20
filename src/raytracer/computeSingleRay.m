@@ -1,6 +1,6 @@
-function [exists, dod, doa, multipath, rayLength, dopplerFactor, pathGain]...
-    = computeSingleRay(txPos, rxPos, txVel, rxVel, triangIdxList,...
-    cadData, visibilityMatrix, materialLibrary, switchQd, switchMaterial, freq)
+function [exists, dod, doa, multipath, rayLength, dopplerFactor, pathGain] =...
+    computeSingleRay(txPos, rxPos, txVel, rxVel, triangIdxList, cadData,...
+    visibilityMatrix, materialLibrary, switchQd, switchMaterial, freq)
 %COMPUTESINGLERAY Computes geometry and physics of a ray between txPos and
 %rxPos, bouncing over a give list of triangles
 
@@ -20,7 +20,8 @@ function [exists, dod, doa, multipath, rayLength, dopplerFactor, pathGain]...
 % See the License for the specific language governing permissions and
 % limitations under the License.
 
-intersections = methodOfImages(txPos, rxPos, cadData, triangIdxList, 1);
+[intersections, pathGain, rayLength] = methodOfImages(txPos, rxPos,...
+    cadData, materialLibrary, triangIdxList, switchQd, freq, 1);
 
 if isempty(intersections)
     % the ray does not exist
@@ -42,16 +43,6 @@ exists = verifyRayExists(txPos, intersections, rxPos,...
 dod = intersections(1,:) - txPos;
 doa = intersections(end,:) - rxPos;
 multipath = getMultipathVector(txPos, intersections, rxPos);
-rayLength = getRayLength(txPos, intersections, rxPos);
-
-friisPg = friisPathGain(rayLength,freq);
-if switchMaterial
-    materialsList = cadData(triangIdxList, 14);
-    reflectionLosses = sum(materialLibrary.mu_RL(materialsList)); % TODO: update with Rician distribution
-else
-    reflectionLosses = 0;
-end
-pathGain = friisPg - reflectionLosses;
 
 dopplerFactor = getDopplerFactor(txPos, rxPos, txVel, rxVel, cadData, triangIdxList);
 
