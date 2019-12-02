@@ -22,7 +22,8 @@ function [exists, dod, doa, multipath, rayLength, dopplerFactor, pathGain,...
 % See the License for the specific language governing permissions and
 % limitations under the License.
 
-intersections = methodOfImages(txPos, rxPos, cadData, triangIdxList, 1);
+[intersections, pathGain, rayLength] = methodOfImages(txPos, rxPos,...
+    cadData, materialLibrary, triangIdxList, switchQd, freq, 1);
 
 if isempty(intersections)
     % the ray does not exist

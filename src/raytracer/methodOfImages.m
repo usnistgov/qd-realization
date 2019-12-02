@@ -1,5 +1,6 @@
-function intersections = methodOfImages(txPos, rxPos, cadData,...
-    triangIdxs, recursionDepth)
+function [intersections, totPathGain, totRayLen, totReflectionLoss] =...
+    methodOfImages(txPos, rxPos, cadData, materialLibrary,...
+    triangIdxs, switchQd, freq, recursionDepth)
 %METHODOFIMAGES Recursive function implementing the Method of Images. Tx is
 %recursively reflected over all triangles in triangIdx and intersections
 %are computed. If any intersection is invalid, an empty array is returned,
@@ -33,11 +34,16 @@ if reflOrder == recursionDepth
     prevIntersection = rxPos;
     % Initialize for as many reflection points as the reflection order
     intersections = nan(reflOrder, 3);
+    % initialize path gain and add it for each reflection segment
+    totPathGain = 0;
+    totRayLen = 0;
+    totReflectionLoss = 0;
     
 else % need more reflections
     % Proceed to the next recursion level
-    intersections = methodOfImages(txPosReflected, rxPos, cadData,...
-        triangIdxs, recursionDepth+1);
+    [intersections, totPathGain, totRayLen, totReflectionLoss] =...
+        methodOfImages(txPosReflected, rxPos, cadData, materialLibrary,...
+        triangIdxs, switchQd, freq, recursionDepth+1);
     
     if isempty(intersections)
         % If intersection cannot exist stop
@@ -57,14 +63,66 @@ if isempty(intersection)
     return
 end
 % else: valid intersection with triangle's plane
-isInsideTriangle = pointInTriangle(intersection, triang(1:3), triang(4:6), triang(7:9));
+isInsideTriangle = pointInTriangle(intersection,...
+    triang(1:3), triang(4:6), triang(7:9));
 if isInsideTriangle
     % Add intersection point if valid
     intersections(recursionDepth, :) = intersection;
+    [totReflectionLoss, totRayLen, totPathGain] =...
+        getPartialPathGain(totReflectionLoss, totRayLen, intersections,...
+        txPos, rxPos, cadData, materialLibrary,...
+        triangIdxs, recursionDepth, switchQd, freq);
+    
 else
     % Invalid if intersection happens outside the triangle's boundaries
     intersections = [];
     return
 end
+
+end
+
+
+%% UTILS
+function [totReflectionLoss, totRayLen, pathGain] =...
+    getPartialPathGain(totReflectionLoss, totRayLen, intersections,...
+    txPos, rxPos, cadData, materialLibrary,...
+    triangIdxs, recursionDepth, switchQd, freq)
+
+currentIntersection = intersections(recursionDepth, :);
+if recursionDepth == length(triangIdxs)
+    % Reflection from last bounce to rx
+    % Consider path from last intesection(s) to rx and reflection loss of
+    % last bounce's material
+    rayLen = norm(rxPos - currentIntersection);
+else
+    % Intermediate reflections
+    % Consider path from current to next intersection and reflection
+    % loss of current bounce's material
+    nextIntersection = intersections(recursionDepth+1, :);
+    rayLen = norm(currentIntersection - nextIntersection);
+end
+
+materialId = cadData(triangIdxs(recursionDepth), 14);
+if switchQd
+    % random reflection losses
+    warning('QD not supported yet. Please make sure to generate random RL onyl once')
+else
+    % deterministic reflection losses
+    % TODO: update with Rician distribution
+    totReflectionLoss = totReflectionLoss + materialLibrary.mu_RL(materialId);
+end
+
+totRayLen = totRayLen + rayLen;
+
+if recursionDepth == 1
+    % Reflection from tx to first bounce
+    % Consider path from tx to first intesection(s) only
+    % Note: for first-order reflections first and last recursionDepth
+    % coincide, and thus need an external if statement
+    rayLen = norm(currentIntersection - txPos);
+    totRayLen = totRayLen + rayLen;
+end
+
+pathGain = friisPathGain(totRayLen, freq) - totReflectionLoss;
 
 end

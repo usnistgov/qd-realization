@@ -31,7 +31,7 @@ end
 % else, start from last previous triangle
 triangIdxs = cell(prevListLen,1);
 for i = 1:prevListLen
-    % index of the last triangle generating the new subtree
+    % index of the last reflecting triangle
     lastTriangIdx = previousReflectionList(i,end);
     % based on last reflection, list of next possible reflections
     newListTriang = find(visibilityMatrix(:, lastTriangIdx));
