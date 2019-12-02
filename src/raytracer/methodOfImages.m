@@ -1,6 +1,7 @@
 function [intersections, totPathGain, totRayLen, totReflectionLoss] =...
     methodOfImages(txPos, rxPos, cadData, materialLibrary,...
-    triangIdxs, switchQd, freq, recursionDepth)
+    triangIdxs, switchQd, freq, recursionDepth, minAbsolutePathGainThreshold,...
+    minRelativePathGainThreshold, currentMaxPathGain)
 %METHODOFIMAGES Recursive function implementing the Method of Images. Tx is
 %recursively reflected over all triangles in triangIdx and intersections
 %are computed. If any intersection is invalid, an empty array is returned,
@@ -43,15 +44,18 @@ else % need more reflections
     % Proceed to the next recursion level
     [intersections, totPathGain, totRayLen, totReflectionLoss] =...
         methodOfImages(txPosReflected, rxPos, cadData, materialLibrary,...
-        triangIdxs, switchQd, freq, recursionDepth+1);
+        triangIdxs, switchQd, freq, recursionDepth+1,...
+        minAbsolutePathGainThreshold, minRelativePathGainThreshold, currentMaxPathGain);
     
     if isempty(intersections)
         % If intersection cannot exist stop
         return
+        
     else
         % Else, find the intersection between the reflected Tx and the
         % previous intersection point, as if it were a "virtual" Rx
         prevIntersection = intersections(recursionDepth+1, :);
+        
     end
 end
 
@@ -61,6 +65,7 @@ if isempty(intersection)
     % the wrong direction (given by plane equation's normal vector)
     intersections = [];
     return
+    
 end
 % else: valid intersection with triangle's plane
 isInsideTriangle = pointInTriangle(intersection,...
@@ -68,15 +73,21 @@ isInsideTriangle = pointInTriangle(intersection,...
 if isInsideTriangle
     % Add intersection point if valid
     intersections(recursionDepth, :) = intersection;
+    
     [totReflectionLoss, totRayLen, totPathGain] =...
         getPartialPathGain(totReflectionLoss, totRayLen, intersections,...
         txPos, rxPos, cadData, materialLibrary,...
         triangIdxs, recursionDepth, switchQd, freq);
     
+    intersections = checkPowerThresholds(intersections, totPathGain,...
+        minAbsolutePathGainThreshold, minRelativePathGainThreshold,...
+        currentMaxPathGain);
+    
 else
     % Invalid if intersection happens outside the triangle's boundaries
     intersections = [];
     return
+    
 end
 
 end
@@ -124,5 +135,21 @@ if recursionDepth == 1
 end
 
 pathGain = friisPathGain(totRayLen, freq) - totReflectionLoss;
+
+end
+
+
+function intersections = checkPowerThresholds(intersections, pathGain,...
+    minAbsolutePathGainThreshold, minRelativePathGainThreshold, currentMaxPathGain)
+
+if pathGain >= minAbsolutePathGainThreshold &&...
+        (pathGain - currentMaxPathGain) >= minRelativePathGainThreshold
+    % Do nothing as ray is still valid
+    
+else
+    % Below power thresholds: invalid ray
+    intersections = [];
+    
+end
 
 end

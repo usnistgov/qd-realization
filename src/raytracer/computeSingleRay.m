@@ -23,7 +23,8 @@ function [exists, dod, doa, multipath, rayLength, dopplerFactor, pathGain,...
 % limitations under the License.
 
 [intersections, pathGain, rayLength] = methodOfImages(txPos, rxPos,...
-    cadData, materialLibrary, triangIdxList, switchQd, freq, 1);
+    cadData, materialLibrary, triangIdxList, switchQd, freq, 1,...
+    minAbsolutePathGainThreshold, minRelativePathGainThreshold, currentMaxPathGain);
 
 if isempty(intersections)
     % the ray does not exist
@@ -31,45 +32,13 @@ if isempty(intersections)
     dod = NaN;
     doa = NaN;
     multipath = NaN;
-    rayLength = NaN;
     dopplerFactor = NaN;
-    pathGain = NaN;
     return
 end
 
-% Extract power-related information
-rayLength = getRayLength(txPos, intersections, rxPos);
-
-friisPg = friisPathGain(rayLength,freq);
-if switchMaterial
-    materialsList = cadData(triangIdxList, 14);
-    
-    if switchQd
-        % random reflection losses
-        warning('QD not supported yet. Please make sure to generate random RL onyl once')
-        
-    else
-        % deterministic reflection losses
-        reflectionLosses = sum(materialLibrary.mu_RL(materialsList)); % TODO: update with Rician distribution
-    
-    end
-    
-else
-    reflectionLosses = 0;
-    
-end
-pathGain = friisPg - reflectionLosses;
-
 % Check if ray exists
-if pathGain >= minAbsolutePathGainThreshold &&...
-    (pathGain - currentMaxPathGain) >= minRelativePathGainThreshold
-    exists = verifyRayExists(txPos, intersections, rxPos,...
-        cadData, visibilityMatrix, triangIdxList);
-    
-else
-    exists = false;
-    
-end
+exists = verifyRayExists(txPos, intersections, rxPos,...
+    cadData, visibilityMatrix, triangIdxList);
 
 if exists
     % Extract info
@@ -134,10 +103,4 @@ points = [txPos; intersections; rxPos];
 points = flipud(points); % rx first, tx last
 points = points.'; % following MATLAB's natural matrix indexing
 multipath = points(:).';
-end
-
-
-function l = getRayLength(txPos, intersections, rxPos)
-vectors = [intersections; rxPos] - [txPos; intersections];
-l = sum(vecnorm(vectors,2,2));
 end
