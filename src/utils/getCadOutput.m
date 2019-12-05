@@ -1,6 +1,6 @@
-function [CADop, switchMaterial, visibilityMatrix] = getCadOutput(...
-    environmentFileName, inputPath, MaterialLibrary, referencePoint,...
-    selectPlanesByDist, indoorSwitch)
+function [CADop, switchMaterial, visibilityMatrix, minDistMatrix] =...
+    getCadOutput(environmentFileName, inputPath, MaterialLibrary,...
+    referencePoint, selectPlanesByDist, indoorSwitch)
 %GETCADOUTPUT Function to handle smart CAD file import. It tries to create
 % a .mat cache file containing the preprocessed CAD file, as importing a
 % raw CAD can be vary time consuming.
@@ -55,14 +55,27 @@ if exist(cacheFilePath, 'file')
         CADop = vars.CADop;
         switchMaterial = vars.switchMaterial;
         
-        % To ensure retrocompatibility, old CAD caches might not have
-        % visibilityMatrix. If so, compute it and update the cache.
+        % To ensure retrocompatibility, old CAD caches might not have some
+        % extra variables. If so, compute them and update the cache.
         if isfield(vars, 'visibilityMatrix')
             visibilityMatrix = vars.visibilityMatrix;
+            
         else
             visibilityMatrix = getVisibilityMatrix(CADop);
             save(cacheFilePath,...
                 'CADop', 'switchMaterial', 'visibilityMatrix');
+            
+        end
+        
+        if isfield(vars, 'minDistMatrix')
+            minDistMatrix = vars.minDistMatrix;
+            
+        else
+            minDistMatrix = getVisibilityMatrix(CADop);
+            save(cacheFilePath,...
+                'CADop', 'switchMaterial', 'visibilityMatrix',...
+                'minDistMatrix');
+            
         end
         
         return
@@ -90,8 +103,10 @@ end
 [CADop, switchMaterial] = xmlreader(tmpXmlFilePath,...
     MaterialLibrary, referencePoint, selectPlanesByDist, indoorSwitch);
 visibilityMatrix = getVisibilityMatrix(CADop);
+minDistMatrix = getMinDistMatrix(CADop);
 
 delete(tmpXmlFilePath);
-save(cacheFilePath, 'CADop', 'switchMaterial', 'visibilityMatrix');
+save(cacheFilePath, 'CADop', 'switchMaterial', 'visibilityMatrix',...
+    'minDistMatrix');
 
 end

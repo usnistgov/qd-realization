@@ -36,7 +36,7 @@ clear
 close all
 clc
 
-addpath('raytracer', 'utils')
+addpath('raytracer', 'utils', 'utils/min-distance-3d-triangles')
 
 %% Initialization
 rootFolderPath = pwd;
