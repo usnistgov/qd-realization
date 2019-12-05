@@ -1,0 +1,3 @@
+[submodule "src/utils/min-distance-3d-triangles"]
+	path = src/utils/min-distance-3d-triangles
+	url = git@github.com:mattia-lecci/min-distance-3d-triangles.git

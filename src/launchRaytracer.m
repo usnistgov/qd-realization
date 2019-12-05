@@ -12,6 +12,8 @@ function outputPath = launchRaytracer(varargin)
 %LAUNCHRAYTRACER(__, 'verbose', v): 'verbose' parameter with level v. If
 %v==0, no information is written on the command window. Default: v = 1.
 
+addpath('raytracer', 'utils', 'utils/min-distance-3d-triangles')
+
 % Input handling
 p = inputParser;
 
