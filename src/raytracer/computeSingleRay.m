@@ -1,6 +1,6 @@
 function [exists, dod, doa, multipath, rayLength, dopplerFactor, pathGain,...
     currentMaxPathGain] = computeSingleRay(txPos, rxPos, txVel, rxVel,...
-    triangIdxList, cadData, visibilityMatrix, materialLibrary,...
+    triangIdxList, cadData, visibilityMatrix, minDistMatrix, materialLibrary,...
     switchQd, switchMaterial, freq, minAbsolutePathGainThreshold,...
     minRelativePathGainThreshold, currentMaxPathGain)
 %COMPUTESINGLERAY Computes geometry and physics of a ray between txPos and
@@ -22,9 +22,21 @@ function [exists, dod, doa, multipath, rayLength, dopplerFactor, pathGain,...
 % See the License for the specific language governing permissions and
 % limitations under the License.
 
-[intersections, pathGain, rayLength] = methodOfImages(txPos, rxPos,...
-    cadData, materialLibrary, triangIdxList, switchQd, freq, 1,...
-    minAbsolutePathGainThreshold, minRelativePathGainThreshold, currentMaxPathGain);
+minPathGain = getMinPathGain(txPos, rxPos, cadData, triangIdxList, freq, minDistMatrix);
+
+if minPathGain >= minAbsolutePathGainThreshold &&...
+        (minPathGain - currentMaxPathGain) >= minRelativePathGainThreshold
+
+    [intersections, pathGain, rayLength] = methodOfImages(txPos, rxPos,...
+        cadData, materialLibrary, triangIdxList, switchQd, freq, 1,...
+        minAbsolutePathGainThreshold, minRelativePathGainThreshold,...
+        currentMaxPathGain, minDistMatrix);
+    
+else
+    intersections = [];
+    
+end
+
 
 if isempty(intersections)
     % the ray does not exist
@@ -32,7 +44,9 @@ if isempty(intersections)
     dod = NaN;
     doa = NaN;
     multipath = NaN;
+    rayLength = NaN;
     dopplerFactor = NaN;
+    pathGain = NaN;
     return
 end
 
