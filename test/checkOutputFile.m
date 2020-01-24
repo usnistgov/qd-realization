@@ -35,8 +35,8 @@ function checkOutputFile(testCase,scenarioFolder,scenarioFileName,...
 % Check if the same file was passed
 assertEqual(testCase,scenarioFileName,exampleFileName)
 
-scenarioFilePath = sprintf('%s/%s',scenarioFolder,scenarioFileName);
-exampleFilePath = sprintf('%s/%s',exampleFolder,exampleFileName);
+scenarioFilePath = [scenarioFolder, filesep, scenarioFileName];
+exampleFilePath =  [exampleFolder, filesep, exampleFileName];
 
 if isNodesPosition(scenarioFilePath)
     scenarioOut = readNodesPosition(scenarioFilePath);

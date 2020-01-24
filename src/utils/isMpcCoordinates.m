@@ -25,7 +25,7 @@ function b = isMpcCoordinates(path)
 % See the License for the specific language governing permissions and
 % limitations under the License.
 
-splitPath = split(path,'/');
+splitPath = split(path, filesep);
 
 b = ~isempty(regexp(splitPath{end},...
     'MpcTx[\d]+Rx[\d]+Refl[\d]+Trc[\d]+.csv',...
