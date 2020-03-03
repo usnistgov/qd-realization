@@ -39,7 +39,7 @@ function para = parameterCfg(scenarioNameStr)
 
 
 % Load Parameters
-cfgPath = sprintf('%s/Input/paraCfgCurrent.txt',scenarioNameStr);
+cfgPath = fullfile(scenarioNameStr, 'Input/paraCfgCurrent.txt');
 paraList = readtable(cfgPath,'Delimiter','\t');
 
 paraCell = (table2cell(paraList))';
@@ -129,6 +129,11 @@ para = fieldToNum(para, 'carrierFrequency', [], 60e9);
 % Default: 6 digits
 para = fieldToNum(para, 'qdFilesFloatPrecision', [], 6);
 
+% Use optimized output to file. Might create problems when files are too
+% many, especially on servers. In this case, try to disable it (=0)
+% Default: 1 (true)
+para = fieldToNum(para, 'useOptimizedOutputToFile', [], 1);
+
 end
 
 
@@ -183,7 +188,7 @@ end
 end
 
 function b = isNodePositionPresent(path)
-files = dir(sprintf('%s/Input',path));
+files = dir(fullfile(path, 'Input'));
 
 b = any(startsWith({files.name},'NodePosition'));
 end
