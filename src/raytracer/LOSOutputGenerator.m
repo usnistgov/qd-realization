@@ -16,7 +16,6 @@ function [switchLOS, output] = LOSOutputGenerator(CADoutput, Rx, Tx,...
 %PolarizationTx - gives polarization information of Tx location
 %f1 - figure that displays multipath
 %f2 - figure that displays channel model
-%properties are presnet in CAD output
 %output - multipath parameters
 % frequency: the carrier frequency at which the system operates
 %
@@ -102,8 +101,8 @@ if switch3==1 % if DoA exists
     output1(13)=acosd(doa(3)/norm(doa));
     % Polarization Jones vector
     if switchPolarization
-        output1(14:15) = PolarizationTx(1,:);
-        % Cross polarization Jones vector
+    output1(14:15) = PolarizationTx(1,:);
+    % Cross polarization Jones vector
         if switchCp
             output1(16:17) = PolarizationTx(2,:);
         end
