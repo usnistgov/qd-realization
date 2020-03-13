@@ -39,6 +39,7 @@ function [paraCfg, nodeCfg] = nodeProfileCfg(paraCfg)
 
 scenarioNameStr = paraCfg.inputScenarioName;
 % Input Parameters to be Updated
+% scenarioNameStr = paraCfg.scenarioNameStr;
 mobilitySwitch = paraCfg.mobilitySwitch;
 mobilityType = paraCfg.mobilityType;
 numberOfNodes = paraCfg.numberOfNodes;
@@ -48,6 +49,8 @@ switchRandomization = paraCfg.switchRandomization;
 % List of paths
 inputPath = fullfile(scenarioNameStr, 'Input');
 nodesPositionPath = fullfile(scenarioNameStr, 'Output/Ns3/NodesPosition');
+paaPositionPath = strcat(scenarioNameStr,'/Output/Ns3/PAAPosition');
+paaPositionPathVisual = strcat(scenarioNameStr,'/Output/Visualizer/PAAPosition');
 
 %% Code
 nodePosition = [];
@@ -65,7 +68,7 @@ if switchRandomization == 1
     Rx = [xCoordinateRandomizer, yCoordinateRandomizer, zCoordinateRandomizer];
     
     if mobilityType ~= 1
-        mobilityType = 1;
+    mobilityType = 1;
         warning('Changing mobilityType to %d', mobilityType)
     end
 end
@@ -136,8 +139,8 @@ if switchRandomization == 0
             if numberOfTimeDivisions ~= size(nodePosition, 1) - 1
                 numberOfTimeDivisions = size(nodePosition, 1) - 1;
                 warning('Changing numberOfTimeDivisions to %d', numberOfTimeDivisions)
-            end
         end
+    end
         
     end
 end
@@ -162,14 +165,18 @@ else
 end
 
 iterateNumberOfNodes = 1;
-%% This part of code generates other parameters of
 nodeAntennaOrientation = zeros(numberOfNodes, 3, 3);
 nodePolarization = zeros(iterateNumberOfNodes, 2);
+nodePAA_position         = cell(numberOfNodes,1); %PAA vector position w.r.t node center
 
 while iterateNumberOfNodes <= numberOfNodes
     nodeAntennaOrientation(iterateNumberOfNodes, :, :) = [1, 0, 0; 0, 1, 0; 0, 0, 1];
     nodePolarization(iterateNumberOfNodes, :) = [1, 0];
-    
+    if isfile(strcat(inputPath, [filesep 'node'], num2str(iterateNumberOfNodes), 'PAAs_position.dat' ))
+        nodePAA_position{iterateNumberOfNodes} = load(strcat(inputPath, [filesep 'node'], num2str(iterateNumberOfNodes), 'PAAs_position.dat' ));
+    else
+        nodePAA_position{iterateNumberOfNodes} = [];
+    end
     if switchRandomization == 1 && iterateNumberOfNodes > 0
         xCoordinateRandomizer = rand * 8 + 1;
         yCoordinateRandomizer = rand * 17 + 1;
@@ -192,6 +199,10 @@ if switchRandomization ~=0
     warning('Changing switchRandomization to %d', switchRandomization)
 end
 
+%% Process PAA position
+[PAA_info]  = cluster_paa(nodeLoc, nodePAA_position);
+switchRandomization = 0;
+
 % Check Temp Output Folder
 rmdirStatus = rmdir(fullfile(scenarioNameStr, 'Output'), 's');
 
@@ -199,11 +210,31 @@ mkdir(fullfile(scenarioNameStr, 'Output'));
 mkdir(fullfile(scenarioNameStr, 'Output/Ns3'));
 mkdir(fullfile(scenarioNameStr, 'Output/Visualizer'));
 
+sizeNode = size(nodeLoc);
+
 if ~isfolder(nodesPositionPath)
     mkdir(nodesPositionPath)
 end
 
+if ~isfolder(paaPositionPath)
+    mkdir(paaPositionPath)
+end
+
+if ~isfolder(paaPositionPathVisual)
+    mkdir(paaPositionPathVisual)
+end
+
 csvwrite(fullfile(nodesPositionPath, 'NodesPosition.csv'), nodeLoc);
+
+for i = 1:length(nodePAA_position)
+csvwrite(strcat(paaPositionPath, filesep,...
+    'Node', num2str(i) ,'PAAPosition.csv'), nodePAA_position{i});
+end
+
+for i = 1:length(nodePAA_position)
+csvwrite(strcat(paaPositionPathVisual, filesep,...
+    'Node', num2str(i-1) ,'PAAPosition.csv'), PAA_info{i}.centroid_position);
+end
 
 warning('OFF', 'MATLAB:table:ModifiedAndSavedVarnames')
 
@@ -212,10 +243,17 @@ paraCfg.numberOfNodes = numberOfNodes;
 paraCfg.numberOfTimeDivisions = numberOfTimeDivisions;
 paraCfg.switchRandomization = switchRandomization;
 
-nodeCfg.nodeLoc = nodeLoc;
+nodeCfg.nodeLoc = cell2mat(reshape(...
+    arrayfun(@(x) x{:}.centroid_position, PAA_info, 'UniformOutput', false),...
+     [],1));
+ 
 nodeCfg.nodeAntennaOrientation = nodeAntennaOrientation;
 nodeCfg.nodePolarization = nodePolarization;
 nodeCfg.nodePosition = nodePosition;
 nodeCfg.nodeVelocities = nodeVelocities;
-
+nodeCfg.PAA_info  = PAA_info; 
+% nodeCfg.nodePAAInfo = nodePAAInfo;
+% nodeCfg.nodePAA_isSmallScaleIndependent = channelGenerationMethod;  
+% nodeCfg.nodePAA_node_idxs = node_idxs;
+% nodeCfg.nodePAA_node_iid_ss = node_iid_ss;
 end
