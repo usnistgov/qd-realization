@@ -3,7 +3,7 @@ function [QD, switchQD, output, multipath, indexMultipath, indexQD] =...
     numberOfRowsArraysOfPlanes, MaterialLibrary, arrayOfMaterials,...
     switchMaterial, velocityTx, velocityRx, PolarizationSwitch,...
     PolarizationTx, AntennaOrientationTx, PolarizationRx,...
-    AntennaOrientationRx, switchCrossPolarization, QDGeneratorSwitch, frequency)
+    AntennaOrientationRx, switchCrossPolarization, QDGeneratorSwitch, frequency, varargin)
 %INPUT -
 %ArrayOfPoints - combinations of multiple triangles, every row is a unique
 %combination. every triangle occupies 9 columns (3 vertices). (o/p of
@@ -80,6 +80,14 @@ function [QD, switchQD, output, multipath, indexMultipath, indexQD] =...
 % Modified by: Mattia Lecci <leccimat@dei.unipd.it>, Used MATLAB functions instead of custom ones,
 %    vectorized code, improved access to MaterialLibrary
 
+var_struct = {'indStoc'}; 
+for k = 1:2:length(varargin)
+    if (~any(strcmp(varargin{k}, var_struct)))
+        warning(['Cannot specify "', varargin{k}, '" as input value - it will be discarted']);
+    end
+    eval([varargin{k},' = varargin{k+1};'])
+end
+if ~exist('indStoc','var'),     indStoc=1;        end
 
 switchQD = 0;
 QD = [];
@@ -88,7 +96,7 @@ indexOutput = 1;
 indexQD = 1;
 sizeArrayOfPlanes = size(ArrayOfPlanes);
 
-output = zeros(sizeArrayOfPlanes(1),21);
+output = zeros(sizeArrayOfPlanes(1),21,indStoc);
 multipath = [];
 LIGHTVELOCITY = 3e8;
 wavelength = LIGHTVELOCITY / frequency;
@@ -154,39 +162,39 @@ if numberOfRowsArraysOfPlanes>0
         
         if  switch1 == 1
             
-            output(indexOutput,1) = indexMultipath;
+            output(indexOutput,1,1:indStoc) = indexMultipath;
             % dod - direction of departure
-            output(indexOutput,2:4) = dod;
+            output(indexOutput,2:4,1:indStoc) = repmat(dod,1,1,indStoc);
             % doa - direction of arrival
-            output(indexOutput,5:7) = doa;
+            output(indexOutput,5:7,1:indStoc) = repmat(doa,1,1,indStoc);
             % Time delay
-            output(indexOutput,8) = distance / LIGHTVELOCITY;
+            output(indexOutput,8,1:indStoc) = distance / LIGHTVELOCITY;
             % Friis transmission loss
             if PathLoss(1) < 0
-                output(indexOutput,9) = 20*log10(wavelength / (4*pi*distance)) + PathLoss(1);
+                output(indexOutput,9,1:indStoc) = 20*log10(wavelength / (4*pi*distance)) + PathLoss(1);
             else
-                output(indexOutput,9) = 20*log10(wavelength / (4*pi*distance)) - 10;
+                output(indexOutput,9,1:indStoc) = 20*log10(wavelength / (4*pi*distance)) - 10;
             end
             % Aod azimuth
-            output(indexOutput,10) = mod(atan2d(dod(2),dod(1)), 360);
+            output(indexOutput,10,1:indStoc) = mod(atan2d(dod(2),dod(1)), 360);
             % Aod elevation
-            output(indexOutput,11) = acosd(dod(3) / norm(dod));
+            output(indexOutput,11,1:indStoc) = acosd(dod(3) / norm(dod));
             % Aoa azimuth
-            output(indexOutput,12) = mod(atan2d(doa(2),doa(1)), 360);
+            output(indexOutput,12,1:indStoc) = mod(atan2d(doa(2),doa(1)), 360);
             % Aoa elevation
-            output(indexOutput,13) = acosd(doa(3) / norm(doa));
-            output(indexOutput,18) = orderOfReflection*pi;% + dopplerFactor*delay;
-            output(indexOutput,20) = dopplerFactor * frequency;
+            output(indexOutput,13,1:indStoc) = acosd(doa(3) / norm(doa));
+            output(indexOutput,18,1:indStoc) = orderOfReflection*pi;% + dopplerFactor*delay;
+            output(indexOutput,20,1:indStoc) = dopplerFactor * frequency;
             indexReference = indexOutput;
             indexMultipath = indexMultipath + 1;
             indexOutput = indexOutput + 1;
-            output(indexOutput - 1,21) = 0;
+            output(indexOutput - 1,21,1:indStoc) = 0;
             
             % refer to "multipath - WCL17_revised.pdf" in this folder for QD model
             if  switchMaterial == 1 && QDGeneratorSwitch == 1
                 [output,indexOutput,switchQD] = QDGenerator(orderOfReflection,...
                     output,arrayOfMaterials,iterateNumberOfRowsArraysOfPlanes,MaterialLibrary,distance,...
-                    frequency,indexOutput,dod,doa,velocityTx,velocityTemp,indexMultipath,indexReference);
+                    frequency,indexOutput,dod,doa,velocityTx,velocityTemp,indexMultipath,indexReference, 'indStoc', indStoc);
             end
         end
         
@@ -195,21 +203,21 @@ if numberOfRowsArraysOfPlanes>0
     switch2 = 1;
     
     try
-        ioi = output(indexMultipath,1)==0;
+        ioi = output(indexMultipath,1,1:indStoc)==0;
     catch
         switch2 = 0;
         indexMultipath = indexMultipath -1;
     end
     
     if switch2==1
-        if output(indexMultipath,1)==0
+        if output(indexMultipath,1,1:indStoc)==0
             indexMultipath = indexMultipath-1 ;
         end
     end
     
     indexQD = indexOutput - 1;
     output1 = output;
-    output = output1(1:indexQD,1:21);
+    output = output1(1:indexQD,1:21,1:indStoc);
     mp1 = multipath;
     multipath = [];
     
