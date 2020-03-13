@@ -36,45 +36,68 @@ if ~useOptimizedOutputToFile
 else
     fid = fids(iTx, iRx);
 end
-    
 
-numRays = size(output,1);
-fprintf(fid, '%d\n', numRays);
+if isstruct(output)  
+    sz = structfun(@size, output, 'UniformOutput', false);
+    fn = fieldnames(sz);
+    id_st= 1;
+    for i = 1:numel(fn)
+        sz_paa = [size(eval(['output.',fn{i}])),1];
+        id_end= id_st+sz_paa(3)-1;        
+        output_cell(:, :, id_st:id_end) = mat2cell(eval(['output.',fn{i}]), sz_paa(1), sz_paa(2), ones(1,sz_paa(3)));
+        id_st=id_st+sz_paa(3);
+    end
+    output = squeeze(output_cell);
+    numChan = length(output);
+
+else
+    numRays = size(output,1);
+    numProp = size(output,2);
+    numChan = size(output,3);
+    output = mat2cell(output, numRays,numProp, ones(1,numChan));
+end
+% fprintf(fid, '%d\n', numChan);
 
 if isempty(output)
     return
 end
 
-if any(any(isnan(output(:, [8, 9, 18, 11, 10, 13, 12]))))
-    warning('Writing NaN in QD file')
-end
+% if any(any(isnan(output(:, [8, 9, 18, 11, 10, 13, 12]))))
+%     warning('Writing NaN in QD file')
+% end
 
 floatFormat = sprintf('%%.%dg',precision);
 formatSpec = [repmat([floatFormat,','],1,numRays-1), [floatFormat,'\n']];
 
-% Stores delay [s]
-fprintf(fid,formatSpec,output(:,8));
+for id = 1:numChan
+    output_id = output{id};
+    numRays = size(output_id,1);
+    fprintf(fid, '%d\n', numRays);
+    formatSpec = [repmat([floatFormat,','],1,numRays-1), [floatFormat,'\n']];
 
-% Stores  path gain [dB]
-fprintf(fid,formatSpec,output(:,9));
-
-% Stores  phase [rad]
-fprintf(fid,formatSpec,output(:,18));
-
-% Stores Angle of departure elevation [deg]
-fprintf(fid,formatSpec,output(:,11));
-
-% Stores Angle of departure azimuth [deg]
-fprintf(fid,formatSpec,output(:,10));
-
-% Stores Angle of arrival elevation [deg]
-fprintf(fid,formatSpec,output(:,13));
-
-% Stores Angle of arrival azimuth [deg]
-fprintf(fid,formatSpec,output(:,12));
+    % Stores delay [s]
+    fprintf(fid,formatSpec,output_id(:,8));
+    
+    % Stores  path gain [dB]
+    fprintf(fid,formatSpec,output_id(:,9));
+    
+    % Stores  phase [rad]
+    fprintf(fid,formatSpec,output_id(:,18));
+    
+    % Stores Angle of departure elevation [deg]
+    fprintf(fid,formatSpec,output_id(:,11));
+    
+    % Stores Angle of departure azimuth [deg]
+    fprintf(fid,formatSpec,output_id(:,10));
+    
+    % Stores Angle of arrival elevation [deg]
+    fprintf(fid,formatSpec,output_id(:,13));
+    
+    % Stores Angle of arrival azimuth [deg]
+    fprintf(fid,formatSpec,output_id(:,12));
+end
 
 if ~useOptimizedOutputToFile
     fclose(fid);
 end
-
 end
