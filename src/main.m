@@ -35,8 +35,8 @@
 clear
 close all
 clc
-
-addpath('raytracer', 'utils')
+tic
+addpath('raytracer', 'utils', 'quaternions')
 
 %% Initialization
 rootFolderPath = pwd;
@@ -51,7 +51,8 @@ end
 
 %% Input
 % Leave empty for default 'ScenarioTest'
-scenarioNameStr = '';
+scenarioNameStr = 'examples\vrScenario';
+
 if ~isempty(scenarioNameStr)
     fprintf('Use customized scenario: %s.\n',scenarioNameStr);
 else
@@ -81,7 +82,8 @@ paraCfg = parameterCfg(scenarioNameStr);
 % Input Node related parameters
 [paraCfg, nodeCfg] = nodeProfileCfg(paraCfg);
 % Run raytracing function and generate outputs
-outputPath = Raytracer(paraCfg, nodeCfg);
+[outputPath] = Raytracer(paraCfg, nodeCfg);
 
 fprintf('Save output data to:\n%s\n',outputPath);
 fprintf('--------- Simulation Complete ----------\n');
+toc
