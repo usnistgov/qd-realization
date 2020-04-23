@@ -80,7 +80,7 @@ function [QD, switchQD, output, multipath, indexMultipath, indexQD] =...
 % Modified by: Mattia Lecci <leccimat@dei.unipd.it>, Used MATLAB functions instead of custom ones,
 %    vectorized code, improved access to MaterialLibrary
 
-var_struct = {'indStoc'}; 
+var_struct = {'indStoc', 'qTx', 'qRx'}; 
 for k = 1:2:length(varargin)
     if (~any(strcmp(varargin{k}, var_struct)))
         warning(['Cannot specify "', varargin{k}, '" as input value - it will be discarted']);
@@ -88,6 +88,8 @@ for k = 1:2:length(varargin)
     eval([varargin{k},' = varargin{k+1};'])
 end
 if ~exist('indStoc','var'),     indStoc=1;        end
+if ~exist('qTx','var'),     qTx.cTx = Tx;  qTx.euc = zeros(1,3);   end
+if ~exist('qRx','var'),     qRx.cRx = Rx;  qRx.euc = zeros(1,3);   end
 
 switchQD = 0;
 QD = [];
@@ -146,8 +148,8 @@ if numberOfRowsArraysOfPlanes>0
             multipath,indexMultipath,velocityTx,velocityRx,PolarizationSwitchTemporary,...
             PolarizationTx,AntennaOrientationTx,PolarizationRx,...
             AntennaOrientationRx,nt_array,switchCrossPolarization);
-        
-        
+            dod=  pointRotation(dod,[0 0 0], qTx.euc, 1);
+            doa=  pointRotation(doa,[0 0 0], qRx.euc, 1); 
         if switch1 == 1
             for i = 1:indexMultipath - 1
                 switch3 = 1;

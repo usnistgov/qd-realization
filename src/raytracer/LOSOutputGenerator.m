@@ -1,6 +1,6 @@
 function [switchLOS, output] = LOSOutputGenerator(CADoutput, Rx, Tx,...
     output, velocityTx, velocityRx, switchPolarization, switchCp,...
-    PolarizationTx, frequency)
+    PolarizationTx, frequency, varargin)
 % This part of code compute LOS between two nodes
 %
 %Inputs:
@@ -60,14 +60,25 @@ function [switchLOS, output] = LOSOutputGenerator(CADoutput, Rx, Tx,...
 %
 % Modified by: Mattia Lecci <leccimat@dei.unipd.it>, Used MATLAB functions instead of custom ones
 
+%% Input processing
+var_struct = {'qTx', 'qRx'};
+for k = 1:2:length(varargin)
+    if (~any(strcmp(varargin{k}, var_struct)))
+        warning(['Cannot specify "', varargin{k}, '" as input value - it will be discarted']);
+    end
+    eval([varargin{k},' = varargin{k+1};'])
+end
+
+if ~exist('qTx','var'),     qTx.cTx = Tx;  qTx.euc = zeros(1,3);   end
+if ~exist('qRx','var'),     qRx.cRx = Rx;  qRx.euc = zeros(1,3);   end
 
 % Direction of departure (DoD) is simple the difference of position vectors
 % of Tx and Rx
-dod=Rx-Tx;
+dod=pointRotation(Rx-Tx,[0 0 0], qTx.euc, 1);
 % delay is the total length of multipath
 delay=norm(dod);
 % Direction of arrival (DoA) is negative of DoD
-doa=-dod;
+doa= pointRotation(-dod, [0 0 0], qRx.euc,1);
 % Calculating Doppler factor for LOS
 velocityTxAlongDirectionOfDeparture=dot(velocityTx,-1.*dod);
 velocityRxAlongDirectionOfDeparture=dot(velocityRx,-1.*dod);
