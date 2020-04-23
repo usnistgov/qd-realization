@@ -63,8 +63,8 @@ node = nan(numberOfNodes, 3);
 for nodeIdx = 1:numberOfNodes
     node(nodeIdx, :) = NodePosition(timeDivision, :, nodeIdx);
     
-    nodeVelocity(nodeIdx, :)= (NodePosition(timeDivision+1, :, nodeIdx) -...
-        NodePosition(timeDivision, :, nodeIdx)) / delt;
+    nodeVelocity(nodeIdx, :)= (NodePosition(timeDivision, :, nodeIdx) -...
+        NodePosition(timeDivision, :, nodeIdx)) / delt;% To doublecheck
     
 end
 

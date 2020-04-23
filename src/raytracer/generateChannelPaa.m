@@ -22,7 +22,7 @@ nodes = length(info);
 all_nodes = 1:nodes;
 get_paa_id = @(x,X) sum(X(1:x)):sum(X(1:x))+X(x+1)-1;
 ch_out = cell(size(ch_in));
-debug_tmp
+% debug_tmp
 % for nt = all_nodes
 %     for nr = all_nodes(all_nodes~=nt)
 %         ch_t_r = [];
@@ -64,7 +64,7 @@ for nt = all_nodes
                 ch_t = [];
                 for rot_tx = 1:numel(info{nt}.nodePAAInfo{c_t}.rotated_channel)
                     for rot_rx = 1:numel(info{nr}.nodePAAInfo{c_r}.rotated_channel)
-                        t = eval(['ch_in{nt,nr}.paaTx', num2str(c_t), 'paaRx', num2str(c_r),'(:,:,rot_tx)']);
+                        t = eval(['ch_in{nt,nr}.paaTx', num2str(c_t), 'paaRx', num2str(c_r),'(:,:,rot_tx);']);
                         ptr.nt = nt;
                         ptr.nr = nr;
                         ptr.paatx = c_t;
@@ -73,7 +73,7 @@ for nt = all_nodes
                         ptr.rot_rx = rot_rx;
                         ch_t_tmp = ddir2MIMO(t,info, ptr);
                         ch_t = cat(3, ch_t, ch_t_tmp);
-                        size(ch_t)
+%                         size(ch_t)
                     end
                 end
                 ch_t_r = cat(3, ch_t_r, ch_t);

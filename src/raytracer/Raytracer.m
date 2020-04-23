@@ -68,9 +68,17 @@ function [outputPath, varargout] = Raytracer(paraCfgInput, nodeCfgInput)
 numberOfNodes = paraCfgInput.numberOfNodes;
 
 % nodeLoc = nodeCfgInput.nodeLoc;
-nodeLoc = reshape(...
-    cell2mat(cellfun(@(x) x.PAA_loc(1,1:3), nodeCfgInput.PAA_info, 'UniformOutput', 0)),...
-    3, []).';
+% nodeLoc = reshape(...
+%     cell2mat(cellfun(@(x) x.PAA_loc(1,1:3), nodeCfgInput.PAA_info, 'UniformOutput', 0)),...
+%     3, []).';
+% nodeLoc = reshape(...
+%     cell2mat(cellfun(@(x) x.PAA_loc, nodeCfgInput.PAA_info, 'UniformOutput', 0)),...
+%     3, []).';
+nodeLoc = [];
+nodeLocCellArray = cellfun(@(x) reshape(squeeze(x.PAA_loc), size(nodeCfgInput.nodeLoc,1), [], 3), nodeCfgInput.PAA_info, 'UniformOutput', 0).';
+for i = 1:length(nodeLocCellArray)
+    nodeLoc= cat(2, nodeLoc, nodeLocCellArray{i});
+end
 nodeAntennaOrientation = nodeCfgInput.nodeAntennaOrientation;
 nodePolarization = nodeCfgInput.nodePolarization;
 nodePosition = nodeCfgInput.nodePosition;
@@ -123,14 +131,12 @@ fids = getQdFilesIds(qdFilesPath, paraCfgInput.numberOfNodes,...
     paraCfgInput.useOptimizedOutputToFile);
 
 %% Init
-Tx = nodeLoc(1,:);
-Rx = nodeLoc(2,:);
+Tx = reshape(squeeze(nodeLoc(1,1,:)), [],3);
+Rx = reshape(squeeze(nodeLoc(1,2,:)), [],3);
 vtx = nodeVelocities(1,:);
 vrx = nodeVelocities(2,:);
-
 switchPolarization = 0;
 switchCp = 0;
-
 polarizationTx = [1, 0];
 polarizationRx = [1, 0];
 
@@ -166,6 +172,9 @@ timeDivisionValue = paraCfgInput.totalTimeDuration / paraCfgInput.numberOfTimeDi
 % planes. If that occurs then the velocities are simply reversed (not
 % reflected). At every time step the positions of all nodes are updated
 for iterateTimeDivision = 1:paraCfgInput.numberOfTimeDivisions
+    if mod(iterateTimeDivision,100)==0
+    display([num2str(iterateTimeDivision/32070*100),'%'])
+    end
     % update mobility
     if paraCfgInput.mobilityType == 1
         if paraCfgInput.numberOfNodes == 2
@@ -190,12 +199,12 @@ for iterateTimeDivision = 1:paraCfgInput.numberOfTimeDivisions
     end
     
     % save NodePositionsTrc
-    if paraCfgInput.switchSaveVisualizerFiles
+    if paraCfgInput.switchSaveVisualizerFiles && ~paraCfgInput.jsonOutput
         filename = sprintf('NodePositionsTrc%d.csv', iterateTimeDivision-1);
-        csvwrite(fullfile(nodePositionsPath, filename),...
-            nodeLoc);
+        writematrix(squeeze(nodePosition(iterateTimeDivision,:,:)).',fullfile(nodePositionsPath, filename)...
+            );
     end
-    
+
     % Iterates through all the nodes
     for iterateTx = 1:paraCfgInput.numberOfNodes
         for iterateRx = iterateTx+1:paraCfgInput.numberOfNodes
@@ -203,9 +212,19 @@ for iterateTimeDivision = 1:paraCfgInput.numberOfTimeDivisions
                 for iteratePaaRx = 1:nPAA_centroids(iterateRx)
                     output = [];
                     if (paraCfgInput.numberOfNodes >= 2 || paraCfgInput.switchRandomization == 1)
-                        Tx = nodeCfgInput.PAA_info{iterateTx}.centroid_position(iteratePaaTx,:);%nodeLoc(iterateTx, :);
-                        Rx = nodeCfgInput.PAA_info{iterateRx}.centroid_position(iteratePaaRx,:);%nodeLoc(iterateRx, :);
-                        
+                        Tx = squeeze(nodeCfgInput.PAA_info{iterateTx}.centroid_position(iterateTimeDivision,iteratePaaTx,:)).';%nodeLoc(iterateTx, :);
+                        Rx = squeeze(nodeCfgInput.PAA_info{iterateRx}.centroid_position(iterateTimeDivision,iteratePaaRx,:)).';%nodeLoc(iterateRx, :);
+                        QTx.cTx = nodeCfgInput.PAA_info{iterateTx}.node_centroid(iterateTimeDivision,:,:);
+                        QTx.euc = nodeCfgInput.nodeEuclidian(iterateTimeDivision,:, iterateTx);
+                        QRx.cRx = nodeCfgInput.PAA_info{iterateRx}.node_centroid(iterateTimeDivision,:,:);
+                        QRx.euc = nodeCfgInput.nodeEuclidian(iterateTimeDivision,:, iterateRx);
+%                         if iterateTimeDivision==1886, keyboard, end
+                        [Tx] = pointRotation(Tx, ...
+                            QTx.cTx,...
+                            QTx.euc);
+                        [Rx] = pointRotation(Rx, ...
+                            QRx.cRx,...
+                            QRx.euc);                               
                         vtx = nodeVelocities(iterateTx, :);
                         vrx = nodeVelocities(iterateRx, :);
                     end
@@ -213,15 +232,18 @@ for iterateTimeDivision = 1:paraCfgInput.numberOfTimeDivisions
                     % LOS Path generation
                     [switchLOS, output] = LOSOutputGenerator(CADop, Rx, Tx,...
                         output, vtx, vrx, switchPolarization, switchCp,...
-                        polarizationTx, paraCfgInput.carrierFrequency);
-                    
+                        polarizationTx, paraCfgInput.carrierFrequency, 'qTx', QTx, 'qRx', QRx);
+
                     if paraCfgInput.switchSaveVisualizerFiles && switchLOS
                         multipath1 = [Tx, Rx];
-                        filename = sprintf('MpcTx%dRx%dRefl%dTrc%d.csv',...
-                            iterateTx-1, iterateRx-1, 0, iterateTimeDivision-1);
-                        csvwrite(fullfile(mpcCoordinatesPath, filename),...
-                            multipath1);
-                        
+                        if ~paraCfgInput.jsonOutput
+                            filename = sprintf('MpcTx%dPAA%dRx%dPAA%dRefl%dTrc%d.csv',...
+                                iterateTx-1, iteratePaaTx-1, iterateRx-1, iteratePaaRx-1, 0, iterateTimeDivision-1);
+                            csvwrite(fullfile(mpcCoordinatesPath, filename),...
+                                multipath1);
+                        else
+                            Mpc{iterateTx,iteratePaaTx,iterateRx,iteratePaaRx, 1, iterateTimeDivision+1} =multipath1;
+                        end
                     end
                     
                     % Higher order reflections (Non LOS)
@@ -247,19 +269,25 @@ for iterateTimeDivision = 1:paraCfgInput.numberOfTimeDivisions
                             switchPolarization, polarizationTx, [],...
                             polarizationRx, [], switchCp,...
                             paraCfgInput.switchQDGenerator,...
-                            paraCfgInput.carrierFrequency,'indStoc', Nrealizations);
+                            paraCfgInput.carrierFrequency,'indStoc', Nrealizations,...
+                            'qTx', QTx, 'qRx', QRx);
                         
                         if paraCfgInput.switchSaveVisualizerFiles &&...
                                 size(multipathTemporary,1) > 0
                             
                             multipath1 = multipathTemporary(1:count,...
                                 2:size(multipathTemporary,2));
-                            filename = sprintf('MpcTx%dRx%dRefl%dTrc%d.csv',...
-                                iterateTx-1, iteratePaaTx-1,...
-                                iterateRx-1, iteratePaaRx-1,...
-                                iterateOrderOfReflection, iterateTimeDivision-1);
-                            csvwrite(fullfile(mpcCoordinatesPath, filename),...
-                                multipath1);
+                            if  ~paraCfgInput.jsonOutput
+                                filename = sprintf('MpcTx%dPAA%dRx%dPAA%dRefl%dTrc%d.csv',...
+                                    iterateTx-1, iteratePaaTx-1,...
+                                    iterateRx-1, iteratePaaRx-1,...
+                                    iterateOrderOfReflection, iterateTimeDivision-1);
+                                csvwrite(fullfile(mpcCoordinatesPath, filename),...
+                                    multipath1);
+                            else
+                                Mpc{iterateTx,iteratePaaTx,iterateRx,iteratePaaRx, iterateOrderOfReflection+1, iterateTimeDivision+1} =multipath1;
+                            end
+
                         end
                         if size(output,1)==1
                             output = repmat(output, 1,1,Nrealizations);
@@ -273,26 +301,68 @@ for iterateTimeDivision = 1:paraCfgInput.numberOfTimeDivisions
                         end
                         
                     end
-                    eval(['outputPAA{iterateTx, iterateRx}.paaTx',num2str(iteratePaaTx),'paaRx', num2str(iteratePaaRx), '= output'] );
-                    eval(['outputPAA{iterateRx, iterateTx}.paaTx',num2str(iteratePaaRx),'paaRx', num2str(iteratePaaTx), '= reverseOutputTxRx(output)'] );
+                    eval(['outputPAA{iterateTx, iterateRx}.paaTx',num2str(iteratePaaTx),'paaRx', num2str(iteratePaaRx), '= output;'] );
+                    eval(['outputPAA{iterateRx, iterateTx}.paaTx',num2str(iteratePaaRx),'paaRx', num2str(iteratePaaTx), '= reverseOutputTxRx(output);'] );
                 end
             end
             
         end
     end
-end
-outputPAA = generateChannelPaa(outputPAA, nodeCfgInput.PAA_info); %#ok<NODEF>
+
+outputPAATime(:,:,iterateTimeDivision) = generateChannelPaa(outputPAA, nodeCfgInput.PAA_info); %#ok<NODEF>
 
 for iterateTx = 1:paraCfgInput.numberOfNodes
     for iterateRx = iterateTx+1:paraCfgInput.numberOfNodes
-        writeQdFileOutput(outputPAA{iterateTx, iterateRx}, paraCfgInput.useOptimizedOutputToFile, fids, iterateTx, iterateRx,...
+        writeQdFileOutput(outputPAATime{iterateTx, iterateRx,iterateTimeDivision}, paraCfgInput.useOptimizedOutputToFile, fids, iterateTx, iterateRx,...
             qdFilesPath,...
             paraCfgInput.qdFilesFloatPrecision);
-        writeQdFileOutput(outputPAA{iterateRx,iterateTx}, paraCfgInput.useOptimizedOutputToFile, fids, iterateRx,iterateTx,...
+        writeQdFileOutput(outputPAATime{iterateRx,iterateTx,iterateTimeDivision}, paraCfgInput.useOptimizedOutputToFile, fids, iterateRx,iterateTx,...
             qdFilesPath,...
             paraCfgInput.qdFilesFloatPrecision);
     end
 end
+clear outputPAA
+end
+
+if paraCfgInput.jsonOutput
+ writeQdJsonOutput(outputPAATime,...
+            qdFilesPath,...
+            paraCfgInput.qdFilesFloatPrecision);
+
+Mpc(:,:,:,:,:,1) = [];
+end
+if paraCfgInput.switchSaveVisualizerFiles && paraCfgInput.jsonOutput
+    % MPC       
+    fmpc = fopen(fullfile(mpcCoordinatesPath, 'Mpc.json'), 'w');
+    for iterateTx = 1:paraCfgInput.numberOfNodes
+        for iterateRx = iterateTx+1:paraCfgInput.numberOfNodes
+            for iteratePaaTx = 1:nPAA_centroids(iterateTx)
+                for iteratePaaRx = 1:nPAA_centroids(iterateRx)
+                    for reflOrd = 1:paraCfgInput.totalNumberOfReflections+1
+                        Mpc_t = squeeze(cell2mat(Mpc(iterateTx,iteratePaaTx,...
+                            iterateRx,iteratePaaRx,reflOrd,:)));
+                            s = struct('TX', iterateTx-1, 'PAA_TX', iteratePaaTx-1,...
+                                   'RX', iterateRx-1, 'PAA_RX', iteratePaaRx-1, ...
+                                   'Rorder', reflOrd-1, 'MPC', Mpc_t);
+                               json = jsonencode(s);
+                               fprintf(fmpc, '%s\n', json);  
+                    end
+                end
+            end
+        end
+    end
+    fclose(fmpc);
+    
+    
+    % Node Position
+    if paraCfgInput.switchSaveVisualizerFiles && paraCfgInput.jsonOutput
+        filename = sprintf('NodePositions.json');
+        f = fopen(fullfile(nodePositionsPath, filename), 'w');
+        fprintf(f, '%s', jsonencode(nodePosition));
+        fclose(f);
+    end
+end
+
 closeQdFilesIds(fids, paraCfgInput.useOptimizedOutputToFile);
-varargout{1} = outputPAA;
+% varargout{1} = outputPAA;
 end

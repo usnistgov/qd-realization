@@ -134,6 +134,8 @@ para = fieldToNum(para, 'qdFilesFloatPrecision', [], 6);
 % Default: 1 (true)
 para = fieldToNum(para, 'useOptimizedOutputToFile', [], 1);
 
+para = fieldToNum(para, 'jsonOutput', [], 1);
+
 end
 
 

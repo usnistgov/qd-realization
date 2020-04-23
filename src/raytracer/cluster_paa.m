@@ -43,16 +43,24 @@ if ~exist('l_cor','var'),     l_cor = 50;   end
 
 C = 3e8;
 wavelength =C/fc;
+squeezeAndReshape = @(x) reshape(squeeze(x), [], 3); % Helper anonymus for using unique when multiple time divisions
+if ismatrix(nodeLoc)
+    nodeLocTmp = zeros([1,size(nodeLoc)]);
+    nodeLocTmp(1,:,:) = nodeLoc;
+    nodeLoc = nodeLocTmp;
+end
 
 %% Process PAA positions
 numberOfNodes = length(nodePAA_position);
 PAA_distance_paaCombinations = cell([1,numberOfNodes]);
 PAA_info = cell([1,numberOfNodes]);
+numberTimeDivision = size(nodeLoc,1);
 
 %% Clustering: loop on nodes
 for node_id = 1:numberOfNodes
     nPAA = size(nodePAA_position{node_id},1);
     PAA_info{node_id}.nPAA_node = nPAA;
+    PAA_info{node_id}.centroids = 1;
     PAA_node_to_cluster = 1:nPAA;
     node_clustered = [];
     idx_paa=0;
@@ -77,7 +85,7 @@ for node_id = 1:numberOfNodes
                 unique(idx(sum(ismember(idx,node_to_cluster(popular_node_id)),2)>0, :)),...
                 [], 1); % Cluster of nodes connected with popular node
             PAA_info{node_id}.centroids(idx_paa) = node_to_cluster(popular_node_id);
-            PAALoc(idx_paa, :) =nodeLoc(node_id, :) + nodePAA_position{node_id}(PAA_info{node_id}.centroids(idx_paa),:);%#ok<*EMVDF>
+            PAALoc(:,idx_paa, :) =nodeLoc(:,node_id, :) + repmat(nodePAA_position{node_id}(PAA_info{node_id}.centroids(idx_paa),:), [numberTimeDivision, 1,1]);%#ok<*EMVDF>
             PAA_info{node_id}.generationMethod(idx_paa) = 0;
             node_clustered = [node_clustered; PAA_info{node_id}.node_clusters{idx_paa}]; %#ok<AGROW>
             PAA_info{node_id}.centroids_shift{idx_paa} = repmat(nodePAA_position{node_id}(PAA_info{node_id}.centroids(idx_paa),:), length(PAA_info{node_id}.node_clusters{idx_paa}),1)-nodePAA_position{node_id}(PAA_info{node_id}.node_clusters{idx_paa} ,:);
@@ -126,7 +134,7 @@ for node_id = 1:numberOfNodes
                 PAA_info{node_id}.centroids(idx_paa) =PAA_info{node_id}.centroids(ct);
                 PAA_info{node_id}.centroids_shift{idx_paa}  = ...
                 repmat(nodePAA_position{node_id}(PAA_info{node_id}.centroids(idx_paa),:), length(PAA_info{node_id}.node_clusters{idx_paa}),1)-nodePAA_position{node_id}(PAA_info{node_id}.node_clusters{idx_paa} ,:);
-                PAALoc(idx_paa, :) =nodeLoc(node_id, :) + nodePAA_position{node_id}(PAA_info{node_id}.centroids(idx_paa),:);
+                PAALoc(:,idx_paa, :) =nodeLoc(:,node_id, :) + nodePAA_position{node_id}(PAA_info{node_id}.centroids(idx_paa),:);
                 PAA_info{node_id}.generationMethod(idx_paa) = 1;
                 node_clustered = [node_clustered;PAA_info{node_id}.node_clusters{idx_paa}];
             end
@@ -143,7 +151,7 @@ for node_id = 1:numberOfNodes
             PAA_info{node_id}.node_clusters{idx_paa+m_id} = missing_paa(m_id);
             PAA_info{node_id}.centroids(idx_paa+m_id) = missing_paa(m_id);
             PAA_info{node_id}.centroids_shift{idx_paa+m_id}  = zeros(1,3);
-            PAALoc(idx_paa+m_id, :) =nodeLoc(node_id, :) + nodePAA_position{node_id}(PAA_info{node_id}.centroids(idx_paa+m_id),:);
+            PAALoc(:,idx_paa+m_id, :) =squeezeAndReshape(nodeLoc(:,node_id, :)) + nodePAA_position{node_id}(PAA_info{node_id}.centroids(idx_paa+m_id),:);
             PAA_info{node_id}.generationMethod(idx_paa+m_id)=2;
         end
     end
@@ -156,20 +164,21 @@ for node_id = 1:numberOfNodes
         PAA_info{node_id}.node_clusters = {1};
         PAA_info{node_id}.centroids = 1;
         PAA_info{node_id}.centroids_shift = {zeros(1,3)};
-        PAA_info{node_id}.PAA_loc =nodeLoc(node_id, :);
+        PAA_info{node_id}.PAA_loc =nodeLoc(:,node_id, :);
     end    
 end
 
 %% Interface with channel model
 paa_id_init = 0;
 tot_number_paa = sum(arrayfun(@(x) length(unique(x{:}.centroids)), PAA_info));
-nodeLoc2 = zeros(tot_number_paa,3);
-st_id = 1;
+% nodeLoc2 = zeros(tot_number_paa,3);
+% st_id = 1;
 for node_id  = 1:numberOfNodes
-    unique_PAA_location = unique(PAA_info{node_id}.PAA_loc, 'rows', 'stable');
-    en_id = st_id + size(unique_PAA_location,1)-1;
-    nodeLoc2(st_id:en_id,:) = unique_PAA_location;
-    st_id = en_id + 1;
+    [~, id ] = unique(squeezeAndReshape(PAA_info{node_id}.PAA_loc(1,:,:)), 'rows', 'stable');
+    unique_PAA_location = PAA_info{node_id}.PAA_loc(:,id,:);
+%     en_id = st_id + size(unique_PAA_location,1)-1;
+%     nodeLoc2(st_id:en_id,:) = unique_PAA_location;
+%     st_id = en_id + 1;
     [unique_centroids,position_centroids] = unique(PAA_info{node_id}.centroids);
     [~,position_centroids_sorted] = sort(position_centroids);
     centroid_rep = histc(PAA_info{node_id}.centroids, unique_centroids);
@@ -186,7 +195,8 @@ for node_id  = 1:numberOfNodes
     end
     paa_id_init = 0;%paa_id_init+ length(centroid_rep);
     PAA_info{node_id}.centroid_position = unique_PAA_location;
-    PAA_info{node_id}.nPAA_centroids = size(PAA_info{node_id}.centroid_position,1);
+    PAA_info{node_id}.nPAA_centroids = size(PAA_info{node_id}.centroid_position,2);
+    PAA_info{node_id}.node_centroid  =   squeeze(nodeLoc(:, node_id,:));
 end
 
 end
