@@ -134,6 +134,8 @@ if switchRandomization == 0
             %                 end
         end
         %         end
+        listing = dir(fullfile(scenarioNameStr, 'Input'));
+
         for iterateSizeListing = 1:size(listing, 1)
             ln = listing(iterateSizeListing).name;
             
