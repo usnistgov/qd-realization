@@ -1,4 +1,4 @@
-function writeQdJsonOutput(output, qdFilesPath, precision)
+function writeQdJsonOutput(output, nPAA_centroids, qdFilesPath, precision)
 %WRITEQDFILEOUTPUT Writes timestamp information to QdFile
 %
 % INPUTS:
@@ -40,22 +40,34 @@ ITER  = size(output,3);
 
 for tx = 1:NODES
     for rx = tx+1:NODES
-        for txPaa = 1:2
-            for rxPaa = 1:2
+        for txPaa = 1:nPAA_centroids(tx)
+            for rxPaa = 1:nPAA_centroids(rx)
                 mimoCh = squeeze(output(tx,rx,:));
 %                 sisoCh = mimoCh(:,:, (txPaa-1)*2+rxPaa);
                 sisoCh =cell2mat(cellfun(@(x) x(:,:,(txPaa-1)*2+rxPaa), mimoCh,'UniformOutput', false));
-                NRAYS = size(sisoCh,1)/ITER;
-                s = struct('TX', tx-1, 'RX', rx-1,...
+                rowDist = cellfun(@(x) size(x,1), mimoCh);
+%                 NRAYS = size(sisoCh,1)/ITER;
+%                 s = struct('TX', tx-1, 'RX', rx-1,...
+%                                    'PAA_TX', txPaa-1, 'PAA_RX', rxPaa-1, ...
+%                                    'Rays', NRAYS, ...
+%                                    'Delay',reshape(sisoCh(:,8), NRAYS,ITER),...
+%                                    'Gain', reshape(sisoCh(:,9), NRAYS,ITER),...
+%                                    'Phase',reshape(sisoCh(:,18),NRAYS,ITER),...
+%                                    'AODEL',reshape(sisoCh(:,11), NRAYS,ITER),...
+%                                    'AODAZ',reshape(sisoCh(:,10), NRAYS,ITER),...
+%                                    'AOAEL',reshape(sisoCh(:,13), NRAYS,ITER),...
+%                                    'AOAAZ',reshape(sisoCh(:,12), NRAYS,ITER)...
+%                                    );
+                               s = struct('TX', tx-1, 'RX', rx-1,...
                                    'PAA_TX', txPaa-1, 'PAA_RX', rxPaa-1, ...
-                                   'Rays', NRAYS, ...
-                                   'Delay',reshape(sisoCh(:,8), NRAYS,ITER),...
-                                   'Gain', reshape(sisoCh(:,9), NRAYS,ITER),...
-                                   'Phase',reshape(sisoCh(:,18),NRAYS,ITER),...
-                                   'AODEL',reshape(sisoCh(:,11), NRAYS,ITER),...
-                                   'AODAZ',reshape(sisoCh(:,10), NRAYS,ITER),...
-                                   'AOAEL',reshape(sisoCh(:,13), NRAYS,ITER),...
-                                   'AOAAZ',reshape(sisoCh(:,12), NRAYS,ITER)...
+                                  ...%'Rays', NRAYS, ...
+                                   'Delay',mat2cell(sisoCh(:,8), rowDist),...
+                                   'Gain', mat2cell(sisoCh(:,9), rowDist),...
+                                   'Phase',mat2cell(sisoCh(:,18), rowDist),...
+                                   'AODEL',mat2cell(sisoCh(:,11), rowDist),...
+                                   'AODAZ',mat2cell(sisoCh(:,10), rowDist),...
+                                   'AOAEL',mat2cell(sisoCh(:,13), rowDist),...
+                                   'AOAAZ',mat2cell(sisoCh(:,12), rowDist)...
                                    );
                                json = jsonencode(s);
                                fprintf(fid, '%s\n', json);  
@@ -65,67 +77,67 @@ for tx = 1:NODES
 end
 fclose(fid);
 
-if isstruct(output)  
-    sz = structfun(@size, output, 'UniformOutput', false);
-    fn = fieldnames(sz);
-    id_st= 1;
-    for i = 1:numel(fn)
-        sz_paa = [size(eval(['output.',fn{i}])),1];
-        id_end= id_st+sz_paa(3)-1;        
-        output_cell(:, :, id_st:id_end) = mat2cell(eval(['output.',fn{i}]), sz_paa(1), sz_paa(2), ones(1,sz_paa(3)));
-        id_st=id_st+sz_paa(3);
-    end
-    output = squeeze(output_cell);
-    numChan = length(output);
-
-else
-    numRays = size(output,1);
-    numProp = size(output,2);
-    numChan = size(output,3);
-    output = mat2cell(output, numRays,numProp, ones(1,numChan));
-end
-% fprintf(fid, '%d\n', numChan);
-
-if isempty(output)
-    return
-end
-
-% if any(any(isnan(output(:, [8, 9, 18, 11, 10, 13, 12]))))
-%     warning('Writing NaN in QD file')
+% if isstruct(output)  
+%     sz = structfun(@size, output, 'UniformOutput', false);
+%     fn = fieldnames(sz);
+%     id_st= 1;
+%     for i = 1:numel(fn)
+%         sz_paa = [size(eval(['output.',fn{i}])),1];
+%         id_end= id_st+sz_paa(3)-1;        
+%         output_cell(:, :, id_st:id_end) = mat2cell(eval(['output.',fn{i}]), sz_paa(1), sz_paa(2), ones(1,sz_paa(3)));
+%         id_st=id_st+sz_paa(3);
+%     end
+%     output = squeeze(output_cell);
+%     numChan = length(output);
+% 
+% else
+%     numRays = size(output,1);
+%     numProp = size(output,2);
+%     numChan = size(output,3);
+%     output = mat2cell(output, numRays,numProp, ones(1,numChan));
 % end
-
-floatFormat = sprintf('%%.%dg',precision);
-formatSpec = [repmat([floatFormat,','],1,numRays-1), [floatFormat,'\n']];
-
-for id = 1:numChan
-    output_id = output{id};
-    numRays = size(output_id,1);
-    fprintf(fid, '%d\n', numRays);
-    formatSpec = [repmat([floatFormat,','],1,numRays-1), [floatFormat,'\n']];
-
-    % Stores delay [s]
-    fprintf(fid,formatSpec,output_id(:,8));
-    
-    % Stores  path gain [dB]
-    fprintf(fid,formatSpec,output_id(:,9));
-    
-    % Stores  phase [rad]
-    fprintf(fid,formatSpec,output_id(:,18));
-    
-    % Stores Angle of departure elevation [deg]
-    fprintf(fid,formatSpec,output_id(:,11));
-    
-    % Stores Angle of departure azimuth [deg]
-    fprintf(fid,formatSpec,output_id(:,10));
-    
-    % Stores Angle of arrival elevation [deg]
-    fprintf(fid,formatSpec,output_id(:,13));
-    
-    % Stores Angle of arrival azimuth [deg]
-    fprintf(fid,formatSpec,output_id(:,12));
-end
-
-if ~useOptimizedOutputToFile
-    fclose(fid);
-end
+% % fprintf(fid, '%d\n', numChan);
+% 
+% if isempty(output)
+%     return
+% end
+% 
+% % if any(any(isnan(output(:, [8, 9, 18, 11, 10, 13, 12]))))
+% %     warning('Writing NaN in QD file')
+% % end
+% 
+% floatFormat = sprintf('%%.%dg',precision);
+% formatSpec = [repmat([floatFormat,','],1,numRays-1), [floatFormat,'\n']];
+% 
+% for id = 1:numChan
+%     output_id = output{id};
+%     numRays = size(output_id,1);
+%     fprintf(fid, '%d\n', numRays);
+%     formatSpec = [repmat([floatFormat,','],1,numRays-1), [floatFormat,'\n']];
+% 
+%     % Stores delay [s]
+%     fprintf(fid,formatSpec,output_id(:,8));
+%     
+%     % Stores  path gain [dB]
+%     fprintf(fid,formatSpec,output_id(:,9));
+%     
+%     % Stores  phase [rad]
+%     fprintf(fid,formatSpec,output_id(:,18));
+%     
+%     % Stores Angle of departure elevation [deg]
+%     fprintf(fid,formatSpec,output_id(:,11));
+%     
+%     % Stores Angle of departure azimuth [deg]
+%     fprintf(fid,formatSpec,output_id(:,10));
+%     
+%     % Stores Angle of arrival elevation [deg]
+%     fprintf(fid,formatSpec,output_id(:,13));
+%     
+%     % Stores Angle of arrival azimuth [deg]
+%     fprintf(fid,formatSpec,output_id(:,12));
+% end
+% 
+% if ~useOptimizedOutputToFile
+%     fclose(fid);
+% end
 end
