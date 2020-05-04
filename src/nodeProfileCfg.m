@@ -159,8 +159,8 @@ if switchRandomization == 0
                     nodeEuclidianTemp = load(fullfile(inputPath, ln));
                     
                     try
-                        numberTracePoints = size(nodeEuclidianTemp,1);
-                        nodeEuclidian(1:numberTracePoints, :, iterateNumberOfNodes) = nodeEuclidianTemp;
+                        numberTracePoints =  min(size(nodeEuclidianTemp,1),paraCfg.numberOfTimeDivisions);
+                        nodeEuclidian(1:numberTracePoints, :, iterateNumberOfNodes) = nodeEuclidianTemp(1:numberTracePoints,:);
                         nodeEuclidian(numberTracePoints+1:end, :, iterateNumberOfNodes) = repmat(nodeEuclidianTemp, [paraCfg.numberOfTimeDivisions-numberTracePoints,1,1]);
                         countListing = countListing + 1;
                     catch
@@ -313,7 +313,7 @@ if paraCfg.jsonOutput == 1
     fclose(fPaa);
 else
     for i = 1:length(nodePAA_position)
-        writematrix([squeeze(PAA_info{i}.centroid_position), nodeEuclidian(1:numberTracePoints,:,i)] ,strcat(paaPositionPathVisual, filesep,...
+        writematrix([reshape(squeeze(PAA_info{i}.centroid_position), [], 3), nodeEuclidian(1:numberOfTimeDivisions,:,i)] ,strcat(paaPositionPathVisual, filesep,...
             'Node', num2str(i-1) ,'PAAPosition.csv') );
         %  writematrix([squeeze(PAA_info{i}.centroid_position), ...
         %      permute(repmat(nodeEuclidian(1:numberTracePoints,:,i), [1 1 PAA_info{i}.nPAA_centroids]),[ 1, 3,2])] ,...
