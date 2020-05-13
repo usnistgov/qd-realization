@@ -45,6 +45,7 @@ mobilityType = paraCfg.mobilityType;
 numberOfNodes = paraCfg.numberOfNodes;
 numberOfTimeDivisions = paraCfg.numberOfTimeDivisions;
 switchRandomization = paraCfg.switchRandomization;
+numberTracePoints = paraCfg.numberOfTimeDivisions;
 
 % List of paths
 inputPath = fullfile(scenarioNameStr, 'Input');
@@ -53,8 +54,8 @@ paaPositionPath = strcat(scenarioNameStr,'/Output/Ns3/PAAPosition');
 paaPositionPathVisual = strcat(scenarioNameStr,'/Output/Visualizer/PAAPosition');
 
 %% Code
-nodePosition = [];
-nodeEuclidian =[];
+% nodePosition = [];
+nodeEuclidian= zeros(paraCfg.numberOfTimeDivisions,3, paraCfg.numberOfNodes);
 
 %% Random generation of node positions
 if switchRandomization == 1
@@ -106,6 +107,7 @@ if switchRandomization == 0
     else
         clear nodeVelocities;
         nodeVelocities = zeros(numberOfNodes, 3);
+        %nodePosition(1,:,:) = nodeLoc.';
     end
     
     if mobilityType == 2
@@ -210,14 +212,14 @@ end
 
 iterateNumberOfNodes = 1;
 nodeAntennaOrientation = zeros(numberOfNodes, 3, 3);
-nodePolarization = zeros(iterateNumberOfNodes, 2);
-nodePAA_position         = cell(numberOfNodes,1); %PAA vector position w.r.t node center
+nodePolarization       = zeros(iterateNumberOfNodes, 2);
+nodePAA_position       = cell(numberOfNodes,1); %PAA vector position w.r.t node center
 
 while iterateNumberOfNodes <= numberOfNodes
     nodeAntennaOrientation(iterateNumberOfNodes, :, :) = [1, 0, 0; 0, 1, 0; 0, 0, 1];
     nodePolarization(iterateNumberOfNodes, :) = [1, 0];
-    if isfile(strcat(inputPath, [filesep 'node'], num2str(iterateNumberOfNodes), 'PAAs_position.dat' ))
-        nodePAA_position{iterateNumberOfNodes} = load(strcat(inputPath, [filesep 'node'], num2str(iterateNumberOfNodes), 'PAAs_position.dat' ));
+    if isfile(strcat(inputPath, [filesep 'node'], num2str(iterateNumberOfNodes-1), 'PAAs_position.dat' ))
+        nodePAA_position{iterateNumberOfNodes} = load(strcat(inputPath, [filesep 'node'], num2str(iterateNumberOfNodes-1), 'PAAs_position.dat' ));
     else
         nodePAA_position{iterateNumberOfNodes} = [];
     end
@@ -243,13 +245,15 @@ if switchRandomization ~=0
     warning('Changing switchRandomization to %d', switchRandomization)
 end
 
-%% Process PAA position
-if isempty(nodePosition)
-    [PAA_info]  = cluster_paa(nodeLoc, nodePAA_position);
-else
-    [PAA_info]  = cluster_paa(permute(nodePosition, [1 3 2]), nodePAA_position);
+%Check if nodePosition has been generated
+if ~exist('nodePosition','var')
+    nodePosition = nodeLoc.';
 end
-% nodePosition
+
+%% Process PAA position
+
+[PAA_info]  = cluster_paa(nodePosition, nodePAA_position);
+
 switchRandomization = 0;
 
 % Check Temp Output Folder
@@ -313,7 +317,7 @@ if paraCfg.jsonOutput == 1
     fclose(fPaa);
 else
     for i = 1:length(nodePAA_position)
-        writematrix([reshape(squeeze(PAA_info{i}.centroid_position), [], 3), nodeEuclidian(1:numberOfTimeDivisions,:,i)] ,strcat(paaPositionPathVisual, filesep,...
+        writematrix([reshape(squeeze(PAA_info{i}.centroid_position), [], 3), reshape(repmat(nodeEuclidian(1:numberOfTimeDivisions,:,i), [1 1 PAA_info{i}.nPAA_centroids]), [],3)] ,strcat(paaPositionPathVisual, filesep,...
             'Node', num2str(i-1) ,'PAAPosition.csv') );
         %  writematrix([squeeze(PAA_info{i}.centroid_position), ...
         %      permute(repmat(nodeEuclidian(1:numberTracePoints,:,i), [1 1 PAA_info{i}.nPAA_centroids]),[ 1, 3,2])] ,...
@@ -339,7 +343,7 @@ nodeCfg.nodeLoc = cell2mat(...
 
 nodeCfg.nodeAntennaOrientation = nodeAntennaOrientation;
 nodeCfg.nodePolarization = nodePolarization;
-nodeCfg.nodePosition = nodePosition;
+nodeCfg.nodePosition = reshape(nodePosition, [], 3,numberOfNodes);
 if isempty(nodeEuclidian)
     nodeCfg.nodeEuclidian = zeros(size(nodeCfg.nodeLoc));
 else

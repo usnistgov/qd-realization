@@ -127,8 +127,10 @@ if paraCfgInput.switchSaveVisualizerFiles == 1
 end
 
 % Init output files
-fids = getQdFilesIds(qdFilesPath, paraCfgInput.numberOfNodes,...
-    paraCfgInput.useOptimizedOutputToFile);
+if ~paraCfgInput.jsonOutput
+    fids = getQdFilesIds(qdFilesPath, paraCfgInput.numberOfNodes,...
+        paraCfgInput.useOptimizedOutputToFile);
+end
 
 %% Init
 Tx = reshape(squeeze(nodeLoc(1,1,:)), [],3);
@@ -173,22 +175,31 @@ timeDivisionValue = paraCfgInput.totalTimeDuration / paraCfgInput.numberOfTimeDi
 % reflected). At every time step the positions of all nodes are updated
 for iterateTimeDivision = 1:paraCfgInput.numberOfTimeDivisions
     if mod(iterateTimeDivision,100)==0
-    display([num2str(iterateTimeDivision/32070*100),'%'])
+    disp([fprintf('%2.2f', iterateTimeDivision/paraCfgInput.numberOfTimeDivisions*100),'%'])
     end
     % update mobility
     if paraCfgInput.mobilityType == 1
         if paraCfgInput.numberOfNodes == 2
-            [nodeLoc, Tx, Rx, vtx, vrx, nodeVelocities] = LinearMobility...
+            [nodeLoc, Tx, Rx, vtx, vrx, nodeVelocities,nodeCfgInput.PAA_info] = LinearMobility...
                 (paraCfgInput.numberOfNodes, paraCfgInput.switchRandomization, ...
                 iterateTimeDivision-1, nodeLoc, nodeVelocities, vtx,...
                 vrx,TxInitial, RxInitial, timeDivisionValue,...
-                CADop, Tx, Rx);
+                CADop, Tx, Rx, nodeCfgInput.PAA_info);
         else
-            [nodeLoc, Tx, Rx, vtx, vrx, nodeVelocities] = LinearMobility...
+            [nodeLoc, Tx, Rx, vtx, vrx, nodeVelocities,nodeCfgInput.PAA_info] = LinearMobility...
                 (paraCfgInput.numberOfNodes, paraCfgInput.switchRandomization,...
                 iterateTimeDivision-1, nodeLoc, nodeVelocities,...
                 [], [], TxInitial, RxInitial, timeDivisionValue, ...
-                CADop, Tx, Rx);
+                CADop, Tx, Rx, nodeCfgInput.PAA_info);
+%             for i = 1:paraCfgInput.numberOfNodes
+%                 paaLoc(1,:,:) = nodeCfgInput.PAA_info{i}.centroid_position(iterateTimeDivision,i,:);
+%                 paaVel = nodeVelocities(i,:);
+%                 [paaLoc, Tx, ~, vtx, vrx, nodeVelocities] = LinearMobility...
+%                 (nodeCfgInput.PAA_info{i}.nPAA_node, paraCfgInput.switchRandomization,...
+%                 iterateTimeDivision-1, paaLoc, paaVel,...
+%                 [], [], [], [], timeDivisionValue, ...
+%                 CADop, Tx, []);
+%             end
         end
         
     elseif paraCfgInput.mobilityType == 2
@@ -360,11 +371,17 @@ if paraCfgInput.switchSaveVisualizerFiles && paraCfgInput.jsonOutput
     if paraCfgInput.switchSaveVisualizerFiles && paraCfgInput.jsonOutput
         filename = sprintf('NodePositions.json');
         f = fopen(fullfile(nodePositionsPath, filename), 'w');
-        fprintf(f, '%s', jsonencode(nodePosition));
+        for i = 1:paraCfgInput.numberOfNodes
+            s = struct('Node' , i-1, 'Position', nodePosition(:,:,i), ...
+                'Rotation', nodeCfgInput.nodeEuclidian(:,:,i));
+                    fprintf(f, '%s\n', jsonencode(s));
+        end
         fclose(f);
     end
 end
 
-closeQdFilesIds(fids, paraCfgInput.useOptimizedOutputToFile);
+if ~paraCfgInput.jsonOutput
+    closeQdFilesIds(fids, paraCfgInput.useOptimizedOutputToFile);
+end
 % varargout{1} = outputPAA;
 end
