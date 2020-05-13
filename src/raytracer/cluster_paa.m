@@ -3,10 +3,11 @@ function [PAA_info]  = cluster_paa(nodeLoc, nodePAA_position, varargin)
 %nodes nodeLoc and the position of the PAAs each node nodePAA_position.
 %
 %   [PAA_info]  =  CLUSTER_PAA(nodeLoc, nodePAA_position)
-%   **nodeLoc is the Nx3 matrix containing the 3D coordinates of the N nodes
+%   **nodeLoc is the TxNx3 matrix containing the 3D coordinates of the N
+%   nodes at different T time instances
 %   **nodePAA_position is the Nx1 cell array containing the 3D coordinates of
-%   each PAA in the N nodes. If PAAs are not defined input is the Nx1 cell array
-%   of empty vectors {[], [], ..}
+%   each PAA in the N nodes at different T time instances. If PAAs are not 
+%   defined input is the Nx1 cell array of empty vectors {[], [], ..}
 %
 %   PAA_info{i}:
 %     **nPAA_node: number of PAA in node i
@@ -18,7 +19,7 @@ function [PAA_info]  = cluster_paa(nodeLoc, nodePAA_position, varargin)
 %     **nodePAAInfo: flags for interfacing with Raytracer
 %     **PAA_position: matrix of unique centroid positions. If no PAAs are
 %     defined in input, the output is the location of the node
-%     **nPAA_centroids: 3 number of unique centroids
+%     **nPAA_centroids: number of unique centroids
 %
 %   [PAA_info, nodeLoc2,nodePAAInfo]  =  CLUSTER_PAA(nodeLoc, nodePAA_position, option, value)
 %
@@ -41,13 +42,20 @@ end
 if ~exist('fc','var'),     fc=60e9;        end
 if ~exist('l_cor','var'),     l_cor = 50;   end
 
+assert(size(nodeLoc,ndims(nodeLoc)-1) == 3, 'Provide (x,y,z) coordinates as input of cluster_paa')
+assert(size(nodeLoc,ndims(nodeLoc)) == length(nodePAA_position), 'Provide correct input: each node should have a correspondent PAAs description')
+
 C = 3e8;
 wavelength =C/fc;
 squeezeAndReshape = @(x) reshape(squeeze(x), [], 3); % Helper anonymus for using unique when multiple time divisions
+findColumn = @(x,y) sum(ismember(x,y),2)>0;
+
 if ismatrix(nodeLoc)
-    nodeLocTmp = zeros([1,size(nodeLoc)]);
-    nodeLocTmp(1,:,:) = nodeLoc;
+    nodeLocTmp = zeros([1,flip(size(nodeLoc))]);
+    nodeLocTmp(1,:,:) = nodeLoc.';
     nodeLoc = nodeLocTmp;
+else
+    nodeLoc = permute(nodeLoc, [1 3 2]);
 end
 
 %% Process PAA positions
@@ -58,13 +66,13 @@ numberTimeDivision = size(nodeLoc,1);
 
 %% Clustering: loop on nodes
 for node_id = 1:numberOfNodes
-    nPAA = size(nodePAA_position{node_id},1);
+    nPAA = size(nodePAA_position{node_id},1); % Number of PAAs at node node_id
     PAA_info{node_id}.nPAA_node = nPAA;
     PAA_info{node_id}.centroids = 1;
-    PAA_node_to_cluster = 1:nPAA;
-    node_clustered = [];
+    PAA_node_to_cluster = 1:nPAA; % Indexes of nodes to cluster
+    node_clustered = [];          % Nodes in the cluster
     idx_paa=0;
-    paaIdComb  = nchoosek(1:nPAA ,2);
+    paaIdComb  = nchoosek(1:nPAA ,2); % Indexes of all PAA combinations
     
     PAA_distance_paaCombinations{node_id} = sqrt(...
         sum(abs(...
@@ -72,23 +80,26 @@ for node_id = 1:numberOfNodes
         nodePAA_position{node_id}(paaIdComb(:,2),:)...
         ).^2, ...
         2)...
-        ); 
+        ); % Compute pairwise distances
     
     % Find possible clusters of PAA closer than l/2
     if any(PAA_distance_paaCombinations{node_id}<= wavelength/2+eps)
         idx_paa=idx_paa+1;
         idx = paaIdComb(PAA_distance_paaCombinations{node_id}<= wavelength/2+eps,:);% This couples can be combined
-        node_to_cluster = unique(idx(:));
+        node_to_cluster = unique(idx(:)); % Remove redundancy
         while numel(node_to_cluster)
             [~, popular_node_id] = max(histc(idx(:), node_to_cluster)); % Find node with most connections
             PAA_info{node_id}.node_clusters{idx_paa} = reshape(...
-                unique(idx(sum(ismember(idx,node_to_cluster(popular_node_id)),2)>0, :)),...
+                unique(idx(findColumn(idx,node_to_cluster(popular_node_id)), :)),...
                 [], 1); % Cluster of nodes connected with popular node
             PAA_info{node_id}.centroids(idx_paa) = node_to_cluster(popular_node_id);
-            PAALoc(:,idx_paa, :) =nodeLoc(:,node_id, :) + repmat(nodePAA_position{node_id}(PAA_info{node_id}.centroids(idx_paa),:), [numberTimeDivision, 1,1]);%#ok<*EMVDF>
+            PAALoc(:,idx_paa, :) =squeezeAndReshape(nodeLoc(:,node_id, :)) + ...
+                repmat(nodePAA_position{node_id}(PAA_info{node_id}.centroids(idx_paa),:), ...
+                [numberTimeDivision, 1,1]);%#ok<*EMVDF> % Add PAA shifts to PAA locations
             PAA_info{node_id}.generationMethod(idx_paa) = 0;
             node_clustered = [node_clustered; PAA_info{node_id}.node_clusters{idx_paa}]; %#ok<AGROW>
-            PAA_info{node_id}.centroids_shift{idx_paa} = repmat(nodePAA_position{node_id}(PAA_info{node_id}.centroids(idx_paa),:), length(PAA_info{node_id}.node_clusters{idx_paa}),1)-nodePAA_position{node_id}(PAA_info{node_id}.node_clusters{idx_paa} ,:);
+            PAA_info{node_id}.centroids_shift{idx_paa} = repmat(nodePAA_position{node_id}(PAA_info{node_id}.centroids(idx_paa),:), ...
+                length(PAA_info{node_id}.node_clusters{idx_paa}),1)-nodePAA_position{node_id}(PAA_info{node_id}.node_clusters{idx_paa} ,:); % Save shift from centroid
             node_to_cluster = node_to_cluster(~ismember(node_to_cluster,  PAA_info{node_id}.node_clusters{idx_paa})); % Node not considered in cluster
             idx_paa = idx_paa+1;
         end
@@ -111,7 +122,7 @@ for node_id = 1:numberOfNodes
             PAA_info{node_id}.node_clusters = PAA_info{node_id}.node_clusters(~ismember(1:numel(PAA_info{node_id}.node_clusters), cluster2del)); % Double-check this line
             PAA_info{node_id}.centroids(cluster2del) = [];
             PAA_info{node_id}.generationMethod(cluster2del) = [];
-            PAALoc(cluster2del, :) = [];
+            PAALoc(:,cluster2del, :) = [];
             PAA_info{node_id}.centroids_shift{cluster_idx} = repmat(nodePAA_position{node_id}(PAA_info{node_id}.centroids(cluster_idx),:), length(node_merged),1)-nodePAA_position{node_id}(PAA_info{node_id}.node_clusters{cluster_idx} ,:);
             PAA_info{node_id}.centroids_shift(cluster2del) = [];
             idx_paa = idx_paa-1;
@@ -119,8 +130,8 @@ for node_id = 1:numberOfNodes
     end
     
     % Find possible clusters of PAA between l/2 and l_cor*lambda
-    indepPAAidx = PAA_node_to_cluster(~ismember(PAA_node_to_cluster,node_clustered) );
-    row_idx = find(sum(ismember(paaIdComb, indepPAAidx),2)>0);
+    indepPAAidx = PAA_node_to_cluster(~ismember(PAA_node_to_cluster,node_clustered) ); % Node not clustered yet
+    row_idx = find(findColumn(paaIdComb, indepPAAidx));
     
     if  any(PAA_distance_paaCombinations{node_id}(row_idx,:)<= l_cor*wavelength/2 ...
             & PAA_distance_paaCombinations{node_id}(row_idx,:)> wavelength/2)
@@ -129,14 +140,15 @@ for node_id = 1:numberOfNodes
             row_with_centroid = idx(sum(ismember(idx,PAA_info{node_id}.centroids),2)>0,:);  % This couples can be combined
             for ct = 1:numel(PAA_info{node_id}.centroids)
                 idx_paa = idx_paa+1;
-                cluster_tmp = unique(row_with_centroid(sum(row_with_centroid == PAA_info{node_id}.centroids(ct),2)>0,:));
+                cluster_tmp = unique(row_with_centroid(findColumn(row_with_centroid, PAA_info{node_id}.centroids(ct)),:));
                 PAA_info{node_id}.node_clusters{idx_paa}  = cluster_tmp(cluster_tmp ~= PAA_info{node_id}.centroids(ct));
                 PAA_info{node_id}.centroids(idx_paa) =PAA_info{node_id}.centroids(ct);
                 PAA_info{node_id}.centroids_shift{idx_paa}  = ...
-                repmat(nodePAA_position{node_id}(PAA_info{node_id}.centroids(idx_paa),:), length(PAA_info{node_id}.node_clusters{idx_paa}),1)-nodePAA_position{node_id}(PAA_info{node_id}.node_clusters{idx_paa} ,:);
-                PAALoc(:,idx_paa, :) =nodeLoc(:,node_id, :) + nodePAA_position{node_id}(PAA_info{node_id}.centroids(idx_paa),:);
+                repmat(nodePAA_position{node_id}(PAA_info{node_id}.centroids(idx_paa),:),...
+                length(PAA_info{node_id}.node_clusters{idx_paa}),1)-nodePAA_position{node_id}(PAA_info{node_id}.node_clusters{idx_paa} ,:);
+                PAALoc(:,idx_paa, :) =squeezeAndReshape(nodeLoc(:,node_id, :)) + nodePAA_position{node_id}(PAA_info{node_id}.centroids(idx_paa),:);
                 PAA_info{node_id}.generationMethod(idx_paa) = 1;
-                node_clustered = [node_clustered;PAA_info{node_id}.node_clusters{idx_paa}];
+                node_clustered = [node_clustered;PAA_info{node_id}.node_clusters{idx_paa}]; %#ok<AGROW>
             end
         end
     end
@@ -170,7 +182,7 @@ end
 
 %% Interface with channel model
 paa_id_init = 0;
-tot_number_paa = sum(arrayfun(@(x) length(unique(x{:}.centroids)), PAA_info));
+% tot_number_paa = sum(arrayfun(@(x) length(unique(x{:}.centroids)), PAA_info));
 % nodeLoc2 = zeros(tot_number_paa,3);
 % st_id = 1;
 for node_id  = 1:numberOfNodes
@@ -184,7 +196,7 @@ for node_id  = 1:numberOfNodes
     centroid_rep = histc(PAA_info{node_id}.centroids, unique_centroids);
     centroid_rep = centroid_rep(position_centroids_sorted);
     size_paa= cellfun(@(x) length(x), PAA_info{node_id}.node_clusters);
-    nodePAAInfo = cell(numel(unique_centroids),1);
+%     nodePAAInfo = cell(numel(unique_centroids),1);
     unique_centroids=unique_centroids(position_centroids_sorted);
     for paa_id = 1:length(centroid_rep)
         PAA_info{node_id}.nodePAAInfo{paa_id_init+paa_id,1}.centroid_id = unique_centroids(paa_id);
@@ -196,7 +208,7 @@ for node_id  = 1:numberOfNodes
     paa_id_init = 0;%paa_id_init+ length(centroid_rep);
     PAA_info{node_id}.centroid_position = unique_PAA_location;
     PAA_info{node_id}.nPAA_centroids = size(PAA_info{node_id}.centroid_position,2);
-    PAA_info{node_id}.node_centroid  =   squeeze(nodeLoc(:, node_id,:));
+    PAA_info{node_id}.node_centroid(1:numberTimeDivision, 1:3)  =   squeezeAndReshape(nodeLoc(:, node_id,:));
 end
 
 end
