@@ -78,7 +78,7 @@ dod=pointRotation(Rx-Tx,[0 0 0], qTx.euc, 1);
 % delay is the total length of multipath
 delay=norm(dod);
 % Direction of arrival (DoA) is negative of DoD
-doa= pointRotation(-dod, [0 0 0], qRx.euc,1);
+doa= pointRotation(Tx-Rx, [0 0 0], qRx.euc,1);
 % Calculating Doppler factor for LOS
 velocityTxAlongDirectionOfDeparture=dot(velocityTx,-1.*dod);
 velocityRxAlongDirectionOfDeparture=dot(velocityRx,-1.*dod);
