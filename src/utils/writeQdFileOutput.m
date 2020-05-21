@@ -57,10 +57,10 @@ else
     output = mat2cell(output, numRays,numProp, ones(1,numChan));
 end
 % fprintf(fid, '%d\n', numChan);
-
-if isempty(output)
-    return
-end
+idEmpty = cellfun(@isempty, output);
+% if isempty(output)
+%     return
+% end
 
 % if any(any(isnan(output(:, [8, 9, 18, 11, 10, 13, 12]))))
 %     warning('Writing NaN in QD file')
@@ -68,8 +68,8 @@ end
 
 floatFormat = sprintf('%%.%dg',precision);
 formatSpec = [repmat([floatFormat,','],1,numRays-1), [floatFormat,'\n']];
-
-for id = 1:numChan
+numChanV = 1:numChan;
+for id = numChanV(~idEmpty)
     output_id = output{id};
     numRays = size(output_id,1);
     fprintf(fid, '%d\n', numRays);
