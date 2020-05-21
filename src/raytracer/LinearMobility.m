@@ -79,7 +79,7 @@ if (number_of_nodes>=2 || switch_randomization==1) && time_division==0
         Tx=node(Tx_i,:)+nodeShift;
         
         node(Tx_i,:)=Tx;
-        nodePAA{Tx_i} = updatePAAposition(nodePAA{Tx_i}, nodeShift); %#ok<AGROW>
+        nodePAA{Tx_i} = updatePAAposition(nodePAA{Tx_i}, nodeShift,time_division); %#ok<AGROW>
         
         Tx_test=node(Tx_i,:)+(node_v(Tx_i,:).*delt...
             .*(time_division+1));
@@ -113,7 +113,7 @@ if (number_of_nodes>=2 || switch_randomization==1) && time_division>0
         Tx=node(Tx_i,:)+nodeShift;
         
         node(Tx_i,:)=Tx;
-        nodePAA{Tx_i} = updatePAAposition(nodePAA{Tx_i}, nodeShift); %#ok<AGROW>
+        nodePAA{Tx_i} = updatePAAposition(nodePAA{Tx_i}, nodeShift,time_division); %#ok<AGROW>
         
         Tx_test=node(Tx_i,:)+(node_v(Tx_i,:).*delt.*(1+1));
         
@@ -134,13 +134,14 @@ end
 node = reshape(node, [1 size(node)]);
 end
 
-function nodePAA = updatePAAposition(nodePAA,nodeShift)
+function nodePAA = updatePAAposition(nodePAA,nodeShift,t)
 squeezeAndReshape = @(x) reshape(squeeze(x), [], 3); 
 
 if isempty(nodePAA)
 else
-    t= size(nodePAA.centroid_position,1);
-    nodePAA.centroid_position(t+1,:,:) = squeezeAndReshape(nodePAA.centroid_position(t,:,:)) + nodeShift;
-    nodePAA.node_centroid(t+1,:) = nodePAA.node_centroid(t,:) + nodeShift;
+    if t ~= 0
+        nodePAA.centroid_position(t+1,:,:) = squeezeAndReshape(nodePAA.centroid_position(t,:,:)) + nodeShift;
+        nodePAA.node_centroid(t+1,:) = nodePAA.node_centroid(t,:) + nodeShift;
+    end
 end
 end
