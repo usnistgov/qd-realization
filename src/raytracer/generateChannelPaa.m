@@ -71,13 +71,20 @@ for nt = all_nodes
                         ptr.paarx = c_r;
                         ptr.rot_tx = rot_tx;
                         ptr.rot_rx = rot_rx;
-                        ch_t_tmp = ddir2MIMO(t,info, ptr);
+                        if isempty(t)
+                            ch_t_tmp = [];
+                        else
+                            ch_t_tmp = ddir2MIMO(t,info, ptr);
+                        end
                         ch_t = cat(3, ch_t, ch_t_tmp);
 %                         size(ch_t)
                     end
                 end
                 ch_t_r = cat(3, ch_t_r, ch_t);
             end
+        end
+        if isempty(ch_t_r)
+            ch_t_r = [];
         end
         ch_out{nt, nr} = ch_t_r;
     end
