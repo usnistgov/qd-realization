@@ -119,21 +119,36 @@ if switchRandomization == 0
         %             ln = listing(iterateSizeListing).name;
         
         for iterateNumberOfNodes = 1:numberOfNodes
+            % If mobility matrix
             if sum(arrayfun(@(x) strcmp(x.name,['node',num2str(iterateNumberOfNodes-1),'mobility.mat']), listing))
                 savePositionFromTrace(fullfile(inputPath, sprintf('node%dmobility.mat', iterateNumberOfNodes-1)),...
                     fullfile(inputPath,sprintf('Node%dPosition.dat', iterateNumberOfNodes-1)));
                 saveEuclidianFromTrace(fullfile(inputPath, sprintf('node%dmobility.mat', iterateNumberOfNodes-1)),...
                     fullfile(inputPath,sprintf('Node%dEuclidian.dat', iterateNumberOfNodes-1)));
-            else
-                writematrix(nodeLoc(iterateNumberOfNodes,:), fullfile(inputPath,sprintf('Node%dPosition.dat', iterateNumberOfNodes-1)));
-                writematrix([0 0 0], fullfile(inputPath,sprintf('Node%dEuclidian.dat', iterateNumberOfNodes-1)));
+            else % If mobility matrix is not there check position and euclidian files
+                
+                % If only position write euclidian
+                if sum(arrayfun(@(x) strcmp(x.name,['Node',num2str(iterateNumberOfNodes-1),'Position.dat']), listing)) && ...
+                    ~ sum(arrayfun(@(x) strcmp(x.name,['Node',num2str(iterateNumberOfNodes-1),'Euclidian.dat']), listing)) 
+                    nlines = size(readmatrix(fullfile(inputPath,sprintf('Node%dPosition.dat', iterateNumberOfNodes-1))),1);
+                    writematrix(repmat([0 0  0], nlines,1), fullfile(inputPath,sprintf('Node%dEuclidian.dat', iterateNumberOfNodes-1)));
+                    
+                % If only euclidians write position                
+                elseif ~ sum(arrayfun(@(x) strcmp(x.name,['Node',num2str(iterateNumberOfNodes-1),'Position.dat']), listing)) && ...
+                     sum(arrayfun(@(x) strcmp(x.name,['Node',num2str(iterateNumberOfNodes-1),'Euclidian.dat']), listing)) 
+                 nlines = size(readmatrix(fullfile(inputPath,sprintf('Node%dEuclidian.dat', iterateNumberOfNodes-1))),1);
+                 writematrix(repmat(nodeLoc(iterateNumberOfNodes,:), nlines,1), fullfile(inputPath,sprintf('Node%dPosition.dat', iterateNumberOfNodes-1)));
+                                 
+                 % If both are there skip
+                elseif sum(arrayfun(@(x) strcmp(x.name,['Node',num2str(iterateNumberOfNodes-1),'Position.dat']), listing)) && ...
+                     sum(arrayfun(@(x) strcmp(x.name,['Node',num2str(iterateNumberOfNodes-1),'Euclidian.dat']), listing)) 
+                 
+                 % If they are not present
+                else
+                    writematrix(nodeLoc(iterateNumberOfNodes,:), fullfile(inputPath,sprintf('Node%dPosition.dat', iterateNumberOfNodes-1)));
+                    writematrix([0 0  0], fullfile(inputPath,sprintf('Node%dEuclidian.dat', iterateNumberOfNodes-1)));
+                end
             end
-            % %                 if strcmp(ln, sprintf('node%dmobility.mat', iterateNumberOfNodes))
-            %                     savePositionFromTrace(fullfile(inputPath, sprintf('node%dmobility.mat', iterateNumberOfNodes-1)),...
-            %                         fullfile(inputPath,sprintf('Node%dPosition.dat', iterateNumberOfNodes)));
-            %                     saveEuclidianFromTrace(fullfile(inputPath, sprintf('node%dmobility.mat', iterateNumberOfNodes-1)),...
-            %                         fullfile(inputPath,sprintf('Node%dEuclidian.dat', iterateNumberOfNodes)));
-            %                 end
         end
         %         end
         listing = dir(fullfile(scenarioNameStr, 'Input'));
@@ -317,13 +332,15 @@ if paraCfg.jsonOutput == 1
     fclose(fPaa);
 else
     for i = 1:length(nodePAA_position)
-        writematrix([reshape(squeeze(PAA_info{i}.centroid_position), [], 3), reshape(repmat(nodeEuclidian(1:numberOfTimeDivisions,:,i), [1 1 PAA_info{i}.nPAA_centroids]), [],3)] ,strcat(paaPositionPathVisual, filesep,...
-            'Node', num2str(i-1) ,'PAAPosition.csv') );
-        %  writematrix([squeeze(PAA_info{i}.centroid_position), ...
-        %      permute(repmat(nodeEuclidian(1:numberTracePoints,:,i), [1 1 PAA_info{i}.nPAA_centroids]),[ 1, 3,2])] ,...
-        %      strcat(paaPositionPathVisual, filesep,...
-        %             'Node', num2str(i-1) ,'PAAPosition.csv') );
-        
+        if mobilityType==1 &&  mobilitySwitch == 1
+            ntd =1;
+        else
+            ntd = numberOfTimeDivisions;
+        end
+        writematrix([reshape(squeeze(PAA_info{i}.centroid_position), [], 3), ...
+            reshape(repmat(nodeEuclidian(1:ntd,:,i), [1 1 PAA_info{i}.nPAA_centroids]), [],3)] ,...
+            strcat(paaPositionPathVisual, filesep,...
+            'Node', num2str(i-1) ,'PAAPosition.csv') );        
     end
 end
 
