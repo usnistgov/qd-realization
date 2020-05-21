@@ -178,7 +178,7 @@ for iterateTimeDivision = 1:paraCfgInput.numberOfTimeDivisions
     disp([fprintf('%2.2f', iterateTimeDivision/paraCfgInput.numberOfTimeDivisions*100),'%'])
     end
     % update mobility
-    if paraCfgInput.mobilityType == 1
+    if paraCfgInput.mobilityType == 1 && paraCfgInput.mobilitySwitch ==1
         if paraCfgInput.numberOfNodes == 2
             [nodeLoc, Tx, Rx, vtx, vrx, nodeVelocities,nodeCfgInput.PAA_info] = LinearMobility...
                 (paraCfgInput.numberOfNodes, paraCfgInput.switchRandomization, ...
@@ -191,18 +191,9 @@ for iterateTimeDivision = 1:paraCfgInput.numberOfTimeDivisions
                 iterateTimeDivision-1, nodeLoc, nodeVelocities,...
                 [], [], TxInitial, RxInitial, timeDivisionValue, ...
                 CADop, Tx, Rx, nodeCfgInput.PAA_info);
-%             for i = 1:paraCfgInput.numberOfNodes
-%                 paaLoc(1,:,:) = nodeCfgInput.PAA_info{i}.centroid_position(iterateTimeDivision,i,:);
-%                 paaVel = nodeVelocities(i,:);
-%                 [paaLoc, Tx, ~, vtx, vrx, nodeVelocities] = LinearMobility...
-%                 (nodeCfgInput.PAA_info{i}.nPAA_node, paraCfgInput.switchRandomization,...
-%                 iterateTimeDivision-1, paaLoc, paaVel,...
-%                 [], [], [], [], timeDivisionValue, ...
-%                 CADop, Tx, []);
-%             end
         end
-        
-    elseif paraCfgInput.mobilityType == 2
+        nodePosition(iterateTimeDivision,:,:) = permute(nodeLoc, [1 3 2]);
+    elseif paraCfgInput.mobilityType == 2  && paraCfgInput.mobilitySwitch ==1
         [nodeLoc, nodeVelocities] = NodeExtractor...
             (paraCfgInput.numberOfNodes,  paraCfgInput.switchRandomization, ...
             iterateTimeDivision, nodeLoc, nodeVelocities,...
@@ -321,7 +312,7 @@ for iterateTimeDivision = 1:paraCfgInput.numberOfTimeDivisions
         end
     end
 
-outputPAATime(:,:,iterateTimeDivision) = generateChannelPaa(outputPAA, nodeCfgInput.PAA_info); %#ok<NODEF>
+outputPAATime(:,:,iterateTimeDivision) = generateChannelPaa(outputPAA, nodeCfgInput.PAA_info);  %#ok<AGROW>
 if ~paraCfgInput.jsonOutput
     for iterateTx = 1:paraCfgInput.numberOfNodes
         for iterateRx = iterateTx+1:paraCfgInput.numberOfNodes
