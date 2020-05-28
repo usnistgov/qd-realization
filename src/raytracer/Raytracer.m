@@ -343,11 +343,11 @@ if paraCfgInput.switchSaveVisualizerFiles && paraCfgInput.jsonOutput
             for iteratePaaTx = 1:nPAA_centroids(iterateTx)
                 for iteratePaaRx = 1:nPAA_centroids(iterateRx)
                     for reflOrd = 1:paraCfgInput.totalNumberOfReflections+1
-                        Mpc_t = squeeze(cell2mat(Mpc(iterateTx,iteratePaaTx,...
+                        Mpc_t = squeeze((Mpc(iterateTx,iteratePaaTx,...
                             iterateRx,iteratePaaRx,reflOrd,:)));
                             s = struct('TX', iterateTx-1, 'PAA_TX', iteratePaaTx-1,...
                                    'RX', iterateRx-1, 'PAA_RX', iteratePaaRx-1, ...
-                                   'Rorder', reflOrd-1, 'MPC', Mpc_t);
+                                   'Rorder', reflOrd-1,'T', num2cell(0:size(Mpc,ndims(Mpc))-1).', 'MPC', Mpc_t);
                                json = jsonencode(s);
                                fprintf(fmpc, '%s\n', json);  
                     end
@@ -358,14 +358,21 @@ if paraCfgInput.switchSaveVisualizerFiles && paraCfgInput.jsonOutput
     fclose(fmpc);
     
     
-    % Node Position
+    % Node Position/Rotation
     if paraCfgInput.switchSaveVisualizerFiles && paraCfgInput.jsonOutput
         filename = sprintf('NodePositions.json');
         f = fopen(fullfile(nodePositionsPath, filename), 'w');
         for i = 1:paraCfgInput.numberOfNodes
-            s = struct('Node' , i-1, 'Position', nodePosition(:,:,i), ...
-                'Rotation', nodeCfgInput.nodeEuclidian(:,:,i));
-                    fprintf(f, '%s\n', jsonencode(s));
+            s = struct('Node' , i-1, 'Position', [nodePosition(:,:,i); [inf inf inf]], ...
+                'Rotation', [nodeCfgInput.nodeEuclidian(:,:,i); [inf inf inf]]);
+            json = jsonencode(s); % Add a temporary inf vector to make sure
+            % more than a single vector will be encoded. Matlab json 
+            % encoder lose the square brackets when encoding vectors.
+            str2remove =',[null,null,null]'; %Temporary string to remove
+            rem_ind_start = num2cell(strfind(json, str2remove)); % Find start string to remove
+            index2rm = cell2mat(cellfun(@(x) x:x+length(str2remove)-1,rem_ind_start,'UniformOutput',false)); % Create index of char to remove
+            json(index2rm) = []; % Remove temporary vector.
+            fprintf(f, '%s\n', json);
         end
         fclose(f);
     end
