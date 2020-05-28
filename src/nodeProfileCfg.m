@@ -324,7 +324,7 @@ if paraCfg.jsonOutput == 1
     fPaa = fopen(strcat(paaPositionPathVisual, filesep,'PAAPosition.json'), 'w');
     for i = 1:length(nodePAA_position)
         for paaId = 1:PAA_info{i}.nPAA_centroids
-            s = struct('Node', i-1, 'PAA',paaId-1, 'Position', squeeze(PAA_info{i}.centroid_position(:,paaId,:)),'Rotation', nodeEuclidian(1:numberTracePoints,:,i));
+            s = struct('Node', i-1, 'PAA',paaId-1, 'Position', squeeze(PAA_info{i}.centroid_position(:,paaId,:)));
             json = jsonencode(s);
             fprintf(fPaa, '%s\n', json);
         end
