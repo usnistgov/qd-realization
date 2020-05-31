@@ -64,7 +64,8 @@ function [output, count1, switch_QD] = QDGenerator(order_of_R,output,...
 % States.
 %
 % Modified by: Mattia Lecci <leccimat@dei.unipd.it>, Improved access to MaterialLibrary
-
+% Modified by: Neeraj Varshney <neeraj.varshney@nist.gov>, Included residual
+% error in QD model
 
 c = 3e8;
 % if  switch_material==1 && QD_gen==1
@@ -74,6 +75,7 @@ c = 3e8;
 % are in progress.
 %  if  switch_material==1 && order_of_R==1
 Pathloss1 = 0;
+switch_QD = 0;
 for order_of_R_temp = 1:order_of_R
     
     
@@ -101,6 +103,8 @@ for i1 = 1:2
         sigmay = MaterialLibrary.sigma_Y_Precursor(Material);
         mul = MaterialLibrary.mu_lambda_Precursor(Material);
         sigmal = MaterialLibrary.sigma_lambda_Precursor(Material);
+        muSigmas = MaterialLibrary.mu_SigmaS_Precursor(Material);
+        sigmaSigmas = MaterialLibrary.sigma_SigmaS_Precursor(Material);
         % A total of 3 precursors are generated. they can be adjusted by
         % changing n
         n = 3;
@@ -112,23 +116,28 @@ for i1 = 1:2
         sigmay = MaterialLibrary.sigma_Y_Postcursor(Material);
         mul = MaterialLibrary.mu_lambda_Postcursor(Material);
         sigmal = MaterialLibrary.sigma_lambda_Postcursor(Material);
+        muSigmas = MaterialLibrary.mu_SigmaS_Postcursor(Material);
+        sigmaSigmas = MaterialLibrary.sigma_SigmaS_Postcursor(Material);
         % A total of 16 post cursors are genearted
         n = 16;
         
     end
     
-    mus = MaterialLibrary.mu_sigmaTheta(Material);
-    sigmas = MaterialLibrary.sigma_sigmaTheta(Material);
+    mutheta = MaterialLibrary.mu_sigmaThetaAZ(Material);
+    sigmatheta = MaterialLibrary.sigma_sigmaThetaAZ(Material);
+    muphi = MaterialLibrary.mu_sigmaThetaEL(Material);
+    sigmaphi = MaterialLibrary.sigma_sigmaThetaEL(Material);
     
     %%
     if  muk~=0
-        Kfactor = normalRandomGenerator(muk,sigmak);
+        sigmas = db2pow(normalRandomGenerator(muSigmas,sigmaSigmas)); 
+        Kfactor = db2pow(normalRandomGenerator(muk,sigmak));           
         gamma = normalRandomGenerator(muy,sigmay);
         lambda1 = normalRandomGenerator(mul,sigmal);
-        sigma_Aod_E = abs(normalRandomGenerator(mus,sigmas));
-        sigma_Aod_A = abs(normalRandomGenerator(mus,sigmas));
-        sigma_Aoa_E = abs(normalRandomGenerator(mus,sigmas));
-        sigma_Aoa_A = abs(normalRandomGenerator(mus,sigmas));
+        sigma_Aod_E = abs(normalRandomGenerator(muphi,sigmaphi));
+        sigma_Aod_A = abs(normalRandomGenerator(mutheta,sigmatheta));
+        sigma_Aoa_E = abs(normalRandomGenerator(muphi,sigmaphi));
+        sigma_Aoa_A = abs(normalRandomGenerator(mutheta,sigmatheta));
         
         lambda1 = abs(normalRandomGenerator(mul,sigmal));
         tau_set = nan(n+1, 1);
@@ -157,23 +166,26 @@ for i1 = 1:2
             i=i+1;
         end
         
-        PGcursor = New_pathgain;
-        
+        PGcursor = db2pow(New_pathgain);
         % generates path loss
         
         for i=1:n
             
             if i~=0
+                s = normalRandomGenerator(0,sigmas);
                 if i1==1
-                    output(count1+i-1,9) = ((PGcursor)-...
-                        Kfactor+(((tau_set(i+1))-...
-                        (tau_set(1)))/gamma));
+%                     output(count1+i-1,9) = ((PGcursor)-...
+%                         Kfactor+(((tau_set(i+1))-...
+%                         (tau_set(1)))/gamma)+s);
+                       output(count1+i-1,9) = pow2db((PGcursor/Kfactor).*...
+                           exp(((tau_set(i+1)-tau_set(1))/gamma)+s));
+
                 else
-                    output(count1+i-1,9) = ((PGcursor)-...
-                        Kfactor-(((tau_set(i+1))-...
-                        (tau_set(1)))/gamma));
+                    output(count1+i-1,9) =  pow2db((PGcursor/Kfactor).*...
+                           exp(-((tau_set(i+1)-tau_set(1))/gamma)+s));
                     if i == 1
-                        output(indexReference,9) = 20*log10(10^(PGcursor/10)-10^((PGcursor-Kfactor)/10));
+%                         output(indexReference,9) = 20*log10(10^(PGcursor/10)-10^((PGcursor-Kfactor)/10));
+                        output(indexReference,9) =  20*log10(PGcursor-(PGcursor/Kfactor));
                     end
                 end
             end
