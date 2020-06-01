@@ -324,8 +324,14 @@ if paraCfg.jsonOutput == 1
     fPaa = fopen(strcat(paaPositionPathVisual, filesep,'PAAPosition.json'), 'w');
     for i = 1:length(nodePAA_position)
         for paaId = 1:PAA_info{i}.nPAA_centroids
-            s = struct('Node', i-1, 'PAA',paaId-1, 'Position', squeeze(PAA_info{i}.centroid_position(:,paaId,:)));
-            json = jsonencode(s);
+            s = struct('Node', i-1, 'PAA',paaId-1, 'Position', [reshape(squeeze(PAA_info{i}.centroid_position(:,paaId,:)), [],3); [inf inf inf]]);
+            json = jsonencode(s);% Add a temporary inf vector to make sure
+            % more than a single vector will be encoded. Matlab json 
+            % encoder lose the square brackets when encoding vectors.
+            str2remove =',[null,null,null]'; %Temporary string to remove
+            rem_ind_start = num2cell(strfind(json, str2remove)); % Find start string to remove
+            index2rm = cell2mat(cellfun(@(x) x:x+length(str2remove)-1,rem_ind_start,'UniformOutput',false)); % Create index of char to remove
+            json(index2rm) = []; % Remove temporary vector.
             fprintf(fPaa, '%s\n', json);
         end
     end
