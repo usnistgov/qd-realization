@@ -1,4 +1,4 @@
-"Primary key","Reflector","mu (k & precursor)","sigma (k & precursor)","mu (k & postcursor)","sigma (k & precursor)","mu (Y & precursor)","sigma (Y & precursor)","mu (Y & postcursor)","sigma (Y & precursor)","mu (lambda & precursor)","sigma (lambda & precursor)","mu (lambda & postcursor)","sigma (lambda & precursor)","mu (sigma theta)","sigma (sigma theta)","mu (RL)","sigma (RL)","Dielectric constant"
+"Primary key","Reflector","mu (k & precursor)","sigma (k & precursor)","mu (k & postcursor)","sigma (k & postcursor)","mu (Y & precursor)","sigma (Y & precursor)","mu (Y & postcursor)","sigma (Y & postcursor)","mu (lambda & precursor)","sigma (lambda & precursor)","mu (lambda & postcursor)","sigma (lambda & postcursor)","mu (sigma theta)","sigma (sigma theta)","mu (RL)","sigma (RL)","Dielectric constant"
 "1","Ceiling","0","0","12.4","6.2","0","0","0.74","0.53","0","0","1.93","1.96","2.6","1.6","7.6","2.6","2.6"
 "2","Racktop","0","0","0","0","0","0","0","0","0","0","0","0","0","0","6.8","1.1",""
 "3","Curtain","0","0","7.3","4.4","0","0","0.95","0.59","0","0","1.17","0.34","3.6","1.2","0.1","1.2",""
