@@ -38,17 +38,17 @@ fid = fopen(filepath, 'w');
 NODES = size(output,1);
 ITER  = size(output,3);
 floatFormat = sprintf('%%.%dg',precision);
+nodeList = 1:NODES;
 
-
-for tx = 1:NODES
-    for rx = tx+1:NODES
-        for txPaa = 1:nPAA_centroids(tx)
-            for rxPaa = 1:nPAA_centroids(rx)
-                mimoCh = squeeze(output(tx,rx,:));
-                sisoCh =cell2mat(cellfun(@(x) x(:,:,(txPaa-1)*rxPaa+rxPaa), mimoCh,'UniformOutput', false));
-                rowDist = cellfun(@(x) size(x,1), mimoCh);
-                s = struct('TX', tx-1, 'RX', rx-1,...
-                    'PAA_TX', txPaa-1, 'PAA_RX', rxPaa-1);
+for tx = nodeList
+    for rx = nodeList(nodeList~=tx)
+            for txPaa = 1:nPAA_centroids(tx)
+                for rxPaa = 1:nPAA_centroids(rx)
+                    mimoCh = squeeze(output(tx,rx,:));
+                    sisoCh =cell2mat(cellfun(@(x) x(:,:,(txPaa-1)*rxPaa+rxPaa), mimoCh,'UniformOutput', false));
+                    rowDist = cellfun(@(x) size(x,1), mimoCh);
+                    s = struct('TX', tx-1, 'RX', rx-1,...
+                        'PAA_TX', txPaa-1, 'PAA_RX', rxPaa-1);
                     s.Delay = mat2cell(single(sisoCh(:,8)), rowDist);
                     s.Gain  = mat2cell(single(sisoCh(:,9)), rowDist);
                     s.Phase = mat2cell(single(sisoCh(:,18)), rowDist);
@@ -56,10 +56,10 @@ for tx = 1:NODES
                     s.AODAZ = mat2cell(single(sisoCh(:,10)), rowDist);
                     s.AOAEL = mat2cell(single(sisoCh(:,13)), rowDist);
                     s.AOAAZ = mat2cell(single(sisoCh(:,12)), rowDist);
-                json = jsonencode(s);
-                fprintf(fid, '%s\n', json);
+                    json = jsonencode(s);
+                    fprintf(fid, '%s\n', json);
+                end
             end
-        end
     end
 end
 fclose(fid);
