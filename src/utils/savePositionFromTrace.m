@@ -7,7 +7,11 @@ end
 trace = load(nameTraceFile);
 traceField = fieldnames(trace);
 traceSelect = ~cellfun(@isempty,(regexp(traceField,['.', captureId])));
-trace = eval(['trace.',traceField{traceSelect}]);
-position = trace(:,[1 3 2])*2.54/100;
-writematrix(position, nameFile)
+if sum(traceSelect)
+    trace = eval(['trace.',traceField{traceSelect}]);
+    position = trace(:,[1 3 2])*2.54/100;
+    writematrix(position, nameFile)
+else
+    warning('Trace not found')
+end
 end
