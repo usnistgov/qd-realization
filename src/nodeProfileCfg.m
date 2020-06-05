@@ -80,7 +80,13 @@ end
 % velocities
 if switchRandomization == 0
     try
-        nodeLoc = csvread(fullfile(inputPath, 'nodes.dat'));
+        nodeInfo = csvread(fullfile(inputPath, 'nodes.dat'));
+        nodeLoc  = nodeInfo(:, 1:3);
+        if size(nodeInfo,2) ==3
+            nodeOrientation = zeros(size(nodeLoc));
+        elseif size(nodeInfo,2) ==6
+            nodeOrientation = nodeInfo(:,4:6);
+        end
         nodeVelocities = csvread(fullfile(inputPath, 'nodeVelocities.dat'));
     catch
         switchRandomization = 1;
@@ -122,9 +128,9 @@ if switchRandomization == 0
             % If mobility matrix
             if sum(arrayfun(@(x) strcmp(x.name,['node',num2str(iterateNumberOfNodes-1),'mobility.mat']), listing))
                 savePositionFromTrace(fullfile(inputPath, sprintf('node%dmobility.mat', iterateNumberOfNodes-1)),...
-                    fullfile(inputPath,sprintf('Node%dPosition.dat', iterateNumberOfNodes-1)));
+                    fullfile(inputPath,sprintf('Node%dPosition.dat', iterateNumberOfNodes-1)),iterateNumberOfNodes );
                 saveEuclidianFromTrace(fullfile(inputPath, sprintf('node%dmobility.mat', iterateNumberOfNodes-1)),...
-                    fullfile(inputPath,sprintf('Node%dEuclidian.dat', iterateNumberOfNodes-1)));
+                    fullfile(inputPath,sprintf('Node%dEuclidian.dat', iterateNumberOfNodes-1)),iterateNumberOfNodes );
             else % If mobility matrix is not there check position and euclidian files
                 
                 % If only position write euclidian
@@ -229,14 +235,26 @@ iterateNumberOfNodes = 1;
 nodeAntennaOrientation = zeros(numberOfNodes, 3, 3);
 nodePolarization       = zeros(iterateNumberOfNodes, 2);
 nodePAA_position       = cell(numberOfNodes,1); %PAA vector position w.r.t node center
+nodePAA_Orientation       = cell(numberOfNodes,1); %PAA vector position w.r.t node center
 
 while iterateNumberOfNodes <= numberOfNodes
     nodeAntennaOrientation(iterateNumberOfNodes, :, :) = [1, 0, 0; 0, 1, 0; 0, 0, 1];
     nodePolarization(iterateNumberOfNodes, :) = [1, 0];
     if isfile(strcat(inputPath, [filesep 'node'], num2str(iterateNumberOfNodes-1), 'PAAs_position.dat' ))
-        nodePAA_position{iterateNumberOfNodes} = load(strcat(inputPath, [filesep 'node'], num2str(iterateNumberOfNodes-1), 'PAAs_position.dat' ));
+        nodePAA_info =  load(strcat(inputPath, [filesep 'node'], num2str(iterateNumberOfNodes-1), 'PAAs_position.dat' ));
+        if isempty(nodePAA_info)
+            nodePAA_position{iterateNumberOfNodes}  = nodePAA_info;
+        else
+            nodePAA_position{iterateNumberOfNodes}  = nodePAA_info(:, 1:3);
+        end
+        if size(nodePAA_info,2) ==3
+            nodePAA_Orientation{iterateNumberOfNodes}  = zeros(size(nodePAA_info));
+        elseif size(nodePAA_info,2) ==6
+            nodePAA_Orientation{iterateNumberOfNodes}  = nodePAA_info(:,4:6);
+        end
     else
         nodePAA_position{iterateNumberOfNodes} = [];
+        nodePAA_Orientation{iterateNumberOfNodes}  = zeros(1,3);
     end
     if switchRandomization == 1 && iterateNumberOfNodes > 0
         xCoordinateRandomizer = rand * 8 + 1;
@@ -250,6 +268,8 @@ while iterateNumberOfNodes <= numberOfNodes
         zCoordinateRandomizer = 0;
         nodeVelocities(iterateNumberOfNodes, :) =...
             [xCoordinateRandomizer, yCoordinateRandomizer, zCoordinateRandomizer];
+        nodeOrientation = zeros(size(nodeLoc));
+
     end
     
     iterateNumberOfNodes = iterateNumberOfNodes + 1;
@@ -321,21 +341,21 @@ else
 end
 
 if paraCfg.jsonOutput == 1
-    fPaa = fopen(strcat(paaPositionPathVisual, filesep,'PAAPosition.json'), 'w');
-    for i = 1:length(nodePAA_position)
-        for paaId = 1:PAA_info{i}.nPAA_centroids
-            s = struct('Node', i-1, 'PAA',paaId-1, 'Position', [reshape(squeeze(PAA_info{i}.centroid_position(:,paaId,:)), [],3); [inf inf inf]]);
-            json = jsonencode(s);% Add a temporary inf vector to make sure
-            % more than a single vector will be encoded. Matlab json 
-            % encoder lose the square brackets when encoding vectors.
-            str2remove =',[null,null,null]'; %Temporary string to remove
-            rem_ind_start = num2cell(strfind(json, str2remove)); % Find start string to remove
-            index2rm = cell2mat(cellfun(@(x) x:x+length(str2remove)-1,rem_ind_start,'UniformOutput',false)); % Create index of char to remove
-            json(index2rm) = []; % Remove temporary vector.
-            fprintf(fPaa, '%s\n', json);
-        end
-    end
-    fclose(fPaa);
+%     fPaa = fopen(strcat(paaPositionPathVisual, filesep,'PAAPosition.json'), 'w');
+%     for i = 1:length(nodePAA_position)
+%         for paaId = 1:PAA_info{i}.nPAA_centroids
+%             s = struct('Node', i-1, 'PAA',paaId-1, 'Position', [reshape(squeeze(PAA_info{i}.centroid_position(:,paaId,:)), [],3); [inf inf inf]]);
+%             json = jsonencode(s);% Add a temporary inf vector to make sure
+%             % more than a single vector will be encoded. Matlab json 
+%             % encoder lose the square brackets when encoding vectors.
+%             str2remove =',[null,null,null]'; %Temporary string to remove
+%             rem_ind_start = num2cell(strfind(json, str2remove)); % Find start string to remove
+%             index2rm = cell2mat(cellfun(@(x) x:x+length(str2remove)-1,rem_ind_start,'UniformOutput',false)); % Create index of char to remove
+%             json(index2rm) = []; % Remove temporary vector.
+%             fprintf(fPaa, '%s\n', json);
+%         end
+%     end
+%     fclose(fPaa);
 else
     for i = 1:length(nodePAA_position)
         if mobilityType==1 &&  mobilitySwitch == 1
@@ -364,7 +384,9 @@ paraCfg.switchRandomization = switchRandomization;
 nodeCfg.nodeLoc = cell2mat(...
     arrayfun(@(x) x{:}.centroid_position, PAA_info, 'UniformOutput', false));
 
-nodeCfg.nodeAntennaOrientation = nodeAntennaOrientation;
+nodeCfg.nodeAntennaOrientation = nodePAA_Orientation;
+nodeCfg.nodeOrientation = nodeOrientation;
+
 nodeCfg.nodePolarization = nodePolarization;
 nodeCfg.nodePosition = reshape(nodePosition, [], 3,numberOfNodes);
 if isempty(nodeEuclidian)
