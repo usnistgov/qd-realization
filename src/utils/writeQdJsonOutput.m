@@ -45,7 +45,7 @@ for tx = nodeList
             for txPaa = 1:nPAA_centroids(tx)
                 for rxPaa = 1:nPAA_centroids(rx)
                     mimoCh = squeeze(output(tx,rx,:));
-                    sisoCh =cell2mat(cellfun(@(x) x(:,:,(txPaa-1)*rxPaa+rxPaa), mimoCh,'UniformOutput', false));
+                    sisoCh =cell2mat(cellfun(@(x) x(:,:,(txPaa-1)*nPAA_centroids(rx)+rxPaa), mimoCh,'UniformOutput', false));
                     rowDist = cellfun(@(x) size(x,1), mimoCh);
                     s = struct('TX', tx-1, 'RX', rx-1,...
                         'PAA_TX', txPaa-1, 'PAA_RX', rxPaa-1);
