@@ -27,9 +27,15 @@ if rotateFrame
 else
     Q = qtrnFeul(eucl , 'ZXY');
 end
+% Qnode    = qtrnFeul(orientation , 'ZXY');
+
+
+%% Rotate to initial orientation 
+% Node rotation
+P = qtrnRotatepoint(Q(1,:),P-Pc)+Pc;
 
 %% Rotate position of node
-P = qtrnRotatepoint(Q,P-Pc)+Pc;
+P = qtrnRotatepoint(Q(2,:),P-Pc)+Pc;
 
 %% Output
 varargout{1} = Q;
