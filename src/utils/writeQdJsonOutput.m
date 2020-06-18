@@ -45,6 +45,7 @@ for tx = nodeList
             for txPaa = 1:nPAA_centroids(tx)
                 for rxPaa = 1:nPAA_centroids(rx)
                     mimoCh = squeeze(output(tx,rx,:));
+                    mimoCh = cellfun(@(x) appendNan(x), mimoCh, 'UniformOutput', false);
                     sisoCh =cell2mat(cellfun(@(x) x(:,:,(txPaa-1)*nPAA_centroids(rx)+rxPaa), mimoCh,'UniformOutput', false));
                     rowDist = cellfun(@(x) size(x,1), mimoCh);
                     s = struct('TX', tx-1, 'RX', rx-1,...
@@ -57,6 +58,10 @@ for tx = nodeList
                     s.AOAEL = mat2cell(single(sisoCh(:,13)), rowDist);
                     s.AOAAZ = mat2cell(single(sisoCh(:,12)), rowDist);
                     json = jsonencode(s);
+                    str2remove =',null'; %Temporary string to remove
+                    rem_ind_start = num2cell(strfind(json, str2remove)); % Find start string to remove
+                    index2rm = cell2mat(cellfun(@(x) x:x+length(str2remove)-1,rem_ind_start,'UniformOutput',false)); % Create index of char to remove
+                    json(index2rm) = [];
                     fprintf(fid, '%s\n', json);
                 end
             end
@@ -65,4 +70,8 @@ end
 fclose(fid);
 
 
+end
+
+function x = appendNan(x)
+    x(end+1,:) = nan;
 end
