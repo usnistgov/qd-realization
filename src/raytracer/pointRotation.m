@@ -30,14 +30,16 @@ end
 % Qnode    = qtrnFeul(orientation , 'ZXY');
 
 
-%% Rotate to initial orientation 
-% Node rotation
-P = qtrnRotatepoint(Q(1,:),P-Pc)+Pc;
+
 
 %% Rotate position of node
 P = qtrnRotatepoint(Q(2,:),P-Pc)+Pc;
 
+%% Rotate to initial orientation 
+% Node rotation
+P = qtrnRotatepoint(Q(1,:),P-Pc)+Pc;
+
 %% Output
-varargout{1} = Q;
+varargout{1} =  eulFqtrn(qtrnMultiply(Q(2,:), Q(1,:)), 'ZXY');
 
 end
