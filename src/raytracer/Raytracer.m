@@ -131,9 +131,9 @@ if paraCfgInput.switchSaveVisualizerFiles == 1
     end
     
 end
-
+keepBothQDOutput =1;
 % Init output files
-if ~paraCfgInput.jsonOutput
+if ~paraCfgInput.jsonOutput || keepBothQDOutput
     fids = getQdFilesIds(qdFilesPath, paraCfgInput.numberOfNodes,...
         paraCfgInput.useOptimizedOutputToFile);
 end
@@ -206,27 +206,30 @@ for iterateTimeDivision = 1:paraCfgInput.numberOfTimeDivisions
             nodeCfgInput.nodePosition, timeDivisionValue);
     end
     
-    % save NodePositionsTrc
-    if paraCfgInput.switchSaveVisualizerFiles && ~paraCfgInput.jsonOutput
-        filename = sprintf('NodePositionsTrc%d.csv', iterateTimeDivision-1);
-        writematrix([squeeze(nodePosition(iterateTimeDivision,:,:)).'...
-            squeeze(nodeCfgInput.nodeEuclidian(iterateTimeDivision,:, :)).'],fullfile(nodePositionsPath, filename)...
-            );
-    end
-    
+      
     % Compute rotation
     for nodeId = 1:paraCfgInput.numberOfNodes
         nodeCfgInput.PAA_info{nodeId}.centroid_position(iterateTimeDivision,:,:);
         center_rotation = nodeCfgInput.PAA_info{nodeId}.node_centroid(iterateTimeDivision,:,:);
         euclidian(1,:) = nodeCfgInput.nodeOrientation(nodeId,:);
         euclidian(2,:) = nodeCfgInput.nodeEuclidian(iterateTimeDivision,:, nodeId);
-        paaPositionTrot = pointRotation(reshape(squeeze(...
+        [paaPositionTrot, nodeEuclTemp] = pointRotation(reshape(squeeze(...
             nodeCfgInput.PAA_info{nodeId}.centroid_position(iterateTimeDivision,:,:)), [], 3), ...
             center_rotation,...
             euclidian ...
             );
+        nodeCfgInput.nodeEuclidianTot(iterateTimeDivision,:, nodeId) = nodeEuclTemp;
         nodeCfgInput.PAA_info{nodeId}.centroid_position_rot(iterateTimeDivision,:,:) =paaPositionTrot;
     end
+    
+    % save NodePositionsTrc
+    if paraCfgInput.switchSaveVisualizerFiles && ~paraCfgInput.jsonOutput
+        filename = sprintf('NodePositionsTrc%d.csv', iterateTimeDivision-1);
+        writematrix([squeeze(nodePosition(iterateTimeDivision,:,:)).'...
+            squeeze(nodeCfgInput.nodeEuclidianTot(iterateTimeDivision,:, :)).'],fullfile(nodePositionsPath, filename)...
+            );
+    end
+    
     
     % Iterates through all the nodes
     for iterateTx = 1:paraCfgInput.numberOfNodes
@@ -333,7 +336,7 @@ for iterateTimeDivision = 1:paraCfgInput.numberOfTimeDivisions
     end
     
     outputPAATime(:,:,iterateTimeDivision) = generateChannelPaa(outputPAA, nodeCfgInput.PAA_info);  %#ok<AGROW>
-    if ~paraCfgInput.jsonOutput
+    if ~paraCfgInput.jsonOutput || keepBothQDOutput
         for iterateTx = 1:paraCfgInput.numberOfNodes
             for iterateRx = iterateTx+1:paraCfgInput.numberOfNodes
                 writeQdFileOutput(outputPAATime{iterateTx, iterateRx,iterateTimeDivision}, paraCfgInput.useOptimizedOutputToFile, fids, iterateTx, iterateRx,...
@@ -384,7 +387,7 @@ if paraCfgInput.switchSaveVisualizerFiles && paraCfgInput.jsonOutput
     for i = 1:paraCfgInput.numberOfNodes
         s = struct('Node' , i-1, 'Orientation', nodeCfgInput.nodeOrientation(i,:), ...
             'Position', [nodePosition(:,:,i); [inf inf inf]], ...
-            'Rotation', [nodeCfgInput.nodeEuclidian(:,:,i); [inf inf inf]]);
+            'Rotation', [nodeCfgInput.nodeEuclidianTot(:,:,i); [inf inf inf]]);
         json = jsonencode(s); % Add a temporary inf vector to make sure
         % more than a single vector will be encoded. Matlab json
         % encoder lose the square brackets when encoding vectors.
@@ -397,7 +400,7 @@ if paraCfgInput.switchSaveVisualizerFiles && paraCfgInput.jsonOutput
     fclose(f);
     
     %% Write PAAPosition.json
-    f = fopen(strcat(visualizerPath, filesep,'PAAPosition.json'), 'w');
+    f = fopen(strcat(visualizerPath, filesep,'PAAPosition', filesep,'PAAPosition.json'), 'w');
     for i = 1:paraCfgInput.numberOfNodes
         for paaId = 1:nPAA_centroids(i)
             s = struct('Node', i-1, 'PAA',paaId-1, 'Position', [reshape(squeeze(nodeCfgInput.PAA_info{i}.centroid_position_rot(:,paaId,:)), [],3); [inf inf inf]]);
@@ -414,7 +417,7 @@ if paraCfgInput.switchSaveVisualizerFiles && paraCfgInput.jsonOutput
     fclose(f); 
 end
 
-if ~paraCfgInput.jsonOutput
+if ~paraCfgInput.jsonOutput || keepBothQDOutput
     closeQdFilesIds(fids, paraCfgInput.useOptimizedOutputToFile);
 end
 % varargout{1} = outputPAA;
