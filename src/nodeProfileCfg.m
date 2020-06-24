@@ -128,9 +128,9 @@ if switchRandomization == 0
             % If mobility matrix
             if sum(arrayfun(@(x) strcmp(x.name,['node',num2str(iterateNumberOfNodes-1),'mobility.mat']), listing))
                 savePositionFromTrace(fullfile(inputPath, sprintf('node%dmobility.mat', iterateNumberOfNodes-1)),...
-                    fullfile(inputPath,sprintf('Node%dPosition.dat', iterateNumberOfNodes-1)),iterateNumberOfNodes-1 );
+                    fullfile(inputPath,sprintf('Node%dPosition.dat', iterateNumberOfNodes-1)) );
                 saveEuclidianFromTrace(fullfile(inputPath, sprintf('node%dmobility.mat', iterateNumberOfNodes-1)),...
-                    fullfile(inputPath,sprintf('Node%dEuclidian.dat', iterateNumberOfNodes-1)),iterateNumberOfNodes-1 );
+                    fullfile(inputPath,sprintf('Node%dEuclidian.dat', iterateNumberOfNodes-1)) );
             else % If mobility matrix is not there check position and euclidian files
                 
                 % If only position write euclidian
