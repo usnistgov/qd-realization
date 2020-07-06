@@ -5,7 +5,7 @@ indoorSwitch	1
 mobilitySwitch	1
 mobilityType	2
 numberOfNodes	2
-numberOfTimeDivisions	32070
+numberOfTimeDivisions	10
 referencePoint	[3,3,2]
 selectPlanesByDist	0
 switchQDGenerator	0
@@ -15,4 +15,4 @@ totalTimeDuration	128.28
 switchSaveVisualizerFiles	1
 carrierFrequency	60e9
 qdFilesFloatPrecision	6
-jsonOutput	0
+jsonOutput	1
