@@ -107,10 +107,6 @@ qdFilesPath = fullfile(ns3Path, 'QdFiles');
 
 if paraCfgInput.switchSaveVisualizerFiles == 1
     visualizerPath = fullfile(outputPath, 'Visualizer');
-    
-    nodePositionsPath = fullfile(visualizerPath, 'NodePositions');
-    roomCoordinatesPath = fullfile(visualizerPath, 'RoomCoordinates');
-    mpcCoordinatesPath = fullfile(visualizerPath, 'MpcCoordinates');
 end
 
 % Subfolders creation
@@ -118,19 +114,6 @@ if ~isfolder(qdFilesPath)
     mkdir(qdFilesPath)
 end
 
-if paraCfgInput.switchSaveVisualizerFiles == 1
-    
-    if ~isfolder(nodePositionsPath)
-        mkdir(nodePositionsPath)
-    end
-    if ~isfolder(roomCoordinatesPath)
-        mkdir(roomCoordinatesPath)
-    end
-    if ~isfolder(mpcCoordinatesPath)
-        mkdir(mpcCoordinatesPath)
-    end
-    
-end
 keepBothQDOutput =1;
 % Init output files
 if ~paraCfgInput.jsonOutput || keepBothQDOutput
@@ -158,7 +141,7 @@ MaterialLibrary = importMaterialLibrary('raytracer/Material_library.txt');
 if paraCfgInput.switchSaveVisualizerFiles == 1
     % Save output file with room coordinates for visualization
     RoomCoordinates = CADop(:, 1:9);
-    csvwrite(fullfile(roomCoordinatesPath, 'RoomCoordinates.csv'),...
+    csvwrite(fullfile(visualizerPath, 'RoomCoordinates.csv'),...
         RoomCoordinates);
 end
 
@@ -220,13 +203,14 @@ for iterateTimeDivision = 1:paraCfgInput.numberOfTimeDivisions
             );
         nodeCfgInput.nodeEuclidianTot(iterateTimeDivision,:, nodeId) = nodeEuclTemp;
         nodeCfgInput.PAA_info{nodeId}.centroid_position_rot(iterateTimeDivision,:,:) =paaPositionTrot;
+        isPAACentroidValid(RoomCoordinates,paaPositionTrot);
     end
     
     % save NodePositionsTrc
     if paraCfgInput.switchSaveVisualizerFiles && ~paraCfgInput.jsonOutput
         filename = sprintf('NodePositionsTrc%d.csv', iterateTimeDivision-1);
         writematrix([squeeze(nodePosition(iterateTimeDivision,:,:)).'...
-            squeeze(nodeCfgInput.nodeEuclidianTot(iterateTimeDivision,:, :)).'],fullfile(nodePositionsPath, filename)...
+            squeeze(nodeCfgInput.nodeEuclidianTot(iterateTimeDivision,:, :)).'],fullfile(visualizerPath, filename)...
             );
     end
     
@@ -265,7 +249,7 @@ for iterateTimeDivision = 1:paraCfgInput.numberOfTimeDivisions
                         if ~paraCfgInput.jsonOutput
                             filename = sprintf('MpcTx%dPAA%dRx%dPAA%dRefl%dTrc%d.csv',...
                                 iterateTx-1, iteratePaaTx-1, iterateRx-1, iteratePaaRx-1, 0, iterateTimeDivision-1);
-                            csvwrite(fullfile(mpcCoordinatesPath, filename),...
+                            csvwrite(fullfile(visualizerPath, filename),...
                                 multipath1);
                         else
                             Mpc{iterateTx,iteratePaaTx,iterateRx,iteratePaaRx, 1, iterateTimeDivision+1} =multipath1;
@@ -308,7 +292,7 @@ for iterateTimeDivision = 1:paraCfgInput.numberOfTimeDivisions
                                     iterateTx-1, iteratePaaTx-1,...
                                     iterateRx-1, iteratePaaRx-1,...
                                     iterateOrderOfReflection, iterateTimeDivision-1);
-                                csvwrite(fullfile(mpcCoordinatesPath, filename),...
+                                csvwrite(fullfile(visualizerPath, filename),...
                                     multipath1);
                             else
                                 Mpc{iterateTx,iteratePaaTx,iterateRx,iteratePaaRx, iterateOrderOfReflection+1, iterateTimeDivision+1} =multipath1;
@@ -360,7 +344,7 @@ if paraCfgInput.jsonOutput
 end
 if paraCfgInput.switchSaveVisualizerFiles && paraCfgInput.jsonOutput
     %% Write MPC.json
-    f = fopen(fullfile(mpcCoordinatesPath, 'Mpc.json'), 'w');
+    f = fopen(fullfile(visualizerPath, 'Mpc.json'), 'w');
     for iterateTx = 1:paraCfgInput.numberOfNodes
         for iterateRx = iterateTx+1:paraCfgInput.numberOfNodes
             for iteratePaaTx = 1:nPAA_centroids(iterateTx)
@@ -383,7 +367,7 @@ if paraCfgInput.switchSaveVisualizerFiles && paraCfgInput.jsonOutput
     
     %% Write Node Position
     filename = sprintf('NodePositions.json');
-    f = fopen(fullfile(nodePositionsPath, filename), 'w');
+    f = fopen(fullfile(visualizerPath, filename), 'w');
     for i = 1:paraCfgInput.numberOfNodes
         s = struct('Node' , i-1, 'Orientation', nodeCfgInput.nodeOrientation(i,:), ...
             'Position', [nodePosition(:,:,i); [inf inf inf]], ...
@@ -400,7 +384,7 @@ if paraCfgInput.switchSaveVisualizerFiles && paraCfgInput.jsonOutput
     fclose(f);
     
     %% Write PAAPosition.json
-    f = fopen(strcat(visualizerPath, filesep,'PAAPosition', filesep,'PAAPosition.json'), 'w');
+    f = fopen(strcat(visualizerPath, filesep,'PAAPosition.json'), 'w');
     for i = 1:paraCfgInput.numberOfNodes
         for paaId = 1:nPAA_centroids(i)
             s = struct('Node', i-1, 'PAA',paaId-1, 'Position', [reshape(squeeze(nodeCfgInput.PAA_info{i}.centroid_position_rot(:,paaId,:)), [],3); [inf inf inf]]);
