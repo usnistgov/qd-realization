@@ -40,7 +40,7 @@ function para = parameterCfg(scenarioNameStr)
 
 % Load Parameters
 cfgPath = fullfile(scenarioNameStr, 'Input/paraCfgCurrent.txt');
-paraList = readtable(cfgPath,'Delimiter','\t');
+paraList = readtable(cfgPath,'Delimiter','\t', 'Format','auto' );
 
 paraCell = (table2cell(paraList))';
 para = cell2struct(paraCell(2,:), paraCell(1,:), 2);
