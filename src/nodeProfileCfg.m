@@ -51,7 +51,7 @@ numberTracePoints = paraCfg.numberOfTimeDivisions;
 inputPath = fullfile(scenarioNameStr, 'Input');
 nodesPositionPath = fullfile(scenarioNameStr, 'Output/Ns3/NodesPosition');
 paaPositionPath = strcat(scenarioNameStr,'/Output/Ns3/PAAPosition');
-paaPositionPathVisual = strcat(scenarioNameStr,'/Output/Visualizer/PAAPosition');
+paaPositionPathVisual = strcat(scenarioNameStr,'/Output/Visualizer/');
 
 %% Code
 % nodePosition = [];
@@ -119,7 +119,7 @@ if switchRandomization == 0
     if mobilityType == 2
         listing = dir(fullfile(scenarioNameStr, 'Input'));
         nodePosition = zeros(paraCfg.numberOfTimeDivisions,3, paraCfg.numberOfNodes);
-        nodeEuclidian= zeros(paraCfg.numberOfTimeDivisions,3, paraCfg.numberOfNodes);
+%         nodeEuclidian= zeros(paraCfg.numberOfTimeDivisions,3, paraCfg.numberOfNodes);
         countListing = 0;
         %         for iterateSizeListing = 1:size(listing, 1)
         %             ln = listing(iterateSizeListing).name;
@@ -165,6 +165,13 @@ if switchRandomization == 0
             for iterateNumberOfNodes = 1:numberOfNodes
                 if strcmp(ln, sprintf('Node%dPosition.dat', iterateNumberOfNodes-1))
                     nodePositionTemp = load(fullfile(inputPath, ln));
+                    if  size(nodePositionTemp,1)< size(nodePosition,1) &&  ...
+                        size(nodePositionTemp,1) > 1
+                        nodePosition = nodePosition(1:size(nodeEuclidianTemp,1), :,:);
+                        paraCfg.numberOfTimeDivisions = size(nodeEuclidianTemp,1) ;
+                        numberOfTimeDivisions = paraCfg.numberOfTimeDivisions;
+                        warning('Time divisition too long.')
+                    end
                     
                     try
                         numberTracePoints = min(size(nodePositionTemp,1),paraCfg.numberOfTimeDivisions);
@@ -180,6 +187,14 @@ if switchRandomization == 0
                 
                 if strcmp(ln, sprintf('Node%dEuclidian.dat', iterateNumberOfNodes-1))
                     nodeEuclidianTemp = load(fullfile(inputPath, ln));
+                     
+                    if  size(nodeEuclidianTemp,1)< size(nodeEuclidian,1) &&  ...
+                        size(nodeEuclidianTemp,1) > 1
+                        nodeEuclidian = nodeEuclidian(1:size(nodeEuclidianTemp,1), :,:);
+                        paraCfg.numberOfTimeDivisions = size(nodeEuclidianTemp,1) ;
+                        numberOfTimeDivisions = paraCfg.numberOfTimeDivisions;
+                        warning('Time divisition too long.')
+                    end
                     
                     try
                         numberTracePoints =  min(size(nodeEuclidianTemp,1),paraCfg.numberOfTimeDivisions);
