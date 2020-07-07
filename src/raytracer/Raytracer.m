@@ -132,7 +132,7 @@ switch paraCfgInput.inputScenarioName
     case 'ParkingLot'
             % MaterialLibrary = importMaterialLibrary('raytracer/Material_library_ParkingLot.txt');
     case 'DataCenter'
-            % MaterialLibrary = importMaterialLibrary('raytracer/Material_library_DataCenter.txt');
+            MaterialLibrary = importMaterialLibrary('raytracer/Material_library_DataCenter.txt');
     otherwise
             MaterialLibrary = importMaterialLibrary('raytracer/Material_library_Default.txt');
 end
