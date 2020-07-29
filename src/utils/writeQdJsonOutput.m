@@ -1,4 +1,4 @@
-function writeQdJsonOutput(output, nPAA_centroids, qdFilesPath, precision)
+function writeQdJsonOutput(output, paaNodes, qdFilesPath, precision)
 %WRITEQDFILEOUTPUT Writes timestamp information to QdFile
 %
 % INPUTS:
@@ -39,14 +39,15 @@ NODES = size(output,1);
 ITER  = size(output,3);
 floatFormat = sprintf('%%.%dg',precision);
 nodeList = 1:NODES;
+Noutput = 21;
 
 for tx = nodeList
     for rx = nodeList(nodeList~=tx)
-            for txPaa = 1:nPAA_centroids(tx)
-                for rxPaa = 1:nPAA_centroids(rx)
+            for txPaa = 1:paaNodes(tx)
+                for rxPaa = 1:paaNodes(rx)
                     mimoCh = squeeze(output(tx,rx,:));
-                    mimoCh = cellfun(@(x) appendNan(x), mimoCh, 'UniformOutput', false);
-                    sisoCh =cell2mat(cellfun(@(x) x(:,:,(txPaa-1)*nPAA_centroids(rx)+rxPaa), mimoCh,'UniformOutput', false));
+                    mimoCh = cellfun(@(x) appendNan(x,Noutput,paaNodes(tx)*paaNodes(rx)), mimoCh, 'UniformOutput', false);
+                    sisoCh =cell2mat(cellfun(@(x) x(:,:,(txPaa-1)*paaNodes(rx)+rxPaa), mimoCh,'UniformOutput', false));
                     rowDist = cellfun(@(x) size(x,1), mimoCh);
                     s = struct('TX', tx-1, 'RX', rx-1,...
                         'PAA_TX', txPaa-1, 'PAA_RX', rxPaa-1);
@@ -62,6 +63,10 @@ for tx = nodeList
                     rem_ind_start = num2cell(strfind(json, str2remove)); % Find start string to remove
                     index2rm = cell2mat(cellfun(@(x) x:x+length(str2remove)-1,rem_ind_start,'UniformOutput',false)); % Create index of char to remove
                     json(index2rm) = [];
+                    str2remove ='null';
+                    rem_ind_start = num2cell(strfind(json, str2remove)); % Find start string to remove
+                    index2rm = cell2mat(cellfun(@(x) x:x+length(str2remove)-1,rem_ind_start,'UniformOutput',false)); % Create index of char to remove
+                    json(index2rm) = [];
                     fprintf(fid, '%s\n', json);
                 end
             end
@@ -72,6 +77,10 @@ fclose(fid);
 
 end
 
-function x = appendNan(x)
+function x = appendNan(x,n,m)
+if isempty(x)
+    x = nan(2,n,m);
+else
     x(end+1,:) = nan;
+end
 end
