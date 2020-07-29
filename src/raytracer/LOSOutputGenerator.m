@@ -74,11 +74,11 @@ if ~exist('qRx','var'),     qRx.cRx = Rx;  qRx.euc = zeros(1,3);   end
 
 % Direction of departure (DoD) is simple the difference of position vectors
 % of Tx and Rx
-dod=pointRotation(Rx-Tx,[0 0 0], qTx.euc, 1);
+dod=coordinateRotation(Rx-Tx,[0 0 0], qTx.euc, 'frame');
 % delay is the total length of multipath
 delay=norm(dod);
 % Direction of arrival (DoA) is negative of DoD
-doa= pointRotation(Tx-Rx, [0 0 0], qRx.euc,1);
+doa= coordinateRotation(Tx-Rx, [0 0 0], qRx.euc,'frame');
 % Calculating Doppler factor for LOS
 velocityTxAlongDirectionOfDeparture=dot(velocityTx,-1.*dod);
 velocityRxAlongDirectionOfDeparture=dot(velocityRx,-1.*dod);

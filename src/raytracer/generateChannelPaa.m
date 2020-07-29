@@ -20,45 +20,12 @@ function ch_out =  generateChannelPaa(ch_in, info)
 
 nodes = length(info);
 all_nodes = 1:nodes;
-get_paa_id = @(x,X) sum(X(1:x)):sum(X(1:x))+X(x+1)-1;
 ch_out = cell(size(ch_in));
-% debug_tmp
-% for nt = all_nodes
-%     for nr = all_nodes(all_nodes~=nt)
-%         ch_t_r = [];
-%         for paatx = 1:info{nt}.nPAA_centroids
-%             for paarx = 1:info{nr}.nPAA_centroids
-%                 ch_t = [];
-%                 for rot = 1:numel(info{nt}.nodePAAInfo{paatx}.rotated_channel)
-%                     %% call here function to rotate channel
-%                     t = eval(['ch_in{nt,nr}.paaTx', num2str(paatx), 'paaRx', num2str(paarx),'(:,:,rot)']);
-%                     ptr.nt = nt;
-%                     ptr.nr = nr;
-%                     ptr.paatx = paatx;
-%                     ptr.paarx = paarx;
-% %                     ch_t = ddir2MIMO(t,info, ptr);
-%                     ch_t_tmp = repmat(eval(['ch_in{nt,nr}.paaTx', num2str(paatx), 'paaRx', num2str(paarx),'(:,:,rot)']), ...
-%                         [1, 1, info{nt}.nodePAAInfo{paatx}.rotated_channel(rot)]);
-%                     ch_t = cat(3, ch_t, ch_t_tmp);
-%                 end
-%                 rot_vec = [1 info{nr}.nodePAAInfo{paarx}.rotated_channel];
-%                 for ii = 1:size(ch_t,3)
-%                     for rot = 1:numel(info{nr}.nodePAAInfo{paarx}.rotated_channel)
-%                         st_id = (info{nt}.nodePAAInfo{paatx}.paa_id(ii)-1)*info{nr}.nPAA_node+1;
-%                         vec_id = st_id+ info{nr}.nodePAAInfo{paarx}.paa_id(get_paa_id(rot, rot_vec))-1;
-%                         ch_t_r(:,:, vec_id) = repmat(ch_t(:,:,ii), ...
-%                             [1, 1, info{nr}.nodePAAInfo{paarx}.rotated_channel(rot)]);
-%                     end
-%                 end
-%             end
-%         end
-%         ch_out{nt, nr} = ch_t_r;
-%     end
-% end
-
+nvar =21;
 for nt = all_nodes
     for nr = all_nodes(all_nodes~=nt)
         ch_t_r = [];
+        i =0;
         for c_t = 1:info{nt}.nPAA_centroids
             for c_r = 1:info{nr}.nPAA_centroids
                 ch_t = [];
@@ -80,14 +47,25 @@ for nt = all_nodes
 %                         size(ch_t)
                     end
                 end
-                ch_t_r = cat(3, ch_t_r, ch_t);
+                i = i+1;
+                ch_t_r{i} =ch_t; %cat(3, ch_t_r, ch_t);
             end
         end
         if isempty(ch_t_r)
             ch_t_r = [];
+        else
+            M = max(cellfun(@(x) size(x,1), ch_t_r));
+            gg= cellfun(@(x) appendNan(x,M,nvar),ch_t_r,'UniformOutput',false);
+            ch_t_r = cat(3,gg{:});
         end
         ch_out{nt, nr} = ch_t_r;
     end
 end
 
+end
+
+function x = appendNan(x,M,nvar)
+if size(x,1)<M
+    x(end+1:M,1:nvar,:) = nan;
+end
 end

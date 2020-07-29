@@ -1,24 +1,24 @@
-function [P, varargout] = coordinateRotation(P, C, eucl, varargin)
+function [P, varargout] = coordinateRotation(P, C, euler, varargin)
 %COORDINATEROTATION rotates a point in the QD software using quaternions.
 %
-%   P = COORDINATEROTATION(P,PC,EUCL) rotates the point P = (px, py, pz) 
-%   with respect to a reference system centered in C = (cx,cy,cz) by the 
-%   euclidians angles EUCL. EUCL is the Nx3 matrix where N indicates 
+%   P = COORDINATEROTATION(P,PC,EUL) rotates the point P = (px, py, pz)
+%   with respect to a reference system centered in C = (cx,cy,cz) by the
+%   euclidians angles EUL. EUL is the Nx3 matrix where N indicates
 %   consecutive rotations.
-%   The point rotation is used to model the device rotation, which brings 
-%   the PAAs  in  a  different  position  in  the global  frame.  
+%   The point rotation is used to model the device rotation, which brings
+%   the PAAs  in  a  different  position  in  the global  frame.
 %   Default euclidian sequence is assumed 'ZXY'.
-%  
-%  
-%   P = COORDINATEROTATION(P,PC,EUCL, 'frame') returns the coordinates of 
+%
+%
+%   P = COORDINATEROTATION(P,PC,EUL, 'frame') returns the coordinates of
 %   the point P when the reference frame centered in PC is rotated by the
-%   euclidians angles EUCL. The  frame  rotation  is used to transform AOA 
-%   and AOD from global to local coordinates. Default euclidian sequence is 
+%   euclidians angles EUL. The  frame  rotation  is used to transform AOA
+%   and AOD from global to local coordinates. Default euclidian sequence is
 %   assumed 'ZXY'.
-% 
-%  [P Q] = POINTROTATION(..) returns the quaternion equivalent to the
-%  consecutive rotations in EUCL
-%  
+%
+%  [P SUCCESSIVE_EUL] = POINTROTATION(..) returns the angle euler angle
+%  SUCCESSIVE_EUL equivalent to the consecutive rotations in EUL
+%
 %   Copyright 2020 NIST/CLT (steve.blandino@nist.gov)
 
 %% Vargin processing
@@ -27,24 +27,33 @@ if isempty(varargin)
 else
     rotateFrame = varargin{1};
 end
-assert(ismember(rotateFrame, {'point','frame'}), 'Wrong Input')
 
-%% Convert from euclidian to quaternions
-switch rotateFrame
-    case 'frame'
-    Q = qtrnConj(qtrnFeul(eucl , 'ZXY'));
-    case 'point'
-    Q = qtrnFeul(eucl , 'ZXY');
+assert(ismember(rotateFrame, {'point','frame'}), 'Wrong Input')
+assert(size(C,1) == size(euler,1) || size(C,1) ==1, 'Provide correct', ...
+'centroids to perform rotation')
+
+Nrotations = size(euler,1) ;
+
+if size(C,1) ==1
+    C = repmat(C,[Nrotations,1]);
 end
 
-%% Rotate position of node
-P = qtrnRotatepoint(Q(2,:),P-C)+C;
+%% Convert from Euler to quaternions
+switch rotateFrame
+    case 'frame'
+        Q = qtrnConj(qtrnFeul(euler , 'ZXY'));
+    case 'point'
+        Q = qtrnFeul(euler , 'ZXY');
+end
 
-%% Rotate to initial orientation 
-% Node rotation
-P = qtrnRotatepoint(Q(1,:),P-C)+C;
+%% Apply rotations and compute equivalent quaternion
+for j = 1:Nrotations    
+    P = qtrnRotatepoint(Q(j,:),P-C(j,:))+C(j,:);    
+    if j<=Nrotations-1
+        Q(j,:) = qtrnMultiply(Q(j,:), Q(j+1,:)); % Store at index j the prod 1:j+1
+    end
+end
 
 %% Output
-varargout{1} =  eulFqtrn(qtrnMultiply(Q(2,:), Q(1,:)), 'ZXY');
-
+varargout{1} = eulFqtrn(Q(max(Nrotations-1,1),:), 'ZXY'); % Return Q at index Nrotations-1
 end

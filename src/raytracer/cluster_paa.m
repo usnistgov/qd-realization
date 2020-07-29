@@ -71,6 +71,7 @@ for node_id = 1:numberOfNodes
     PAA_info{node_id}.centroids = 1;
     PAA_node_to_cluster = 1:nPAA; % Indexes of nodes to cluster
     node_clustered = [];          % Nodes in the cluster
+    PAALoc = [];
     idx_paa=0;
     paaIdComb  = nchoosek(1:nPAA ,2); % Indexes of all PAA combinations
     
