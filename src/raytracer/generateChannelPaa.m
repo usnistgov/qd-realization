@@ -1,4 +1,4 @@
-function ch_out =  generateChannelPaa(ch_in, info)
+function ch_out =  generateChannelPaa(ch_in, infoPAA)
 %GENERATECHANNEL_PAA returns the QD channel for each PAA_TX - PAA_RX
 %combination.
 %
@@ -18,47 +18,69 @@ function ch_out =  generateChannelPaa(ch_in, info)
 %   Copyright 2019-2020 NIST/CLT (steve.blandino@nist.gov)
 
 
-nodes = length(info);
+nodes = length(infoPAA);
 all_nodes = 1:nodes;
 ch_out = cell(size(ch_in));
 nvar =21;
-for nt = all_nodes
-    for nr = all_nodes(all_nodes~=nt)
-        ch_t_r = [];
+paa_comb_struct = {};
+for nt = all_nodes % Loop on tx nodes
+    for nr = all_nodes(all_nodes~=nt)% Loop on rx nodes
+        chMIMOtx_rx = []; % Channel between one tx and one rx
+        paa_comb = [];
         i =0;
-        for c_t = 1:info{nt}.nPAA_centroids
-            for c_r = 1:info{nr}.nPAA_centroids
-                ch_t = [];
-                for rot_tx = 1:numel(info{nt}.nodePAAInfo{c_t}.rotated_channel)
-                    for rot_rx = 1:numel(info{nr}.nodePAAInfo{c_r}.rotated_channel)
-                        t = eval(['ch_in{nt,nr}.paaTx', num2str(c_t-1), 'paaRx', num2str(c_r-1),'(:,:,rot_tx);']);
-                        ptr.nt = nt;
-                        ptr.nr = nr;
-                        ptr.paatx = c_t;
-                        ptr.paarx = c_r;
-                        ptr.rot_tx = rot_tx;
-                        ptr.rot_rx = rot_rx;
-                        if isempty(t)
-                            ch_t_tmp = [];
+        for c_t = 1:infoPAA{nt}.nPAA_centroids % Loop on transmitter centroid
+            for c_r = 1:infoPAA{nr}.nPAA_centroids % Loop on receiver centroid
+                chMIMOtx = [];
+                paaCombtmp = [];
+                frmRotMpInfo = eval(['ch_in{nt,nr}.frmRotMpInfopaaTx', num2str(c_t-1), 'paaRx', num2str(c_r-1),';']);
+                for rot_tx = 1:numel(infoPAA{nt}.nodePAAInfo{c_t}.rotated_channel)
+                    % Loop on TX PAA genarated with the same centroid ( to
+                    % Generate channel obtained by phase rotation)
+                    for rot_rx = 1:numel(infoPAA{nr}.nodePAAInfo{c_r}.rotated_channel)
+                        % Loop on RX PAA generated with the same centroid
+                        ch_siso_tmp = eval(['ch_in{nt,nr}.paaTx', num2str(c_t-1), 'paaRx', num2str(c_r-1),';']);
+                        if ~isempty(ch_siso_tmp)
+                            ch_siso =ch_siso_tmp(:,:,rot_tx);
                         else
-                            ch_t_tmp = ddir2MIMO(t,info, ptr);
+                            ch_siso = [];
                         end
-                        ch_t = cat(3, ch_t, ch_t_tmp);
+                        
+                        % Pointer struct. Indeces of PAAs 
+                        ptr.nt = nt;    %TX NODE ID
+                        ptr.nr = nr;    %RX NODE ID
+                        ptr.paatx = c_t; %TX PAA centroid pointer
+                        ptr.paarx = c_r; %RX PAA centroid pointer
+                        ptr.rot_tx = rot_tx; %TX PAA rotated channel pointer
+                        ptr.rot_rx = rot_rx; %RX PAA rotated channel pointer
+                        if isempty(ch_siso)
+                            chMIMOtmp_tx = [];
+                        else
+                            [chMIMOtmp_tx, paaCombtmp] = ddir2MIMO(ch_siso,infoPAA, frmRotMpInfo, ptr);
+                        end
+                        chMIMOtx = cat(3, chMIMOtx, chMIMOtmp_tx);
+                        paa_comb = [paa_comb; paaCombtmp];
 %                         size(ch_t)
                     end
                 end
                 i = i+1;
-                ch_t_r{i} =ch_t; %cat(3, ch_t_r, ch_t);
+                chMIMOtx_rx{i} =chMIMOtx; %cat(3, ch_t_r, ch_t);
+                paa_comb_struct{i} = paa_comb;
             end
         end
-        if isempty(ch_t_r)
-            ch_t_r = [];
+        if isempty(chMIMOtx_rx)
+            chMIMOtx_rx = [];
         else
-            M = max(cellfun(@(x) size(x,1), ch_t_r));
-            gg= cellfun(@(x) appendNan(x,M,nvar),ch_t_r,'UniformOutput',false);
-            ch_t_r = cat(3,gg{:});
+            M = max(cellfun(@(x) size(x,1), chMIMOtx_rx));
+            chNanPad= cellfun(@(x) appendNan(x,M,nvar),chMIMOtx_rx,'UniformOutput',false);
+            chMIMOtx_rx = cat(3,chNanPad{:});
         end
-        ch_out{nt, nr} = ch_t_r;
+        if ~isempty(paa_comb)
+            [~, index_sorted] = sortrows(paa_comb,1);
+            ch_out{nt, nr} = chMIMOtx_rx(:,:, index_sorted);
+        else
+            ch_out{nt, nr} = chMIMOtx_rx;
+        end
+
     end
 end
 

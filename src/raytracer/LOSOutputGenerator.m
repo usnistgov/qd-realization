@@ -1,5 +1,5 @@
-function [switchLOS, output] = LOSOutputGenerator(CADoutput, Rx, Tx,...
-    output, velocityTx, velocityRx, switchPolarization, switchCp,...
+function [isLOS, output, varargout] = LOSOutputGenerator(CADoutput, Rx, Tx,...
+    output, velocityTx, velocityRx, isPolarization, isXPol,...
     PolarizationTx, frequency, varargin)
 % This part of code compute LOS between two nodes
 %
@@ -8,9 +8,9 @@ function [switchLOS, output] = LOSOutputGenerator(CADoutput, Rx, Tx,...
 %Tx and Rx locations if using two nodes
 %velocityTx, velocityRx are velocities of tx and rx respectively
 %output - multipath parameters
-%switchPolarization - a boolean to describe whether polarization is
+%isPolarization - a boolean to describe whether polarization is
 %selected
-%switchCp - a boolean to describe whether cross polarization is selected
+%isXPol - a boolean to describe whether cross polarization is selected
 %or not. 1 means there is cross polarization and 0 means there is no cross
 %polarization
 %PolarizationTx - gives polarization information of Tx location
@@ -74,22 +74,24 @@ if ~exist('qRx','var'),     qRx.cRx = Rx;  qRx.euc = zeros(1,3);   end
 
 % Direction of departure (DoD) is simple the difference of position vectors
 % of Tx and Rx
-dod=coordinateRotation(Rx-Tx,[0 0 0], qTx.euc, 'frame');
+dodNoRot = Rx-Tx;
+dod=coordinateRotation(dodNoRot,[0 0 0], qTx.euc, 'frame');
 % delay is the total length of multipath
 delay=norm(dod);
 % Direction of arrival (DoA) is negative of DoD
-doa= coordinateRotation(Tx-Rx, [0 0 0], qRx.euc,'frame');
+doaNoRot = Tx-Rx;
+doa= coordinateRotation(doaNoRot, [0 0 0], qRx.euc,'frame');
 % Calculating Doppler factor for LOS
 velocityTxAlongDirectionOfDeparture=dot(velocityTx,-1.*dod);
 velocityRxAlongDirectionOfDeparture=dot(velocityRx,-1.*dod);
 c=3e8;
 dopplerFactor=(velocityRxAlongDirectionOfDeparture-velocityTxAlongDirectionOfDeparture)/(c);
 % To verify whether DoA vector exists
-vector=Tx-Rx;
-[switch3]=verifyPath(Tx,Rx,vector,[0,0,0],...
+% vector=Tx-Rx;
+[isLOS]=verifyPath(Tx,Rx,doa,[0,0,0],...
     [0,0,0],CADoutput,2,false);
-switchLOS=switch3;
-if switch3==1 % if DoA exists
+
+if isLOS==1 % if DoA exists
     output1 = nan(1,21);
     
     lambda=c/frequency;
@@ -111,10 +113,10 @@ if switch3==1 % if DoA exists
     % Aoa elevation
     output1(13)=acosd(doa(3)/norm(doa));
     % Polarization Jones vector
-    if switchPolarization
-    output1(14:15) = PolarizationTx(1,:);
-    % Cross polarization Jones vector
-        if switchCp
+    if isPolarization
+        output1(14:15) = PolarizationTx(1,:);
+        % Cross polarization Jones vector
+        if isXPol
             output1(16:17) = PolarizationTx(2,:);
         end
     end
@@ -123,17 +125,26 @@ if switch3==1 % if DoA exists
     output1(20) = dopplerFactor*frequency;
     output1(21) = 0;
     % Cross polarization path gain
-    if switchCp==1
+    if isXPol==1
         output1(19) = 20*log10(lambda/(4*pi*delay));
     else
         output1(19) = 0;
     end
-    
+
     if size(output)>0
         output = [output; output1];
     else
         output = output1;
     end
+    
+    paramsRotation.dod = dodNoRot;
+    paramsRotation.doa = doaNoRot;
+    paramsRotation.TxVel = velocityTx;
+    paramsRotation.RxVel = velocityRx;
+    varargout{1} = paramsRotation;
+else
+    varargout{1} = [];
+    
 end
-
+    
 end

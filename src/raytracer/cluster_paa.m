@@ -1,4 +1,4 @@
-function [PAA_info]  = cluster_paa(nodeLoc, nodePAA_position, varargin)
+function [PAA_info]  = cluster_paa(nodeLoc, nodePAA_position, nodePAA_Orientation, varargin)
 %CLUSTER_PAA returns the struct PAA_info given in input the position of the
 %nodes nodeLoc and the position of the PAAs each node nodePAA_position.
 %
@@ -48,7 +48,7 @@ assert(size(nodeLoc,ndims(nodeLoc)) == length(nodePAA_position), 'Provide correc
 C = 3e8;
 wavelength =C/fc;
 squeezeAndReshape = @(x) reshape(squeeze(x), [], 3); % Helper anonymus for using unique when multiple time divisions
-findColumn = @(x,y) sum(ismember(x,y),2)>0;
+findRow = @(x,y) sum(ismember(x,y),2)>0;
 
 if ismatrix(nodeLoc)
     nodeLocTmp = zeros([1,flip(size(nodeLoc))]);
@@ -68,6 +68,7 @@ numberTimeDivision = size(nodeLoc,1);
 for node_id = 1:numberOfNodes
     nPAA = size(nodePAA_position{node_id},1); % Number of PAAs at node node_id
     PAA_info{node_id}.nPAA_node = nPAA;
+%     PAA_info{node_id}.orientation = nodePAA_Orientation{node_id};
     PAA_info{node_id}.centroids = 1;
     PAA_node_to_cluster = 1:nPAA; % Indexes of nodes to cluster
     node_clustered = [];          % Nodes in the cluster
@@ -91,7 +92,7 @@ for node_id = 1:numberOfNodes
         while numel(node_to_cluster)
             [~, popular_node_id] = max(histc(idx(:), node_to_cluster)); % Find node with most connections
             PAA_info{node_id}.node_clusters{idx_paa} = reshape(...
-                unique(idx(findColumn(idx,node_to_cluster(popular_node_id)), :)),...
+                unique(idx(findRow(idx,node_to_cluster(popular_node_id)), :)),...
                 [], 1); % Cluster of nodes connected with popular node
             PAA_info{node_id}.centroids(idx_paa) = node_to_cluster(popular_node_id);
             PAALoc(:,idx_paa, :) =squeezeAndReshape(nodeLoc(:,node_id, :)) + ...
@@ -101,6 +102,7 @@ for node_id = 1:numberOfNodes
             node_clustered = [node_clustered; PAA_info{node_id}.node_clusters{idx_paa}]; %#ok<AGROW>
             PAA_info{node_id}.centroids_shift{idx_paa} = repmat(nodePAA_position{node_id}(PAA_info{node_id}.centroids(idx_paa),:), ...
                 length(PAA_info{node_id}.node_clusters{idx_paa}),1)-nodePAA_position{node_id}(PAA_info{node_id}.node_clusters{idx_paa} ,:); % Save shift from centroid
+            PAA_info{node_id}.orientation{idx_paa} = nodePAA_Orientation{node_id}(PAA_info{node_id}.node_clusters{idx_paa}, :);
             node_to_cluster = node_to_cluster(~ismember(node_to_cluster,  PAA_info{node_id}.node_clusters{idx_paa})); % Node not considered in cluster
             idx_paa = idx_paa+1;
         end
@@ -132,21 +134,23 @@ for node_id = 1:numberOfNodes
     
     % Find possible clusters of PAA between l/2 and l_cor*lambda
     indepPAAidx = PAA_node_to_cluster(~ismember(PAA_node_to_cluster,node_clustered) ); % Node not clustered yet
-    row_idx = find(findColumn(paaIdComb, indepPAAidx));
+    row_idx = find(findRow(paaIdComb, indepPAAidx));
     
     if  any(PAA_distance_paaCombinations{node_id}(row_idx,:)<= l_cor*wavelength/2 ...
             & PAA_distance_paaCombinations{node_id}(row_idx,:)> wavelength/2)
         idx = paaIdComb(row_idx(PAA_distance_paaCombinations{node_id}(row_idx,:)<= l_cor*wavelength/2 & PAA_distance_paaCombinations{node_id}(row_idx,:)> wavelength/2),:);% This couples can be combined
         if any(~ismember(idx(:),node_clustered))
-            row_with_centroid = idx(sum(ismember(idx,PAA_info{node_id}.centroids),2)>0,:);  % This couples can be combined
+            row_with_centroid = idx(findRow(idx, PAA_info{node_id}.centroids),:);  % This couples can be combined
             for ct = 1:numel(PAA_info{node_id}.centroids)
                 idx_paa = idx_paa+1;
-                cluster_tmp = unique(row_with_centroid(findColumn(row_with_centroid, PAA_info{node_id}.centroids(ct)),:));
-                PAA_info{node_id}.node_clusters{idx_paa}  = cluster_tmp(cluster_tmp ~= PAA_info{node_id}.centroids(ct));
+                cluster_tmp = unique(row_with_centroid(findRow(row_with_centroid, PAA_info{node_id}.centroids(ct)),:));
+%                 PAA_info{node_id}.node_clusters{idx_paa}  = cluster_tmp(cluster_tmp ~= PAA_info{node_id}.centroids(ct));
+                PAA_info{node_id}.node_clusters{idx_paa}  = cluster_tmp(~ismember(cluster_tmp,node_clustered));
                 PAA_info{node_id}.centroids(idx_paa) =PAA_info{node_id}.centroids(ct);
                 PAA_info{node_id}.centroids_shift{idx_paa}  = ...
                 repmat(nodePAA_position{node_id}(PAA_info{node_id}.centroids(idx_paa),:),...
                 length(PAA_info{node_id}.node_clusters{idx_paa}),1)-nodePAA_position{node_id}(PAA_info{node_id}.node_clusters{idx_paa} ,:);
+                PAA_info{node_id}.orientation{idx_paa} =  nodePAA_Orientation{node_id}(PAA_info{node_id}.node_clusters{idx_paa}, :);
                 PAALoc(:,idx_paa, :) =squeezeAndReshape(nodeLoc(:,node_id, :)) + nodePAA_position{node_id}(PAA_info{node_id}.centroids(idx_paa),:);
                 PAA_info{node_id}.generationMethod(idx_paa) = 1;
                 node_clustered = [node_clustered;PAA_info{node_id}.node_clusters{idx_paa}]; %#ok<AGROW>
@@ -164,6 +168,7 @@ for node_id = 1:numberOfNodes
             PAA_info{node_id}.node_clusters{idx_paa+m_id} = missing_paa(m_id);
             PAA_info{node_id}.centroids(idx_paa+m_id) = missing_paa(m_id);
             PAA_info{node_id}.centroids_shift{idx_paa+m_id}  = zeros(1,3);
+            PAA_info{node_id}.orientation{idx_paa+m_id} = nodePAA_Orientation{node_id}(missing_paa(m_id), :);
             PAALoc(:,idx_paa+m_id, :) =squeezeAndReshape(nodeLoc(:,node_id, :)) + nodePAA_position{node_id}(PAA_info{node_id}.centroids(idx_paa+m_id),:);
             PAA_info{node_id}.generationMethod(idx_paa+m_id)=2;
         end

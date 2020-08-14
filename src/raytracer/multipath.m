@@ -1,4 +1,4 @@
-function [QD, switchQD, output, multipath, indexMultipath, indexQD] =...
+function [QD, switchQD, output, multipath, indexMultipath, indexQD,varargout] =...
     multipath(ArrayOfPlanes, ArrayOfPoints, Rx, Tx, CADOutput,...
     numberOfRowsArraysOfPlanes, MaterialLibrary, arrayOfMaterials,...
     switchMaterial, velocityTx, velocityRx, PolarizationSwitch,...
@@ -97,6 +97,7 @@ indexMultipath = 1;
 indexOutput = 1;
 indexQD = 1;
 sizeArrayOfPlanes = size(ArrayOfPlanes);
+paramsRotation = [];
 
 output = zeros(sizeArrayOfPlanes(1),21,indStoc);
 multipath = [];
@@ -141,28 +142,27 @@ if numberOfRowsArraysOfPlanes>0
             PolarizationSwitchTemporary = 0;
         end
         
-        [switch1,~,dod,doa,multipath,distance,dopplerFactor,PathLoss,...
+        [isMPC,~,dodNoRot,doaNoRot,multipath,distance,dopplerFactor,PathLoss,...
             ~,~,~,~,velocityTemp] = singleMultipathGenerator...
             (iterateNumberOfRowsArraysOfPlanes,orderOfReflection,indexOrderOfReflection,ArrayOfPlanes,...
             ArrayOfPoints,Reflected,Rx,Tx,CADOutput,...
             multipath,indexMultipath,velocityTx,velocityRx,PolarizationSwitchTemporary,...
             PolarizationTx,AntennaOrientationTx,PolarizationRx,...
             AntennaOrientationRx,nt_array,switchCrossPolarization);
-            dod=  coordinateRotation(dod,[0 0 0], qTx.euc, 'frame');
-            doa=  coordinateRotation(doa,[0 0 0], qRx.euc, 'frame'); 
-        if switch1 == 1
+            dod=  coordinateRotation(dodNoRot,[0 0 0], qTx.euc, 'frame');
+            doa=  coordinateRotation(doaNoRot,[0 0 0], qRx.euc, 'frame'); 
+        if isMPC == 1
             for i = 1:indexMultipath - 1
                 switch3 = 1;
                 for j = 1:(orderOfReflection * 3) + 6
                     switch3 = switch3 && (multipath(i,j) == multipath(indexMultipath,j));
                 end
-                switch1 = switch1 && (~switch3);
+                isMPC = isMPC && (~switch3);
             end
         end
         
         % the delay, AoA, AoD, path loss of the path are stored in output parameter
-        
-        if  switch1 == 1
+        if  isMPC == 1
             
             output(indexOutput,1,1:indStoc) = indexMultipath;
             % dod - direction of departure
@@ -187,6 +187,10 @@ if numberOfRowsArraysOfPlanes>0
             output(indexOutput,13,1:indStoc) = acosd(doa(3) / norm(doa));
             output(indexOutput,18,1:indStoc) = orderOfReflection*pi;% + dopplerFactor*delay;
             output(indexOutput,20,1:indStoc) = dopplerFactor * frequency;
+            paramsRotation(indexOutput).dod = dodNoRot;
+            paramsRotation(indexOutput).doa = doaNoRot;
+            paramsRotation(indexOutput).TxVel = velocityTx;
+            paramsRotation(indexOutput).RxVel = velocityRx;
             indexReference = indexOutput;
             indexMultipath = indexMultipath + 1;
             indexOutput = indexOutput + 1;
@@ -220,6 +224,8 @@ if numberOfRowsArraysOfPlanes>0
     indexQD = indexOutput - 1;
     output1 = output;
     output = output1(1:indexQD,1:21,1:indStoc);
+    varargout{1} = paramsRotation;
+
     mp1 = multipath;
     multipath = [];
     

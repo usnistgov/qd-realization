@@ -1,4 +1,4 @@
-function [ch] = ddir2MIMO(ddir, info, ptr)
+function [ch, varargout] = ddir2MIMO(ddir, info, frmRotMpInfo, ptr)
 %%DDIR2MIMO Converts the double direction impulse response in the MIMO 
 % channel matrix assigning phase rotations according with PAA centroids 
 % positions and angles of departure/arrival
@@ -9,30 +9,57 @@ function [ch] = ddir2MIMO(ddir, info, ptr)
 [~,b] = unique(info{ptr.nt}.centroids);
 b = sort(b);
 idx = find(info{ptr.nt}.centroids == info{ptr.nt}.centroids(b(ptr.paatx)));
-t= idx(ptr.rot_tx);
+t= idx(ptr.rot_tx); %Pointer to centroid in cell array in info{ptr.nt}
 
 [~,b] = unique(info{ptr.nr}.centroids);
 b = sort(b);
 idx = find(info{ptr.nr}.centroids == info{ptr.nr}.centroids(b(ptr.paarx)));
-r= idx(ptr.rot_rx);
+r= idx(ptr.rot_rx); %Pointer to centroid in cell array in info{ptr.nr}
 
-AOD_az = ddir(:,10)/180*pi;
-AOD_el = ddir(:,11)/180*pi;
-AOA_az = ddir(:,12)/180*pi;
-AOA_el = ddir(:,13)/180*pi;
+%% Overwrite angles
 
-R_AOD = phaseRotation(AOD_az,AOD_el, info{ptr.nt}.centroids_shift{t} );
-R_AOA = phaseRotation(AOA_az,AOA_el, info{ptr.nr}.centroids_shift{r} );
-N_AOD = size(R_AOD,2);
-N_AOA = size(R_AOA,2);
+N_AOD = size(info{ptr.nt}.centroids_shift{t},1);
+N_AOD = info{ptr.nt}.nodePAAInfo{ptr.paatx}.rotated_channel(ptr.rot_tx);
+N_AOA = size(info{ptr.nr}.centroids_shift{r},1);
+N_AOA = info{ptr.nr}.nodePAAInfo{ptr.paarx}.rotated_channel(ptr.rot_rx);
+
+% orientation.tx = info{ptr.nt}.orientation(b(ptr.paatx),:);
+% orientation.rx = info{ptr.nr}.orientation(b(ptr.paarx),:);
+% [AOD_az,AOD_el,AOA_az, AOA_el] = frameRotation(frmRotMpInfo, orientation);
+% 
+% ddir(:,10) = AOD_az*180/pi;
+% ddir(:,11) = AOD_el*180/pi;
+% ddir(:,12) = AOA_az*180/pi;
+% ddir(:,13) = AOA_el*180/pi;
+% 
+% R_AOD = phaseRotation(AOD_az,AOD_el, info{ptr.nt}.centroids_shift{t} );
+% R_AOA = phaseRotation(AOA_az,AOA_el, info{ptr.nr}.centroids_shift{r} );
+
 
 ch = zeros([size(ddir), N_AOD*N_AOA]);
 
 for id_aod = 1:N_AOD
     for id_aoa = 1:N_AOA
+        
+        orientation.tx = info{ptr.nt}.orientation{t}(id_aod,:);
+        orientation.rx = info{ptr.nr}.orientation{r}(id_aoa,:);
+        
+        [dod, doa, AOD_az,AOD_el,AOA_az, AOA_el] = frameRotation(frmRotMpInfo, orientation);
+        % dod - direction of departsure
+        ddir(:, 2:4) = dod;
+        % doa - direction of arrival
+        ddir(:, 5:7) = doa;
+        ddir(:,10) = AOD_az*180/pi;
+        ddir(:,11) = AOD_el*180/pi;
+        ddir(:,12) = AOA_az*180/pi;
+        ddir(:,13) = AOA_el*180/pi;
+        R_AOD = phaseRotation(AOD_az,AOD_el, info{ptr.nt}.centroids_shift{t}(id_aod,:) );
+        R_AOA = phaseRotation(AOA_az,AOA_el, info{ptr.nr}.centroids_shift{r}(id_aoa,:) );
+        
         ch(:,:, (id_aod-1)*(N_AOA)+id_aoa) = ddir;
-        ch(:,18, (id_aod-1)*(N_AOA)+id_aoa) = wrapTo2Pi(ch(:,18,id_aod)+angle(R_AOD(:,id_aod))+angle(R_AOA(:,id_aoa)));
+        ch(:,18, (id_aod-1)*(N_AOA)+id_aoa) = wrapTo2Pi(ch(:,18,id_aod)+angle(R_AOD)+angle(R_AOA));
     end
 end
-
+[A,B] = meshgrid(info{ptr.nt}.node_clusters{t}, info{ptr.nr}.node_clusters{r});
+varargout{1} = [A(:), B(:)];
 end
