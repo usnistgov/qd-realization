@@ -80,7 +80,9 @@ end
 function x = appendNan(x,n,m)
 if isempty(x)
     x = nan(2,n,m);
+elseif size(x,3)<m
+    x(:, :, size(x,3)+1:m) = nan;
 else
-    x(end+1,:) = nan;
+    x(end+1,:,:) = nan;
 end
 end
