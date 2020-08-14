@@ -296,7 +296,7 @@ end
 
 %% Process PAA position
 
-[PAA_info]  = cluster_paa(nodePosition, nodePAA_position);
+[PAA_info]  = cluster_paa(nodePosition, nodePAA_position, nodePAA_Orientation);
 
 switchRandomization = 0;
 
@@ -336,7 +336,8 @@ if paraCfg.jsonOutput == 1
     fpp = fopen(fullfile(paaPositionPath,'PAAPosition.json'),'w');
     for i = 1:length(nodePAA_position)
         for ipaa = 1:size(nodePAA_position{i},1)
-            s = struct('Node', i-1, 'PAA', ipaa-1, 'posShift',  nodePAA_position{i}(ipaa, :));
+            centroidId = PAA_info{i}.centroids(cellfun(@(x) any(x == ipaa), PAA_info{i}.node_clusters));
+            s = struct('Node', i-1, 'PAA', ipaa-1, 'Centroid', centroidId,  'Position',  nodePAA_position{i}(ipaa, :));
             json = jsonencode(s);
             fprintf(fpp, '%s\n', json);
         end
