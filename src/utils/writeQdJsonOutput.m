@@ -82,6 +82,7 @@ if isempty(x)
     x = nan(2,n,m);
 elseif size(x,3)<m
     x(:, :, size(x,3)+1:m) = nan;
+    x(end+1,:,:) = nan;
 else
     x(end+1,:,:) = nan;
 end
