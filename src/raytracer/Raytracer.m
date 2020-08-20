@@ -231,20 +231,19 @@ for iterateTimeDivision = 1:paraCfgInput.numberOfTimeDivisions
                         QTx.cTx(1,:) = nodeCfgInput.PAA_info{iterateTx}.node_centroid(iterateTimeDivision,:,:);
                         QTx.cTx(2,:) = Tx;
 %                         QTx.euc(2,:) = nodeCfgInput.nodeOrientation(iterateTx,:);
-                        QTx.euc(2,:) = nodeCfgInput.nodeAntennaOrientation{iterateTx}(iteratePaaTx,:);
+%                         QTx.euc(2,:) = nodeCfgInput.nodeAntennaOrientation{iterateTx}(iteratePaaTx,:);
                         QTx.euc(1,:) = nodeCfgInput.nodeRotation(iterateTimeDivision,:, iterateTx);
                         
                         % Rotation Rx struct
                         QRx.cRx(1,:) = nodeCfgInput.PAA_info{iterateRx}.node_centroid(iterateTimeDivision,:,:);
                         QRx.cRx(2,:) = Rx;
-%                         QRx.euc(2,:) = nodeCfgInput.nodeOrientation(iterateRx,:);
-                        QRx.euc(2,:) = nodeCfgInput.nodeAntennaOrientation{iterateRx}(iteratePaaRx,:);
+
                         QRx.euc(1,:) = nodeCfgInput.nodeRotation(iterateTimeDivision,:, iterateRx);
                         
                         vtx = nodeVelocities(iterateTx, :);
                         vrx = nodeVelocities(iterateRx, :);
                     end
-                    
+  
                     % LOS Path generation
                     [switchLOS, output, frmRotMpInfo{1}] = LOSOutputGenerator(CADop, Rx, Tx,...
                         output, vtx, vrx, switchPolarization, switchCp,...
@@ -320,7 +319,8 @@ for iterateTimeDivision = 1:paraCfgInput.numberOfTimeDivisions
 %                     outputPAA{iterateTx, iterateRx}.frmRotMpInfo=[frmRotMpInfo{:}];
 %                     outputPAA{iterateRx, iterateTx}.frmRotMpInfo=[frmRotMpInfo{:}];
                     eval(['outputPAA{iterateTx, iterateRx}.frmRotMpInfopaaTx',num2str(iteratePaaTx-1),'paaRx', num2str(iteratePaaRx-1), '= [frmRotMpInfo{:}];'] );
-                    eval(['outputPAA{iterateRx, iterateTx}.frmRotMpInfopaaTx',num2str(iteratePaaRx-1),'paaRx', num2str(iteratePaaTx-1), '= [frmRotMpInfo{:}];'] );
+                    eval(['outputPAA{iterateRx, iterateTx}.frmRotMpInfopaaTx',num2str(iteratePaaRx-1),'paaRx', num2str(iteratePaaTx-1), '= reverseFrmRotMpInfo([frmRotMpInfo{:}]);'] );
+%                     reverseFrmRotMpInfo([frmRotMpInfo{:}])
                     frmRotMpInfo = {};
                     eval(['outputPAA{iterateTx, iterateRx}.paaTx',num2str(iteratePaaTx-1),'paaRx', num2str(iteratePaaRx-1), '= output;'] );
                     eval(['outputPAA{iterateRx, iterateTx}.paaTx',num2str(iteratePaaRx-1),'paaRx', num2str(iteratePaaTx-1), '= reverseOutputTxRx(output);'] );

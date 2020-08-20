@@ -187,8 +187,8 @@ if numberOfRowsArraysOfPlanes>0
             output(indexOutput,13,1:indStoc) = acosd(doa(3) / norm(doa));
             output(indexOutput,18,1:indStoc) = orderOfReflection*pi;% + dopplerFactor*delay;
             output(indexOutput,20,1:indStoc) = dopplerFactor * frequency;
-            paramsRotation(indexOutput).dod = dodNoRot;
-            paramsRotation(indexOutput).doa = doaNoRot;
+            paramsRotation(indexOutput).dod = dod;
+            paramsRotation(indexOutput).doa = doa;
             paramsRotation(indexOutput).TxVel = velocityTx;
             paramsRotation(indexOutput).RxVel = velocityRx;
             indexReference = indexOutput;

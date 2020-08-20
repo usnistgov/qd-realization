@@ -88,7 +88,7 @@ c=3e8;
 dopplerFactor=(velocityRxAlongDirectionOfDeparture-velocityTxAlongDirectionOfDeparture)/(c);
 % To verify whether DoA vector exists
 % vector=Tx-Rx;
-[isLOS]=verifyPath(Tx,Rx,doa,[0,0,0],...
+[isLOS]=verifyPath(Tx,Rx,doaNoRot,[0,0,0],...
     [0,0,0],CADoutput,2,false);
 
 if isLOS==1 % if DoA exists
@@ -137,8 +137,8 @@ if isLOS==1 % if DoA exists
         output = output1;
     end
     
-    paramsRotation.dod = dodNoRot;
-    paramsRotation.doa = doaNoRot;
+    paramsRotation.dod = dod;
+    paramsRotation.doa = doa;
     paramsRotation.TxVel = velocityTx;
     paramsRotation.RxVel = velocityRx;
     varargout{1} = paramsRotation;
