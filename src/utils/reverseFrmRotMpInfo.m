@@ -1,0 +1,13 @@
+function frmRotMpInfoOut = reverseFrmRotMpInfo(frmRotMpInfo)
+L = length(frmRotMpInfo);
+
+if isempty(frmRotMpInfo)
+    frmRotMpInfoOut = frmRotMpInfo;
+else
+    frmRotMpInfoOut = struct('dod' ,mat2cell(reshape([frmRotMpInfo.doa], 3, []).', ones(1,L)).', ...
+        'doa' ,mat2cell(reshape([frmRotMpInfo.dod], 3, []).', ones(1,L)).', ...
+        'TxVel' ,mat2cell(reshape([frmRotMpInfo.RxVel], 3, []).', ones(1,L)).', ...
+        'RxVel' ,mat2cell(reshape([frmRotMpInfo.TxVel], 3, []).', ones(1,L)).' ...
+        );
+end
+end
