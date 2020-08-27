@@ -67,6 +67,7 @@ numberTimeDivision = size(nodeLoc,1);
 %% Clustering: loop on nodes
 for node_id = 1:numberOfNodes
     nPAA = size(nodePAA_position{node_id},1); % Number of PAAs at node node_id
+    if nPAA == 1, nPAA =0;end
     PAA_info{node_id}.nPAA_node = nPAA;
 %     PAA_info{node_id}.orientation = nodePAA_Orientation{node_id};
     PAA_info{node_id}.centroids = 1;
@@ -181,8 +182,9 @@ for node_id = 1:numberOfNodes
         PAA_info{node_id}.nPAA_node = 1;
         PAA_info{node_id}.node_clusters = {1};
         PAA_info{node_id}.centroids = 1;
-        PAA_info{node_id}.centroids_shift = {zeros(1,3)};
+        PAA_info{node_id}.centroids_shift =nodePAA_position(node_id);
         PAA_info{node_id}.PAA_loc =nodeLoc(:,node_id, :);
+        PAA_info{node_id}.orientation{1} = nodePAA_Orientation{node_id};
     end    
 end
 
