@@ -96,6 +96,9 @@ for id = numChanV(~idEmpty)
     % Stores Angle of arrival azimuth [deg]
     fprintf(fid,formatSpec,output_id(:,12));
 end
+if isempty(id)
+    fprintf(fid,formatSpec,0);
+end
 
 if ~useOptimizedOutputToFile
     fclose(fid);
