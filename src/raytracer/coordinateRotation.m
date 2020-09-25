@@ -36,6 +36,10 @@ assert(size(C,1) == size(euler,1) || size(C,1) ==1, 'Provide correct', ...
 
 Nrotations = size(euler,1) ;
 
+if isempty(P)
+    return
+end
+
 if size(C,1) ==1
     C = repmat(C,[Nrotations,1]);
 end
