@@ -52,7 +52,7 @@ for tx = nodeList
                     s = struct('TX', tx-1, 'RX', rx-1,...
                         'PAA_TX', txPaa-1, 'PAA_RX', rxPaa-1);
                     s.Delay = mat2cell(single(sisoCh(:,8)), rowDist);
-                    s.Gain  = mat2cell(single(sisoCh(:,9)), rowDist);
+                    s.Gain  = mat2cell(single(real(sisoCh(:,9))), rowDist);
                     s.Phase = mat2cell(single(sisoCh(:,18)), rowDist);
                     s.AODEL = mat2cell(single(sisoCh(:,11)), rowDist);
                     s.AODAZ = mat2cell(single(sisoCh(:,10)), rowDist);
