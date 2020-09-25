@@ -1,6 +1,6 @@
-function [output, count1, switch_QD] = QDGenerator(order_of_R,output,...
-    array_of_materials, number, MaterialLibrary, distance, freq, count1,...
-    dod, doa, vtx, v_temp, count, indexReference, varargin)
+function [output, mpcIdx, switch_QD,paramsRotation] = QDGenerator(order_of_R,output,...
+    array_of_materials, number, MaterialLibrary, distance, freq, mpcIdx,...
+    dod, doa, vtx, v_temp, count, indexReference, paramsRotation, varargin)
 %INPUT -
 %order_of_R -  Order of reflection
 %output - multipath parameters
@@ -66,7 +66,7 @@ function [output, count1, switch_QD] = QDGenerator(order_of_R,output,...
 % Modified by: Mattia Lecci <leccimat@dei.unipd.it>, Improved access to MaterialLibrary
 % Modified by: Neeraj Varshney <neeraj.varshney@nist.gov>, Included residual
 % error in QD model
-ar_struct = {'indStoc'}; 
+var_struct = {'indStoc', 'Nprec', 'Npost'}; 
 for k = 1:2:length(varargin)
     if (~any(strcmp(varargin{k}, var_struct)))
         warning(['Cannot specify "', varargin{k}, '" as input value - it will be discarted']);
@@ -74,6 +74,9 @@ for k = 1:2:length(varargin)
     eval([varargin{k},' = varargin{k+1};'])
 end
 if ~exist('indStoc','var'),     indStoc=1;        end
+if ~exist('Nprec','var'),       Nprec=3;        end
+if ~exist('Npost','var'),       Npost=16;        end
+
 c = 3e8;
 % if  switch_material==1 && QD_gen==1
 % To demonstrate that even higher order reflections can be taken care of
@@ -81,22 +84,22 @@ c = 3e8;
 % above first order. For higher order reflections the physical measurements
 % are in progress.
 %  if  switch_material==1 && order_of_R==1
-Pathloss1 = 0;
+PathlossSum = 0;
 switch_QD = 0;
 for order_of_R_temp = 1:order_of_R
     
     
     Material = array_of_materials(number,order_of_R_temp);
     if order_of_R_temp == order_of_R
-        output(count1-1,21, 1:indStoc) = Material;
+        output(mpcIdx-1,21, 1:indStoc) = Material;
     end
     
     [Pathloss] = PathlossQD(MaterialLibrary,...
         array_of_materials(number,:),1);
-    Pathloss1=Pathloss1+Pathloss;
+    PathlossSum=PathlossSum+Pathloss;
 end
-output(count1-1,9, 1:indStoc) = output(count1-1,9,1:indStoc)-(Pathloss1);
-pathgain = output(count1-1,9,1:indStoc);
+output(mpcIdx-1,9, 1:indStoc) = output(mpcIdx-1,9,1:indStoc)-(PathlossSum);
+pathGain = squeeze(output(mpcIdx-1,9,1:indStoc));
 
 % i1 is for generating precursors and i2 is for generating postcursors.
 for i1 = 1:2
@@ -114,7 +117,7 @@ for i1 = 1:2
         sigmaSigmas = MaterialLibrary.sigma_SigmaS_Precursor(Material);
         % A total of 3 precursors are generated. they can be adjusted by
         % changing n
-        n = 3;
+        n = Nprec;
         
     else
         muk = MaterialLibrary.mu_k_Postcursor(Material);
@@ -126,7 +129,7 @@ for i1 = 1:2
         muSigmas = MaterialLibrary.mu_SigmaS_Postcursor(Material);
         sigmaSigmas = MaterialLibrary.sigma_SigmaS_Postcursor(Material);
         % A total of 16 post cursors are genearted
-        n = 16;
+        n = Npost;
         
     end
     
@@ -147,7 +150,7 @@ for i1 = 1:2
         sigmaAoaAz = abs(normalRandomGenerator(muTheta, sigmaTheta,indStoc));
         
         lambda = abs(normalRandomGenerator(mul, sigmal,indStoc));
-        tau_set = nan(n+1, ,indStoc);
+        tau_set = nan(n+1, indStoc);
         tau_set(1,:) = (distance/c) * 1e9; % convert to ns
         
         i = 1;
@@ -161,10 +164,10 @@ for i1 = 1:2
             else
                 tau_set(i+1,:) = tau_set(i,:)+diff;
             end
-            output(count1+i-1,1,1:indStoc) = count-1;
-            output(count1+i-1, 2:4,1:indStoc) = repmat(dod,1,1,indStoc);
-            output(count1+i-1, 5:7,1:indStoc) = repmat(doa,1,1,indStoc);
-            output(count1+i-1,8,1:indStoc) = tau_set(i+1,:)*1e-9;
+            output(mpcIdx+i-1,1,1:indStoc) = count-1;
+            output(mpcIdx+i-1, 2:4,1:indStoc) = repmat(dod,1,1,indStoc);
+            output(mpcIdx+i-1, 5:7,1:indStoc) = repmat(doa,1,1,indStoc);
+            output(mpcIdx+i-1,8,1:indStoc) = tau_set(i+1,:)*1e-9;
             
             % output(count1,10)=180*atan(dod(2)/dod(1))/pi;
             % output(count1,11)=180*acos(dod(3)/norm(dod))/pi;
@@ -181,13 +184,13 @@ for i1 = 1:2
             if i~=0
                 s = normalRandomGenerator(0,sigmaS);
                 if i1==1
-                       output(count1+i-1,9,1:indStoc) = pow2db((pgCursor/kFactor).*...
-                           exp(((tau_set(i+1)-tau_set(1))/gamma)+s));
+                       output(mpcIdx+i-1,9,1:indStoc) = pow2db((pgCursor./kFactor).*...
+                           exp(((tau_set(i+1,:)-tau_set(1,:)).'./gamma)+s));
                 else
-                    output(count1+i-1,9,1:indStoc) =  pow2db((pgCursor/kFactor).*...
-                           exp(-((tau_set(i+1)-tau_set(1))/gamma)+s));
+                    output(mpcIdx+i-1,9,1:indStoc) =  pow2db((pgCursor./kFactor).*...
+                           exp(-((tau_set(i+1,:)-tau_set(1,:)).'./gamma)+s));
                     if i == 1
-                        output(indexReference,9,1:indStoc) =  20*log10(pgCursor-(pgCursor/kFactor));
+                        output(indexReference,9,1:indStoc) =  20*log10(pgCursor-(pgCursor./kFactor));
                     end
                 end
             end
@@ -197,13 +200,15 @@ for i1 = 1:2
         theta_cursor = repmat(mu,1,indStoc);
         
         % generates angular spread for Aod elevation
-        
+        Aod_el = zeros(n, indStoc);
+        PG = zeros(n, indStoc);
+        PG1 = zeros(n, indStoc);
         for i=1:n
             x = randomLaplaceGenerator(indStoc);
-            ran(i,:) = x;
+%             ran(i,:) = x;
             Aod_el(i,:) = mu+x;
-            PG(i,:) = 10.^(output(count1+i-1,9,1:indStoc)/20);
-            PG1(i,:) = output(count1+i-1,9,1:indStoc);
+            PG(i,:) = 10.^(output(mpcIdx+i-1,9,1:indStoc)/20);
+            PG1(i,:) = output(mpcIdx+i-1,9,1:indStoc);
             %     output(count1+i-1,11)=randomLaplaceGenerator(mu,sigma_Aod_E);
         end
         PG_cursor = squeeze(10.^(output(count-1,9,1:indStoc)/20)).';
@@ -224,7 +229,7 @@ for i1 = 1:2
         s1=abs(x.*(1+(b./a)));
         Aod_el=((Aod_el-mu_1).*sqrt(s1))+(mu_1);
         
-        mu=squeeze(output(count1-1,10,1:indStoc));
+        mu=squeeze(output(mpcIdx-1,10,1:indStoc));
         theta_cursor=mu.';
         % generates angular spread for Aod azimuth
         ran = [];
@@ -246,7 +251,7 @@ for i1 = 1:2
         Aod_az=((Aod_az-mu_1).*sqrt(s1))+(mu_1);
         
         
-        mu=squeeze(output(count1-1,12,1:indStoc));
+        mu=squeeze(output(mpcIdx-1,12,1:indStoc));
         theta_cursor=mu.';
         % generates angular spread for Aoa azimuth
         
@@ -292,26 +297,50 @@ for i1 = 1:2
         
         % sorting all QD parameters in 'QD' parametwr
         for i=1:n
-            output(count1+i-1, 11, 1:indStoc)=Aod_el1(i+1,:);
-            output(count1+i-1, 10, 1:indStoc)=Aod_az1(i+1,:);
-            output(count1+i-1, 12, 1:indStoc)=Aoa_az1(i+1,:);
-            output(count1+i-1, 13, 1:indStoc)=Aoa_el1(i+1,:);
-            output(count1+i-1, 14:18, 1:indStoc)=output(count1-1, 14:18, 1:indStoc);
+            output(mpcIdx+i-1, 11, 1:indStoc)=Aod_el1(i+1,:);
+            output(mpcIdx+i-1, 10, 1:indStoc)=Aod_az1(i+1,:);
+            output(mpcIdx+i-1, 12, 1:indStoc)=Aoa_az1(i+1,:);
+            output(mpcIdx+i-1, 13, 1:indStoc)=Aoa_el1(i+1,:);
+            output(mpcIdx+i-1, 14:18, 1:indStoc)=output(mpcIdx-1, 14:18, 1:indStoc);
             
             vAngle_DoD = Aod_el1(i+1,:);
             hAngle_DoD = Aod_az1(i+1,:);
             dod_temp=reshape([sind(vAngle_DoD).*cosd(hAngle_DoD),sind(vAngle_DoD).*sind(hAngle_DoD),cosd(vAngle_DoD)], [], 3).';
+                    
+            dod_mpc_norm =  tau_set(i+1,:)/(tau_set(1,:))* norm(dod);
+            dod_z =dod_mpc_norm.*cosd(vAngle_DoD);
+            dod_y = sqrt(((dod_mpc_norm)^2-dod_z.^2)./(1./tand(hAngle_DoD).^2 +1));
+            if hAngle_DoD>180
+            dod_y = -dod_y;
+            end
+            dod_x = dod_y./tand(hAngle_DoD);
+            dod_stochMPC = [dod_x, dod_y, dod_z];
+            
+            doa_mpc_norm =  tau_set(i+1,:)/(tau_set(1,:))* norm(doa);
+            doa_z = doa_mpc_norm.*cosd(Aoa_el1(i+1,:));
+            doa_y = sqrt(((doa_mpc_norm)^2-doa_z.^2)./(1./tand(Aoa_az1(i+1,:)).^2 +1));
+            if Aoa_az1(i+1,:)>180
+            doa_y = -doa_y;
+            end
+            doa_x = doa_y./tand(Aoa_az1(i+1,:));
+            doa_stochMPC = [doa_x, doa_y, doa_z];
+            
+            
             vtx_along_dod = dot(repmat(vtx, indStoc,1).', -dod_temp);
             vrx_along_dod = dot(repmat(v_temp, indStoc,1).', -dod_temp);
-            c = 3e8;
+%             c = 3e8;
             doppler_factor = freq * (vrx_along_dod - vtx_along_dod) / c;
-            output(count1+i-1,20,1:indStoc) = doppler_factor;
-            output(count1+i-1,18,1:indStoc) = rand*2*pi;
-            output(count1+i-1,19,1:indStoc) = output(count1+i-1,9,1:indStoc).*(output(count1-1,19,1:indStoc)./output(count1-1,9,1:indStoc));
+            output(mpcIdx+i-1,20,1:indStoc) = doppler_factor;
+            output(mpcIdx+i-1,18,1:indStoc) = rand*2*pi;
+            output(mpcIdx+i-1,19,1:indStoc) = output(mpcIdx+i-1,9,1:indStoc).*(output(mpcIdx-1,19,1:indStoc)./output(mpcIdx-1,9,1:indStoc));
+            paramsRotation(mpcIdx+i-1).dod = reshape(dod_stochMPC, [],3);
+            paramsRotation(mpcIdx+i-1).doa = reshape(doa_stochMPC, [],3);
+            paramsRotation(mpcIdx+i-1).TxVel = vtx_along_dod;
+            paramsRotation(mpcIdx+i-1).RxVel = vrx_along_dod;
             switch_QD = 1;
         end
         
-        count1=count1+i;
+        mpcIdx=mpcIdx+i;
         
     end
 end
