@@ -198,9 +198,9 @@ if numberOfRowsArraysOfPlanes>0
             
             % refer to "multipath - WCL17_revised.pdf" in this folder for QD model
             if  switchMaterial == 1 && QDGeneratorSwitch == 1
-                [output,indexOutput,switchQD] = QDGenerator(orderOfReflection,...
+                [output,indexOutput,switchQD,paramsRotation] = QDGenerator(orderOfReflection,...
                     output,arrayOfMaterials,iterateNumberOfRowsArraysOfPlanes,MaterialLibrary,distance,...
-                    frequency,indexOutput,dod,doa,velocityTx,velocityTemp,indexMultipath,indexReference, 'indStoc', indStoc);
+                    frequency,indexOutput,dod,doa,velocityTx,velocityTemp,indexMultipath,indexReference,paramsRotation, 'indStoc', indStoc);
             end
         end
         
