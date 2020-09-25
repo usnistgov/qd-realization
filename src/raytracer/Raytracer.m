@@ -114,7 +114,7 @@ if ~isfolder(qdFilesPath)
     mkdir(qdFilesPath)
 end
 
-keepBothQDOutput =1;
+keepBothQDOutput =0;
 % Init output files
 if ~paraCfgInput.jsonOutput || keepBothQDOutput
     fids = getQdFilesIds(qdFilesPath, paraCfgInput.numberOfNodes,...
@@ -439,11 +439,11 @@ if ~paraCfgInput.jsonOutput || keepBothQDOutput
     closeQdFilesIds(fids, paraCfgInput.useOptimizedOutputToFile);
 end
 
-writeReportOutput =1 ;
+writeReportOutput =0 ;
 if writeReportOutput
     f = fopen(strcat(outputPath, filesep,'report.dat'), 'w');
-    elapsedTime = toc;
-    fprintf(f, 'Elapsed Time:\t%f\n', elapsedTime);    
+%     elapsedTime = toc;
+%     fprintf(f, 'Elapsed Time:\t%f\n', elapsedTime);    
 %     isDeviceRotationOn = 'true';
     fprintf(f, 'Device Rotation:\t%d\n', paraCfgInput.isDeviceRotationOn);
 %     isInitialOrientationOn = 'true';
