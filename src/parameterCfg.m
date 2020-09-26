@@ -134,6 +134,12 @@ para = fieldToNum(para, 'qdFilesFloatPrecision', [], 6);
 % Default: 1 (true)
 para = fieldToNum(para, 'useOptimizedOutputToFile', [], 1);
 
+% Use output in Json format. Json output reduces number of output files and
+% reduces execution time as output is written only once at the end of the 
+% raytracing operations instead to be written at run-time. 
+% On the contrary it might be heavy on RAM as it will retain data in memory
+% during raytracing.
+% Default: 0 
 para = fieldToNum(para, 'jsonOutput', [], 0);
 
 end
