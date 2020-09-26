@@ -60,15 +60,15 @@ nodeLoc = zeros( paraCfg.numberOfNodes, 3);
 try
     obsoletePosition = csvread(fullfile(inputPath, 'nodes.dat'));
     warning('Configuration obsolete. nodes.dat not used anymore: node information loaded from NodePosition.dat')
-%     obsoleteConfig = true;
+    %     obsoleteConfig = true;
     listing = dir(fullfile(scenarioNameStr, 'Input'));
     for nodeId = 1: size(obsoletePosition,1)
         if ~sum(arrayfun(@(x) strcmp(x.name,['NodePosition',num2str(nodeId-1), '.dat']), listing))
             writematrix(obsoletePosition(nodeId,:), fullfile(inputPath, ['NodePosition', num2str(nodeId-1),'.dat']))
         end
     end
-catch 
-%     obsoleteConfig = false;
+catch
+    %     obsoleteConfig = false;
 end
 
 %% Random generation of node positions
@@ -108,9 +108,9 @@ if switchRandomization == 0
             warning('nodeVelocities.dat not used')
         catch
         end
-    end  
+    end
     
-   %% Load mobility matrix and write NodePositionX.dat and NodeRotationX.dat   
+    %% Load mobility matrix and write NodePositionX.dat and NodeRotationX.dat
     listing = dir(fullfile(scenarioNameStr, 'Input'));
     nodePosition = zeros(paraCfg.numberOfTimeDivisions,3, paraCfg.numberOfNodes);
     countListing = 0;
@@ -122,9 +122,9 @@ if switchRandomization == 0
                 fullfile(inputPath,sprintf('NodePosition%d.dat', iterateNumberOfNodes-1)) );
             saveRotationFromTrace(fullfile(inputPath, sprintf('node%dmobility.mat', iterateNumberOfNodes-1)),...
                 fullfile(inputPath,sprintf('NodeRotation%d.dat', iterateNumberOfNodes-1)) );
-        % If mobility matrix is not present check for NodePosition and
-        % NodeRotation
-        else           
+            % If mobility matrix is not present check for NodePosition and
+            % NodeRotation
+        else
             % If only NodePosition is present, initialize NodeRotation to
             % [0,0,0]
             if sum(arrayfun(@(x) strcmp(x.name,['NodePosition',num2str(iterateNumberOfNodes-1),'.dat']), listing)) && ...
@@ -132,83 +132,83 @@ if switchRandomization == 0
                 nlines = size(readmatrix(fullfile(inputPath,sprintf('NodePosition%d.dat', iterateNumberOfNodes-1))),1);
                 writematrix(repmat([0 0  0], nlines,1), fullfile(inputPath,sprintf('NodeRotation%d.dat', iterateNumberOfNodes-1)));
                 warning('NodeRotation%d.dat not present. Rotation set to [0,0,0] for all time instances.', iterateNumberOfNodes-1)
-            % If only NodeRotation return error:  NodePosition is needed
+                % If only NodeRotation return error:  NodePosition is needed
             elseif ~ sum(arrayfun(@(x) strcmp(x.name,['NodePosition',num2str(iterateNumberOfNodes-1),'.dat']), listing)) && ...
                     sum(arrayfun(@(x) strcmp(x.name,['NodeRotation',num2str(iterateNumberOfNodes-1),'.dat']), listing))
                 error('NodePosition%d.dat is not present.', iterateNumberOfNodes-1);
-            % If NodePosition and NodeRotation are present no further
-            % actions are needed
+                % If NodePosition and NodeRotation are present no further
+                % actions are needed
             elseif sum(arrayfun(@(x) strcmp(x.name,['NodePosition',num2str(iterateNumberOfNodes-1),'.dat']), listing)) && ...
                     sum(arrayfun(@(x) strcmp(x.name,['NodeRotation',num2str(iterateNumberOfNodes-1),'.dat']), listing))
                 
-            % If NodePosition and NodeRotation are not present return error
+                % If NodePosition and NodeRotation are not present return error
             else
                 error('NodePosition%d.dat and NodeRotation%d.dat are not present.', iterateNumberOfNodes-1,  iterateNumberOfNodes-1);
             end
         end
     end
-
-   %%  Load NodePositionX.dat and NodeRotationX.dat   
-   for iterateNumberOfNodes = 1:numberOfNodes
-       
-       % NodePosition processing
-       ln = sprintf('NodePosition%d.dat', iterateNumberOfNodes-1);
-       nodePositionTemp = load(fullfile(inputPath, ln));
-       
-       if mobilityType == 1 && mobilitySwitch
-           nodeLoc(iterateNumberOfNodes,:) = nodePositionTemp;
-           countListing = countListing + 1;
-
-       else
-           
-           if  size(nodePositionTemp,1)< size(nodePosition,1) &&  ...
-                   size(nodePositionTemp,1) > 1
-               nodePosition = nodePosition(1:size(nodeRotationTemp,1), :,:);
-               paraCfg.numberOfTimeDivisions = size(nodeRotationTemp,1) ;
-               numberOfTimeDivisions = paraCfg.numberOfTimeDivisions;
-               warning('Time divisition too long.')
-           end
-           
-           try
-               numberTracePoints = min(size(nodePositionTemp,1),paraCfg.numberOfTimeDivisions);
-               nodePosition(1:numberTracePoints, :, iterateNumberOfNodes) = nodePositionTemp(1:numberTracePoints,:);
-               nodePosition(numberTracePoints+1:end, :, iterateNumberOfNodes) = repmat(nodePositionTemp, [paraCfg.numberOfTimeDivisions-numberTracePoints,1,1]);
-               nodeLoc(iterateNumberOfNodes,:) = squeeze(nodePosition(1,:,iterateNumberOfNodes));
-               countListing = countListing + 1;
-           catch
-               mobilityType = 1;
-               warning('Node Position input incorrect. Changing mobilityType to 1');
-           end
-       end
-       
-       % NodeRotation processing
-       ln  = sprintf('NodeRotation%d.dat', iterateNumberOfNodes-1);
-       nodeRotationTemp = load(fullfile(inputPath, ln));
-       if mobilityType == 1 && mobilitySwitch
-           nodeOrientation(iterateNumberOfNodes,:) = squeeze(nodeRotation(1,:,iterateNumberOfNodes));
-           countListing = countListing + 1;
-       else
-           
-           if  size(nodeRotationTemp,1)< size(nodeRotation,1) &&  ...
-                   size(nodeRotationTemp,1) > 1
-               nodeRotation = nodeRotation(1:size(nodeRotationTemp,1), :,:);
-               paraCfg.numberOfTimeDivisions = size(nodeRotationTemp,1) ;
-               numberOfTimeDivisions = paraCfg.numberOfTimeDivisions;
-               warning('Time divisition too long.')
-           end
-           
-           try
-               numberTracePoints =  min(size(nodeRotationTemp,1),paraCfg.numberOfTimeDivisions);
-               nodeRotation(1:numberTracePoints, :, iterateNumberOfNodes) = nodeRotationTemp(1:numberTracePoints,:);
-               nodeRotation(numberTracePoints+1:end, :, iterateNumberOfNodes) = repmat(nodeRotationTemp, [paraCfg.numberOfTimeDivisions-numberTracePoints,1,1]);
-               nodeOrientation(iterateNumberOfNodes,:) = squeeze(nodeRotation(1,:,iterateNumberOfNodes));
-               countListing = countListing + 1;
-           catch
-               error('Node Rotation config incorrect');
-           end
-       end
-   end
-%%
+    
+    %%  Load NodePositionX.dat and NodeRotationX.dat
+    for iterateNumberOfNodes = 1:numberOfNodes
+        
+        % NodePosition processing
+        ln = sprintf('NodePosition%d.dat', iterateNumberOfNodes-1);
+        nodePositionTemp = load(fullfile(inputPath, ln));
+        
+        if mobilityType == 1 && mobilitySwitch
+            nodeLoc(iterateNumberOfNodes,:) = nodePositionTemp;
+            countListing = countListing + 1;
+            
+        else
+            
+            if  size(nodePositionTemp,1)< size(nodePosition,1) &&  ...
+                    size(nodePositionTemp,1) > 1
+                nodePosition = nodePosition(1:size(nodeRotationTemp,1), :,:);
+                paraCfg.numberOfTimeDivisions = size(nodeRotationTemp,1) ;
+                numberOfTimeDivisions = paraCfg.numberOfTimeDivisions;
+                warning('Time divisition too long.')
+            end
+            
+            try
+                numberTracePoints = min(size(nodePositionTemp,1),paraCfg.numberOfTimeDivisions);
+                nodePosition(1:numberTracePoints, :, iterateNumberOfNodes) = nodePositionTemp(1:numberTracePoints,:);
+                nodePosition(numberTracePoints+1:end, :, iterateNumberOfNodes) = repmat(nodePositionTemp, [paraCfg.numberOfTimeDivisions-numberTracePoints,1,1]);
+                nodeLoc(iterateNumberOfNodes,:) = squeeze(nodePosition(1,:,iterateNumberOfNodes));
+                countListing = countListing + 1;
+            catch
+                mobilityType = 1;
+                warning('Node Position input incorrect. Changing mobilityType to 1');
+            end
+        end
+        
+        % NodeRotation processing
+        ln  = sprintf('NodeRotation%d.dat', iterateNumberOfNodes-1);
+        nodeRotationTemp = load(fullfile(inputPath, ln));
+        if mobilityType == 1 && mobilitySwitch
+            nodeOrientation(iterateNumberOfNodes,:) = squeeze(nodeRotation(1,:,iterateNumberOfNodes));
+            countListing = countListing + 1;
+        else
+            
+            if  size(nodeRotationTemp,1)< size(nodeRotation,1) &&  ...
+                    size(nodeRotationTemp,1) > 1
+                nodeRotation = nodeRotation(1:size(nodeRotationTemp,1), :,:);
+                paraCfg.numberOfTimeDivisions = size(nodeRotationTemp,1) ;
+                numberOfTimeDivisions = paraCfg.numberOfTimeDivisions;
+                warning('Time divisition too long.')
+            end
+            
+            try
+                numberTracePoints =  min(size(nodeRotationTemp,1),paraCfg.numberOfTimeDivisions);
+                nodeRotation(1:numberTracePoints, :, iterateNumberOfNodes) = nodeRotationTemp(1:numberTracePoints,:);
+                nodeRotation(numberTracePoints+1:end, :, iterateNumberOfNodes) = repmat(nodeRotationTemp, [paraCfg.numberOfTimeDivisions-numberTracePoints,1,1]);
+                nodeOrientation(iterateNumberOfNodes,:) = squeeze(nodeRotation(1,:,iterateNumberOfNodes));
+                countListing = countListing + 1;
+            catch
+                error('Node Rotation config incorrect');
+            end
+        end
+    end
+    %%
     
     if mobilityType == 2 && countListing < numberOfNodes
         warning(['Node Position input incorrect. Linear mobility',...
@@ -221,7 +221,7 @@ if switchRandomization == 0
             warning('Changing numberOfTimeDivisions to %d', numberOfTimeDivisions)
         end
     end
-        
+    
     if size(nodeLoc,1) ~= size(nodeVelocities,1) && mobilitySwitch == 1 && mobilityType==1
         error(['nodes.dat and nodeVelocities.dat do not have same number ',...
             'of rows. Please check the input files in the Input folder.'])
@@ -313,7 +313,7 @@ end
 
 [PAA_info]  = cluster_paa(nodePosition, nodePAA_position, nodePAA_Orientation);
 
-%% Output 
+%% Output
 switchRandomization = 0;
 
 % Check Temp Output Folder
