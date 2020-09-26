@@ -41,7 +41,6 @@ warning('off', 'MATLAB:MKDIR:DirectoryExists');
 
 scenarioNameStr = paraCfg.inputScenarioName;
 % Input Parameters to be Updated
-% scenarioNameStr = paraCfg.scenarioNameStr;
 mobilitySwitch = paraCfg.mobilitySwitch;
 mobilityType = paraCfg.mobilityType;
 numberOfNodes = paraCfg.numberOfNodes;
@@ -51,19 +50,17 @@ numberTracePoints = paraCfg.numberOfTimeDivisions;
 
 % List of paths
 inputPath = fullfile(scenarioNameStr, 'Input');
-nodesPositionPath = fullfile(scenarioNameStr, 'Output/Ns3/NodesPosition');
-paaPositionPath = strcat(scenarioNameStr,'/Output/Ns3/PAAPosition');
-paaPositionPathVisual = strcat(scenarioNameStr,'/Output/Visualizer/');
 
 %% Code
-% nodePosition = [];
 nodeRotation= zeros(paraCfg.numberOfTimeDivisions,3, paraCfg.numberOfNodes);
 nodeLoc = zeros( paraCfg.numberOfNodes, 3);
 
+% Try to open previous config: nodes.dat. If it exist convert it into new
+% config i.e. NodePositionX.dat
 try
     obsoletePosition = csvread(fullfile(inputPath, 'nodes.dat'));
     warning('Configuration obsolete. nodes.dat not used anymore: node information loaded from NodePosition.dat')
-    obsoleteConfig = true;
+%     obsoleteConfig = true;
     listing = dir(fullfile(scenarioNameStr, 'Input'));
     for nodeId = 1: size(obsoletePosition,1)
         if ~sum(arrayfun(@(x) strcmp(x.name,['NodePosition',num2str(nodeId-1), '.dat']), listing))
@@ -71,7 +68,7 @@ try
         end
     end
 catch 
-    obsoleteConfig = false;
+%     obsoleteConfig = false;
 end
 
 %% Random generation of node positions
@@ -117,42 +114,44 @@ if switchRandomization == 0
     listing = dir(fullfile(scenarioNameStr, 'Input'));
     nodePosition = zeros(paraCfg.numberOfTimeDivisions,3, paraCfg.numberOfNodes);
     countListing = 0;
+    
     for iterateNumberOfNodes = 1:numberOfNodes
-        % If mobility matrix
+        % If mobility matrix is present
         if sum(arrayfun(@(x) strcmp(x.name,['node',num2str(iterateNumberOfNodes-1),'mobility.mat']), listing))
             savePositionFromTrace(fullfile(inputPath, sprintf('node%dmobility.mat', iterateNumberOfNodes-1)),...
                 fullfile(inputPath,sprintf('NodePosition%d.dat', iterateNumberOfNodes-1)) );
             saveRotationFromTrace(fullfile(inputPath, sprintf('node%dmobility.mat', iterateNumberOfNodes-1)),...
                 fullfile(inputPath,sprintf('NodeRotation%d.dat', iterateNumberOfNodes-1)) );
-        else % If mobility matrix is not there check position and Rotation files            
-            % If only position write Rotation
+        % If mobility matrix is not present check for NodePosition and
+        % NodeRotation
+        else           
+            % If only NodePosition is present, initialize NodeRotation to
+            % [0,0,0]
             if sum(arrayfun(@(x) strcmp(x.name,['NodePosition',num2str(iterateNumberOfNodes-1),'.dat']), listing)) && ...
                     ~ sum(arrayfun(@(x) strcmp(x.name,['NodeRotation',num2str(iterateNumberOfNodes-1),'.dat']), listing))
                 nlines = size(readmatrix(fullfile(inputPath,sprintf('NodePosition%d.dat', iterateNumberOfNodes-1))),1);
                 writematrix(repmat([0 0  0], nlines,1), fullfile(inputPath,sprintf('NodeRotation%d.dat', iterateNumberOfNodes-1)));
                 warning('NodeRotation%d.dat not present. Rotation set to [0,0,0] for all time instances.', iterateNumberOfNodes-1)
-                %                 % If only Rotations error position is needed
+            % If only NodeRotation return error:  NodePosition is needed
             elseif ~ sum(arrayfun(@(x) strcmp(x.name,['NodePosition',num2str(iterateNumberOfNodes-1),'.dat']), listing)) && ...
                     sum(arrayfun(@(x) strcmp(x.name,['NodeRotation',num2str(iterateNumberOfNodes-1),'.dat']), listing))
-                %                  nlines = size(readmatrix(fullfile(inputPath,sprintf('node%drotation.dat', iterateNumberOfNodes-1))),1);
-                %                  writematrix(repmat(nodeLoc(iterateNumberOfNodes,:), nlines,1), fullfile(inputPath,sprintf('node%dposition.dat', iterateNumberOfNodes-1)));
                 error('NodePosition%d.dat is not present.', iterateNumberOfNodes-1);
-                % If both are there skip
+            % If NodePosition and NodeRotation are present no further
+            % actions are needed
             elseif sum(arrayfun(@(x) strcmp(x.name,['NodePosition',num2str(iterateNumberOfNodes-1),'.dat']), listing)) && ...
                     sum(arrayfun(@(x) strcmp(x.name,['NodeRotation',num2str(iterateNumberOfNodes-1),'.dat']), listing))
                 
-                % If they are not present
+            % If NodePosition and NodeRotation are not present return error
             else
-                %                     writematrix(nodeLoc(iterateNumberOfNodes,:), fullfile(inputPath,sprintf('node%dposition.dat', iterateNumberOfNodes-1)));
-                %                     writematrix([0 0 0], fullfile(inputPath,sprintf('node%drotation.dat', iterateNumberOfNodes-1)));
                 error('NodePosition%d.dat and NodeRotation%d.dat are not present.', iterateNumberOfNodes-1,  iterateNumberOfNodes-1);
-                
             end
         end
     end
 
-   %%  Load NodeXPosition.dat and node%drotation.dat   
+   %%  Load NodePositionX.dat and NodeRotationX.dat   
    for iterateNumberOfNodes = 1:numberOfNodes
+       
+       % NodePosition processing
        ln = sprintf('NodePosition%d.dat', iterateNumberOfNodes-1);
        nodePositionTemp = load(fullfile(inputPath, ln));
        
@@ -182,7 +181,7 @@ if switchRandomization == 0
            end
        end
        
-       
+       % NodeRotation processing
        ln  = sprintf('NodeRotation%d.dat', iterateNumberOfNodes-1);
        nodeRotationTemp = load(fullfile(inputPath, ln));
        if mobilityType == 1 && mobilitySwitch
@@ -233,17 +232,6 @@ if switchRandomization == 0
             'nodes given in file. The "numberOfNodes" is adjusted to ',...
             'the number of nodes given in file (%d)'], size(nodeLoc, 1));
     end
-    %     numberOfNodes = size(nodeLoc, 1);
-    
-%     if mobilitySwitch == 1 && mobilityType == 1
-%         nodeVelocitiesTemp = nodeVelocities;
-%         clear nodeVelocities;
-%         nodeVelocities = nodeVelocitiesTemp(1:numberOfNodes, :);
-%     else
-%         clear nodeVelocities;
-%         nodeVelocities = zeros(numberOfNodes, 3);
-%         %nodePosition(1,:,:) = nodeLoc.';
-%     end
     
 end
 
@@ -266,15 +254,15 @@ else
     end
 end
 
+%% PAA init
 iterateNumberOfNodes = 1;
-nodeAntennaOrientation = zeros(numberOfNodes, 3, 3);
 nodePolarization       = zeros(iterateNumberOfNodes, 2);
 nodePAA_position       = cell(numberOfNodes,1); %PAA vector position w.r.t node center
 nodePAA_Orientation       = cell(numberOfNodes,1); %PAA vector position w.r.t node center
 
 while iterateNumberOfNodes <= numberOfNodes
-    nodeAntennaOrientation(iterateNumberOfNodes, :, :) = [1, 0, 0; 0, 1, 0; 0, 0, 1];
     nodePolarization(iterateNumberOfNodes, :) = [1, 0];
+    % If nodeXpaa.dat is present
     if isfile(strcat(inputPath, [filesep 'node'], num2str(iterateNumberOfNodes-1), 'paa.dat' ))
         nodePAA_info =  load(strcat(inputPath, [filesep 'node'], num2str(iterateNumberOfNodes-1), 'paa.dat' ));
         if isempty(nodePAA_info)
@@ -291,6 +279,7 @@ while iterateNumberOfNodes <= numberOfNodes
         nodePAA_position{iterateNumberOfNodes} = zeros(1,3);
         nodePAA_Orientation{iterateNumberOfNodes}  = zeros(1,3);
     end
+    
     if switchRandomization == 1 && iterateNumberOfNodes > 0
         xCoordinateRandomizer = rand * 8 + 1;
         yCoordinateRandomizer = rand * 17 + 1;
@@ -324,6 +313,7 @@ end
 
 [PAA_info]  = cluster_paa(nodePosition, nodePAA_position, nodePAA_Orientation);
 
+%% Output 
 switchRandomization = 0;
 
 % Check Temp Output Folder
@@ -332,84 +322,6 @@ rmdirStatus = rmdir(fullfile(scenarioNameStr, 'Output'), 's');
 mkdir(fullfile(scenarioNameStr, 'Output'));
 mkdir(fullfile(scenarioNameStr, 'Output/Ns3'));
 mkdir(fullfile(scenarioNameStr, 'Output/Visualizer'));
-
-% sizeNode = size(nodeLoc);
-
-% if ~isfolder(nodesPositionPath)
-%     mkdir(nodesPositionPath)
-% end
-% 
-% if ~isfolder(paaPositionPath)
-%     mkdir(paaPositionPath)
-% end
-
-if ~isfolder(paaPositionPathVisual)
-    mkdir(paaPositionPathVisual)
-end
-% if paraCfg.jsonOutput == 1
-%     fNodePosition = fopen(fullfile(nodesPositionPath, 'NodesPosition.json'), 'w');
-%     for i = 1:numberOfNodes
-%         s = struct('Node', i-1, 'Position', nodeLoc(i,:));
-%         json = jsonencode(s);
-%         fprintf(fNodePosition, '%s\n', json);
-%     end
-%     fclose(fNodePosition);
-% else
-%     writematrix(nodeLoc,fullfile(nodesPositionPath, 'NodesPosition.csv'));
-% end
-
-if ~obsoleteConfig
-%     if paraCfg.jsonOutput == 1
-%         fpp = fopen(fullfile(paaPositionPath,'PAAPosition.json'),'w');
-%         for i = 1:length(nodePAA_position)
-%             for ipaa = 1:size(nodePAA_position{i},1)
-%                 centroidId = PAA_info{i}.centroids(cellfun(@(x) any(x == ipaa), PAA_info{i}.node_clusters));
-%                 s = struct('Node', i-1, 'PAA', ipaa-1, 'Centroid', centroidId,  'Position',  nodePAA_position{i}(ipaa, :));
-%                 json = jsonencode(s);
-%                 fprintf(fpp, '%s\n', json);
-%             end
-%         end
-%         fclose(fpp);
-%     else
-%         for i = 1:length(nodePAA_position)
-%             csvwrite(strcat(paaPositionPath, filesep,...
-%                 'Node', num2str(i) ,'PAAPosition.csv'), nodePAA_position{i});
-%         end
-%     end
-
-if paraCfg.jsonOutput ~= 1
-    %     fPaa = fopen(strcat(paaPositionPathVisual, filesep,'PAAPosition.json'), 'w');
-    %     for i = 1:length(nodePAA_position)
-    %         for paaId = 1:PAA_info{i}.nPAA_centroids
-    %             s = struct('Node', i-1, 'PAA',paaId-1, 'Position', [reshape(squeeze(PAA_info{i}.centroid_position(:,paaId,:)), [],3); [inf inf inf]]);
-    %             json = jsonencode(s);% Add a temporary inf vector to make sure
-    %             % more than a single vector will be encoded. Matlab json
-    %             % encoder lose the square brackets when encoding vectors.
-    %             str2remove =',[null,null,null]'; %Temporary string to remove
-    %             rem_ind_start = num2cell(strfind(json, str2remove)); % Find start string to remove
-    %             index2rm = cell2mat(cellfun(@(x) x:x+length(str2remove)-1,rem_ind_start,'UniformOutput',false)); % Create index of char to remove
-    %             json(index2rm) = []; % Remove temporary vector.
-    %             fprintf(fPaa, '%s\n', json);
-    %         end
-    %     end
-    %     fclose(fPaa);
-% else
-%     for i = 1:length(nodePAA_position)
-% %         if mobilityType==1 &&  mobilitySwitch == 1
-% %             ntd =1;
-% %         else
-% %             ntd = numberOfTimeDivisions;
-% %         end
-%         %         writematrix([reshape(squeeze(PAA_info{i}.centroid_position), [], 3), ...
-%         %             reshape(repmat(nodeRotation(1:ntd,:,i), [1 1 PAA_info{i}.nPAA_centroids]), [],3)] ,...
-%         %             strcat(paaPositionPathVisual, filesep,...
-%         %             'Node', num2str(i-1) ,'PAAPosition.csv') );
-%         writematrix(reshape(squeeze(PAA_info{i}.centroid_position), [], 3), ...
-%             strcat(paaPositionPathVisual, filesep,...
-%             'Node', num2str(i-1) ,'PAAPosition.csv') );
-%     end
-end
-end
 
 warning('OFF', 'MATLAB:table:ModifiedAndSavedVarnames')
 
