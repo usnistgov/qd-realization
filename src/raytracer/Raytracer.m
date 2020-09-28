@@ -1,4 +1,4 @@
-function [outputPath, varargout] = Raytracer(paraCfgInput, nodeCfgInput)
+function [outputPath] = Raytracer(paraCfgInput, nodeCfgInput)
 % Inputs:
 % RootFolderPath - it is the current location of the folder where the function is called from
 % environmentFileName - it is the CAD file name
@@ -65,7 +65,7 @@ function [outputPath, varargout] = Raytracer(paraCfgInput, nodeCfgInput)
 
 
 %% Input Parameters Management
-numberOfNodes = paraCfgInput.numberOfNodes;
+% numberOfNodes = paraCfgInput.numberOfNodes;
 
 % nodeLoc = nodeCfgInput.nodeLoc;
 % nodeLoc = reshape(...
@@ -75,13 +75,18 @@ numberOfNodes = paraCfgInput.numberOfNodes;
 %     cell2mat(cellfun(@(x) x.PAA_loc, nodeCfgInput.PAA_info, 'UniformOutput', 0)),...
 %     3, []).';
 nodeLoc = [];
-nodeLocCellArray = cellfun(@(x) reshape(squeeze(x.PAA_loc), size(nodeCfgInput.nodeLoc,1), [], 3), nodeCfgInput.PAA_info, 'UniformOutput', 0).';
+
+%nodeLocCellArray is a cell array. The i-th entry of the array represents
+%the position each PAA in node i. Time x PAA x 3 (coordinates)
+nodeLocCellArray = cellfun(@(x) reshape(squeeze(x.PAA_loc), size(nodeCfgInput.nodeLoc,1), [], 3), ...
+    nodeCfgInput.PAA_info, 'UniformOutput', 0).';
 for i = 1:length(nodeLocCellArray)
     nodeLoc= cat(2, nodeLoc, nodeLocCellArray{i});
 end
-nodeAntennaOrientation = nodeCfgInput.nodeAntennaOrientation;
-nodeOrientation = nodeCfgInput.nodeOrientation;
-nodePolarization = nodeCfgInput.nodePolarization;
+
+% nodeAntennaOrientation = nodeCfgInput.nodeAntennaOrientation;
+% nodeOrientation = nodeCfgInput.nodeOrientation;
+% nodePolarization = nodeCfgInput.nodePolarization;
 nodePosition = nodeCfgInput.nodePosition;
 nodeVelocities = nodeCfgInput.nodeVelocities;
 nPAA_centroids = cellfun(@(x) x.nPAA_centroids ,nodeCfgInput.PAA_info );
@@ -91,6 +96,8 @@ Mpc = cell(paraCfgInput.numberOfNodes,...
     max(nPAA_centroids),...
     paraCfgInput.totalNumberOfReflections+1,...
     paraCfgInput.numberOfTimeDivisions+1 );
+frmRotMpInfo = cell(1, paraCfgInput.totalNumberOfReflections+1);
+
 % Input checking
 if paraCfgInput.switchQDGenerator == 1 &&...
         paraCfgInput.carrierFrequency ~= 60e9
@@ -174,7 +181,8 @@ for iterateTimeDivision = 1:paraCfgInput.numberOfTimeDivisions
     if mod(iterateTimeDivision,100)==0
         disp([fprintf('%2.2f', iterateTimeDivision/paraCfgInput.numberOfTimeDivisions*100),'%'])
     end
-    % update mobility
+    
+    % Update Linear mobility
     if paraCfgInput.mobilityType == 1 && paraCfgInput.mobilitySwitch ==1
         if paraCfgInput.numberOfNodes == 2
             [nodeLoc, Tx, Rx, vtx, vrx, nodeVelocities,nodeCfgInput.PAA_info] = LinearMobility...
@@ -200,20 +208,17 @@ for iterateTimeDivision = 1:paraCfgInput.numberOfTimeDivisions
       
     % Compute rotation
     for nodeId = 1:paraCfgInput.numberOfNodes
-%         for paaId = 1:nodeCfgInput.PAA_info{nodeId}.nPAA_node
-%             centerRotation(2,:) = [0,0,0]; %squeeze(nodeCfgInput.PAA_info{nodeId}.centroid_position(iterateTimeDivision,paaId,:)).';
             centerRotation = nodeCfgInput.PAA_info{nodeId}.node_centroid(iterateTimeDivision,:);
-%             euclidian(2,:) = [0,0,0];%nodeCfgInput.nodeOrientation(nodeId,:);
-            euclidian = nodeCfgInput.nodeRotation(iterateTimeDivision,:, nodeId);
-            [paaPositionTrot, nodeEuclTemp] = coordinateRotation(reshape(squeeze(...
-                nodeCfgInput.PAA_info{nodeId}.centroid_position(iterateTimeDivision,:,:)), [], 3), ...
+            nodeRotationEucAngles = nodeCfgInput.nodeRotation(iterateTimeDivision,:, nodeId);
+            paaInitialPosition = reshape(squeeze(...
+                nodeCfgInput.PAA_info{nodeId}.centroid_position(iterateTimeDivision,:,:)), [], 3);
+            [paaRotatedPosition, nodeEquivalentRotationAngle] = coordinateRotation(paaInitialPosition, ...
                 centerRotation,...
-                euclidian ...
+                nodeRotationEucAngles ...
                 );
-            nodeCfgInput.nodeRotationTot(iterateTimeDivision,:, nodeId) = nodeEuclTemp;
-            nodeCfgInput.PAA_info{nodeId}.centroid_position_rot(iterateTimeDivision,:,:) =paaPositionTrot;
-            isPAACentroidValid(RoomCoordinates,paaPositionTrot);
-%         end
+            nodeCfgInput.nodeRotationTot(iterateTimeDivision,:, nodeId) = nodeEquivalentRotationAngle;
+            nodeCfgInput.PAA_info{nodeId}.centroid_position_rot(iterateTimeDivision,:,:) =paaRotatedPosition;
+            isPAACentroidValid(RoomCoordinates,paaRotatedPosition);
     end
     
     % save NodePositionsTrc
@@ -224,8 +229,7 @@ for iterateTimeDivision = 1:paraCfgInput.numberOfTimeDivisions
             );
     end
     
-    
-    % Iterates through all the nodes
+    % Iterates through all the PAA centroids
     for iterateTx = 1:paraCfgInput.numberOfNodes
         for iterateRx = iterateTx+1:paraCfgInput.numberOfNodes
             for iteratePaaTx = 1:nPAA_centroids(iterateTx)
@@ -235,18 +239,14 @@ for iterateTimeDivision = 1:paraCfgInput.numberOfTimeDivisions
                         
                         Tx = squeeze(nodeCfgInput.PAA_info{iterateTx}.centroid_position_rot(iterateTimeDivision,iteratePaaTx,:)).';
                         Rx = squeeze(nodeCfgInput.PAA_info{iterateRx}.centroid_position_rot(iterateTimeDivision,iteratePaaRx,:)).';
+                        
                         % Rotation Tx struct
-                        QTx.cTx(1,:) = nodeCfgInput.PAA_info{iterateTx}.node_centroid(iterateTimeDivision,:,:);
-                        QTx.cTx(2,:) = Tx;
-%                         QTx.euc(2,:) = nodeCfgInput.nodeOrientation(iterateTx,:);
-%                         QTx.euc(2,:) = nodeCfgInput.nodeAntennaOrientation{iterateTx}(iteratePaaTx,:);
-                        QTx.euc(1,:) = nodeCfgInput.nodeRotation(iterateTimeDivision,:, iterateTx);
+                        QTx.center(1,:) = nodeCfgInput.PAA_info{iterateTx}.node_centroid(iterateTimeDivision,:,:);
+                        QTx.angle(1,:) = nodeCfgInput.nodeRotation(iterateTimeDivision,:, iterateTx);
                         
                         % Rotation Rx struct
-                        QRx.cRx(1,:) = nodeCfgInput.PAA_info{iterateRx}.node_centroid(iterateTimeDivision,:,:);
-                        QRx.cRx(2,:) = Rx;
-            
-                        QRx.euc(1,:) = nodeCfgInput.nodeRotation(iterateTimeDivision,:, iterateRx);
+                        QRx.center(1,:) = nodeCfgInput.PAA_info{iterateRx}.node_centroid(iterateTimeDivision,:,:);            
+                        QRx.angle(1,:) = nodeCfgInput.nodeRotation(iterateTimeDivision,:, iterateRx);
                         
                         vtx = nodeVelocities(iterateTx, :);
                         vrx = nodeVelocities(iterateRx, :);
@@ -316,20 +316,25 @@ for iterateTimeDivision = 1:paraCfgInput.numberOfTimeDivisions
                             output = repmat(output, 1,1,Nrealizations);
                         end
                         if size(output) > 0
-                            output = [output;outputTemporary];
-                            multipath1 = multipathTemporary;
+                            output = [output;outputTemporary]; %#ok<AGROW>
+%                             multipath1 = multipathTemporary;
                         elseif size(outputTemporary) > 0
                             output = outputTemporary;
-                            multipath1 = multipathTemporary;
+%                             multipath1 = multipathTemporary;
                         end
                         
                     end
-%                     outputPAA{iterateTx, iterateRx}.frmRotMpInfo=[frmRotMpInfo{:}];
-%                     outputPAA{iterateRx, iterateTx}.frmRotMpInfo=[frmRotMpInfo{:}];
+                    
+                    % Create outputPAA array of struct. Each entry of the
+                    % array is a struct relative to a NodeTx-NodeRx 
+                    % combination. Each struct has the entries 
+                    % - paaTxXXpaaRxYY: channel between paaTx XX and paaRx
+                    % YY.
+                    % -frmRotMpInfopaaTxXXpaaRxXX. Information to perform
+                    % frame rotation after raytracing                    
                     eval(['outputPAA{iterateTx, iterateRx}.frmRotMpInfopaaTx',num2str(iteratePaaTx-1),'paaRx', num2str(iteratePaaRx-1), '= [frmRotMpInfo{:}];'] );
                     eval(['outputPAA{iterateRx, iterateTx}.frmRotMpInfopaaTx',num2str(iteratePaaRx-1),'paaRx', num2str(iteratePaaTx-1), '= reverseFrmRotMpInfo([frmRotMpInfo{:}]);'] );
-%                     reverseFrmRotMpInfo([frmRotMpInfo{:}])
-                    frmRotMpInfo = {};
+                    frmRotMpInfo = {};                    
                     eval(['outputPAA{iterateTx, iterateRx}.paaTx',num2str(iteratePaaTx-1),'paaRx', num2str(iteratePaaRx-1), '= output;'] );
                     eval(['outputPAA{iterateRx, iterateTx}.paaTx',num2str(iteratePaaRx-1),'paaRx', num2str(iteratePaaTx-1), '= reverseOutputTxRx(output);'] );
                     
@@ -340,6 +345,8 @@ for iterateTimeDivision = 1:paraCfgInput.numberOfTimeDivisions
     end
     
     outputPAATime(:,:,iterateTimeDivision) = generateChannelPaa(outputPAA, nodeCfgInput.PAA_info);  %#ok<AGROW>
+    
+    % Write QD output in CSV files
     if ~paraCfgInput.jsonOutput || keepBothQDOutput
         for iterateTx = 1:paraCfgInput.numberOfNodes
             for iterateRx = iterateTx+1:paraCfgInput.numberOfNodes
@@ -355,6 +362,7 @@ for iterateTimeDivision = 1:paraCfgInput.numberOfTimeDivisions
     clear outputPAA
 end
 
+% Write QD output in JSON files
 if paraCfgInput.jsonOutput
     writeQdJsonOutput(outputPAATime,cellfun(@(x) x.nPAA_node,  nodeCfgInput.PAA_info),...
         qdFilesPath,...
@@ -362,6 +370,7 @@ if paraCfgInput.jsonOutput
     
     Mpc(:,:,:,:,:,1) = [];
 end
+
 if paraCfgInput.switchSaveVisualizerFiles && paraCfgInput.jsonOutput
     %% Write MPC.json
     f = fopen(fullfile(visualizerPath, 'Mpc.json'), 'w');
@@ -439,9 +448,10 @@ if ~paraCfgInput.jsonOutput || keepBothQDOutput
     closeQdFilesIds(fids, paraCfgInput.useOptimizedOutputToFile);
 end
 
-writeReportOutput =0 ;
+% Write useful output information. Set to 0 to allow succeful test.
+writeReportOutput =0 ; 
 if writeReportOutput
-    f = fopen(strcat(outputPath, filesep,'report.dat'), 'w');
+    f = fopen(strcat(outputPath, filesep,'report.dat'), 'w'); %#ok<UNRCH>
 %     elapsedTime = toc;
 %     fprintf(f, 'Elapsed Time:\t%f\n', elapsedTime);    
 %     isDeviceRotationOn = 'true';
@@ -452,5 +462,3 @@ if writeReportOutput
     fprintf(f, 'PAA centered:\t%d\n', paraCfgInput.isPAAcentered);
     fclose(f);
 end
-
-% varargout{1} = outputPAA;
