@@ -28,15 +28,25 @@ function b = isMpcCoordinates(path)
 [remainingPath, fileName, extension] = fileparts(path);
 b = ~isempty(regexp([fileName, extension],...
     'MpcTx[\d]+Rx[\d]+Refl[\d]+Trc[\d]+.csv',...
+    'once'))|| ...
+    ~isempty(regexp([fileName, extension],...
+    'MpcTx[\d]+PAA[\d]+Rx[\d]+PAA[\d]+Refl[\d]+Trc[\d]+.csv',...
     'once'));
 
 [remainingPath, mpCoordinatesFolder] = fileparts(remainingPath);
-b = b && strcmp(mpCoordinatesFolder, 'MpcCoordinates');
+[isFolder, config] = ismember(mpCoordinatesFolder, {'MpcCoordinates', 'Visualizer'});
+b = b && isFolder;
 
-[remainingPath, visualizerFolder] = fileparts(remainingPath);
-b = b && strcmp(visualizerFolder, 'Visualizer');
-
-[~, outputFolder] = fileparts(remainingPath);
-b = b && strcmp(outputFolder, 'Output');
+switch config
+    case 1
+        [remainingPath, visualizerFolder] = fileparts(remainingPath);
+        b = b && strcmp(visualizerFolder, 'Visualizer');
+        
+        [~, outputFolder] = fileparts(remainingPath);
+        b = b && strcmp(outputFolder, 'Output');
+    case 2
+        [~, outputFolder] = fileparts(remainingPath);
+        b = b && strcmp(outputFolder, 'Output');
+end
 
 end

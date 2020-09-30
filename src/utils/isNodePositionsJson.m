@@ -1,13 +1,13 @@
-function b = isRoomCoordinates(path)
-%ISROOMCOORDINATES Function that checks whether the given path matches with
-% the expected Room Coordinates output file position (as given by the
+function b = isNodePositionsJson(path)
+%ISQDJSONFILE Function that checks whether the given path matches with
+% the expected QD file output file position (as given by the
 % documentation). This allows to safely read the file later.
 %
 % INPUTS:
 % - path: file path. This could be either and absolute path, or a relative
 % path, starting at least from the Output/ folder.
 %
-% SEE ALSO: READROOMCOORDINATES
+% SEE ALSO: READQDFILE
 
 
 % Copyright (c) 2019, University of Padova, Department of Information
@@ -26,21 +26,13 @@ function b = isRoomCoordinates(path)
 % limitations under the License.
 
 [remainingPath, fileName, extension] = fileparts(path);
-b = strcmp([fileName, extension], 'RoomCoordinates.csv');
+b = strcmp([fileName, extension], 'NodePositions.json');
 
-[remainingPath, visualizerFolder] = fileparts(remainingPath);
-[isFolder, config] = ismember(visualizerFolder, {'RoomCoordinates', 'Visualizer'});
-b = b && isFolder;
+[remainingPath, qdFilesFolder] = fileparts(remainingPath);
+b = b && strcmp(qdFilesFolder, 'Visualizer');
 
-switch config
-    case 1
-        [remainingPath, visualizerFolder] = fileparts(remainingPath);
-        b = b && strcmp(visualizerFolder, 'Visualizer');
-        
-        [~, outputFolder] = fileparts(remainingPath);
-        b = b && strcmp(outputFolder, 'Output');
-    case 2
-        [~, outputFolder] = fileparts(remainingPath);
-        b = b && strcmp(outputFolder, 'Output');
-end
+
+[~, outputFolder] = fileparts(remainingPath);
+b = b && strcmp(outputFolder, 'Output');
+
 end

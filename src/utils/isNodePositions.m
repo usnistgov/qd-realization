@@ -30,12 +30,18 @@ b = ~isempty(regexp([fileName, extension],...
     'NodePositionsTrc[\d]+.csv', 'once'));
 
 [remainingPath, nodePositionsFolder] = fileparts(remainingPath);
-b = b && strcmp(nodePositionsFolder, 'NodePositions');
-
-[remainingPath, visualizerFolder] = fileparts(remainingPath);
-b = b && strcmp(visualizerFolder, 'Visualizer');
-
-[~, outputFolder] = fileparts(remainingPath);
-b = b && strcmp(outputFolder, 'Output');
+[isFolder, config] = ismember(nodePositionsFolder, {'NodePositions', 'Visualizer'});
+b = b && isFolder;
+switch config
+    case 1
+        [remainingPath, visualizerFolder] = fileparts(remainingPath);
+        b = b && strcmp(visualizerFolder, 'Visualizer');
+        
+        [~, outputFolder] = fileparts(remainingPath);
+        b = b && strcmp(outputFolder, 'Output');
+    case 2
+        [~, outputFolder] = fileparts(remainingPath);
+        b = b && strcmp(outputFolder, 'Output');
+end
 
 end
