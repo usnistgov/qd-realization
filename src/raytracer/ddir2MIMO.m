@@ -18,9 +18,9 @@ r= idx(ptr.rot_rx); %Pointer to centroid in cell array in info{ptr.nr}
 
 %% Overwrite angles
 
-N_AOD = size(info{ptr.nt}.centroids_shift{t},1);
+N_AOD = size(info{ptr.nt}.centroidsShift{t},1);
 N_AOD = info{ptr.nt}.nodePAAInfo{ptr.paatx}.rotated_channel(ptr.rot_tx);
-N_AOA = size(info{ptr.nr}.centroids_shift{r},1);
+N_AOA = size(info{ptr.nr}.centroidsShift{r},1);
 N_AOA = info{ptr.nr}.nodePAAInfo{ptr.paarx}.rotated_channel(ptr.rot_rx);
 
 % orientation.tx = info{ptr.nt}.orientation(b(ptr.paatx),:);
@@ -32,8 +32,8 @@ N_AOA = info{ptr.nr}.nodePAAInfo{ptr.paarx}.rotated_channel(ptr.rot_rx);
 % ddir(:,12) = AOA_az*180/pi;
 % ddir(:,13) = AOA_el*180/pi;
 % 
-% R_AOD = phaseRotation(AOD_az,AOD_el, info{ptr.nt}.centroids_shift{t} );
-% R_AOA = phaseRotation(AOA_az,AOA_el, info{ptr.nr}.centroids_shift{r} );
+% R_AOD = phaseRotation(AOD_az,AOD_el, info{ptr.nt}.centroidsShift{t} );
+% R_AOA = phaseRotation(AOA_az,AOA_el, info{ptr.nr}.centroidsShift{r} );
 
 
 ch = zeros([size(ddir), N_AOD*N_AOA]);
@@ -53,13 +53,13 @@ for id_aod = 1:N_AOD
         ddir(:,11) = AOD_el*180/pi;
         ddir(:,12) = AOA_az*180/pi;
         ddir(:,13) = AOA_el*180/pi;
-        R_AOD = phaseRotation(AOD_az,AOD_el, info{ptr.nt}.centroids_shift{t}(id_aod,:) );
-        R_AOA = phaseRotation(AOA_az,AOA_el, info{ptr.nr}.centroids_shift{r}(id_aoa,:) );
+        R_AOD = phaseRotation(AOD_az,AOD_el, info{ptr.nt}.centroidsShift{t}(id_aod,:) );
+        R_AOA = phaseRotation(AOA_az,AOA_el, info{ptr.nr}.centroidsShift{r}(id_aoa,:) );
         
         ch(:,:, (id_aod-1)*(N_AOA)+id_aoa) = ddir;
         ch(:,18, (id_aod-1)*(N_AOA)+id_aoa) = wrapTo2Pi(ch(:,18,id_aod)+angle(R_AOD)+angle(R_AOA));
     end
 end
-[A,B] = meshgrid(info{ptr.nt}.node_clusters{t}, info{ptr.nr}.node_clusters{r});
+[A,B] = meshgrid(info{ptr.nt}.paaInCluster{t}, info{ptr.nr}.paaInCluster{r});
 varargout{1} = [A(:), B(:)];
 end

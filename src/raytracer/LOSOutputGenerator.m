@@ -69,18 +69,18 @@ for k = 1:2:length(varargin)
     eval([varargin{k},' = varargin{k+1};'])
 end
 
-if ~exist('qTx','var'),     qTx.cTx = Tx;  qTx.euc = zeros(1,3);   end
-if ~exist('qRx','var'),     qRx.cRx = Rx;  qRx.euc = zeros(1,3);   end
+if ~exist('qTx','var'),     qTx.center = Tx;  qTx.angle = zeros(1,3);   end
+if ~exist('qRx','var'),     qRx.center = Rx;  qRx.angle = zeros(1,3);   end
 
 % Direction of departure (DoD) is simple the difference of position vectors
 % of Tx and Rx
 dodNoRot = Rx-Tx;
-dod=coordinateRotation(dodNoRot,[0 0 0], qTx.euc, 'frame');
+dod=coordinateRotation(dodNoRot,[0 0 0], qTx.angle, 'frame');
 % delay is the total length of multipath
 delay=norm(dod);
 % Direction of arrival (DoA) is negative of DoD
 doaNoRot = Tx-Rx;
-doa= coordinateRotation(doaNoRot, [0 0 0], qRx.euc,'frame');
+doa= coordinateRotation(doaNoRot, [0 0 0], qRx.angle,'frame');
 % Calculating Doppler factor for LOS
 velocityTxAlongDirectionOfDeparture=dot(velocityTx,-1.*dod);
 velocityRxAlongDirectionOfDeparture=dot(velocityRx,-1.*dod);

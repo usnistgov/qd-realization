@@ -140,7 +140,7 @@ squeezeAndReshape = @(x) reshape(squeeze(x), [], 3);
 if isempty(nodePAA)
 else
     if t ~= 0
-        nodePAA.centroid_position(t+1,:,:) = squeezeAndReshape(nodePAA.centroid_position(t,:,:)) + nodeShift;
+        nodePAA.centroidTimePosition(t+1,:,:) = squeezeAndReshape(nodePAA.centroidTimePosition(t,:,:)) + nodeShift;
         nodePAA.node_centroid(t+1,:) = nodePAA.node_centroid(t,:) + nodeShift;
     end
 end
