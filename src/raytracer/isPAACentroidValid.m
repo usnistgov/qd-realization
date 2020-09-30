@@ -1,5 +1,5 @@
 function varargout = isPAACentroidValid(roomCoordinates, centroidCoordinate)
-%ISPAACENTROIDVALID returns check if the centroid in insed the defined area.
+%ISPAACENTROIDVALID returns check if the centroid inside the defined area (box).
 %
 %   ISPAACENTROIDVALID(roomCoordinates, centroidCoordinate)
 %   Generate a warning is the centroid coordinates centroidCoordinate are

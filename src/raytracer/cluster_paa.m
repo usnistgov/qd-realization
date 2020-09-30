@@ -7,33 +7,37 @@ function [paaInfo]  = cluster_paa(nodeTimePosition, nodePaaPosition, nodePaaOrie
 %   **nodeTimePosition is the Tx3xN matrix containing the 3D coordinates of the N
 %   nodes at different T time instances
 %   **nodePaaPosition is the Nx1 cell array containing the 3D coordinates of
-%   each PAA in the N nodes at different T time instances. If PAAs are not
-%   defined the input is the Nx1 cell array of zeros 1x3 vectors
+%   each PAA of N nodes in the node local frame (e.g. [0 0 0] if the PAA is
+%   centered in the center of the node). If PAAs are not defined the input
+%   is the Nx1 cell array of zeros 1x3 vectors (Only 1 PAA at the center of
+%   the node)
 %   **nodePaaOrientation is the Nx1 cell array containing the PAAs
 %   orientation.
 %
 %   paaInfo{i}:
-%     **nPAA_node: number of PAA in node i
+%     **nPaa: number of PAA in node i
 %     **centroids: centroid vector i.e. centroid of each cluster
 %     **paaInCluster: cell array. Each entry is a vector of PAAs clustered
-%     **centroidsShift: position of the centroids wrt the node center.
+%     **centroidsShift: position of the PAAs wrt the centroid.
 %     **PAA_loc: PAAs position over time in the global frame
 %     **orientation: orientation of each PAA in cluster
 %     **nodePAAInfo: flags for interfacing with Raytracer
 %     **generationMethod: channel generation method. 0: common channel 1:
-%     common deterministic part 2: indipendent channels
-%     **centroid_position
-%     **node_centroid
+%     common deterministic part 2: independent channels
+%     **centroidTimePosition: position of the centroid in time in the
+%     global framce
+%     **node_centroid: position of the node in time in the global frame
 %     **PAA_position: matrix of unique centroid positions. If no PAAs are
 %     defined in input, the output is the location of the node
 %     **nPAA_centroids: number of unique centroids
 %
 %   [PAA_info]  =  CLUSTER_PAA(nodeLoc, nodePAA_position, option, value)
 %
-%   option 'freq': specify central frequncy in Hz (Default 60e9 Hz)
-%          'corrDistance':  Correlation distance: above this threshold PAAs
+%   options
+%     'fc': specify central frequncy in Hz (Default 60e9 Hz)
+%     'corrDistance':  Correlation distance: above this threshold PAAs
 %          are uncorrelated (Default: 50)
-%          'fullCorrDistance': Full correlation distance: below this
+%     'fullCorrDistance': Full correlation distance: below this
 %          threshold PAAs are fully correlated (Default: 1)
 %
 %   Copyright 2019-2020 NIST/CLT (steve.blandino@nist.gov)

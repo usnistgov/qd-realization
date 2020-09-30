@@ -9,19 +9,19 @@ function [ch, varargout] = ddir2MIMO(ddir, info, frmRotMpInfo, ptr)
 [~,b] = unique(info{ptr.nt}.centroids);
 b = sort(b);
 idx = find(info{ptr.nt}.centroids == info{ptr.nt}.centroids(b(ptr.paatx)));
-t= idx(ptr.rot_tx); %Pointer to centroid in cell array in info{ptr.nt}
+t= idx(ptr.iid_tx); %Pointer to centroid in cell array in info{ptr.nt}
 
 [~,b] = unique(info{ptr.nr}.centroids);
 b = sort(b);
 idx = find(info{ptr.nr}.centroids == info{ptr.nr}.centroids(b(ptr.paarx)));
-r= idx(ptr.rot_rx); %Pointer to centroid in cell array in info{ptr.nr}
+r= idx(ptr.iid_rx); %Pointer to centroid in cell array in info{ptr.nr}
 
 %% Overwrite angles
 
-N_AOD = size(info{ptr.nt}.centroidsShift{t},1);
-N_AOD = info{ptr.nt}.nodePAAInfo{ptr.paatx}.rotated_channel(ptr.rot_tx);
-N_AOA = size(info{ptr.nr}.centroidsShift{r},1);
-N_AOA = info{ptr.nr}.nodePAAInfo{ptr.paarx}.rotated_channel(ptr.rot_rx);
+% N_AOD = size(info{ptr.nt}.centroidsShift{t},1);
+N_AOD = info{ptr.nt}.nodePAAInfo{ptr.paatx}.rotated_channel(ptr.iid_tx);
+% N_AOA = size(info{ptr.nr}.centroidsShift{r},1);
+N_AOA = info{ptr.nr}.nodePAAInfo{ptr.paarx}.rotated_channel(ptr.iid_rx);
 
 % orientation.tx = info{ptr.nt}.orientation(b(ptr.paatx),:);
 % orientation.rx = info{ptr.nr}.orientation(b(ptr.paarx),:);

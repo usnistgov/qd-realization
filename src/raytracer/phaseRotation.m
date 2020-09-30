@@ -8,12 +8,13 @@ function[R]= phaseRotation(theta,phi, centr_shift , varargin)
 %        **centr_shift is the shift wrt the centroid position in which R
 %        needs to be computed
 %
-%        R = PHASEROTATION(theta,phi, centr_shift, 'frequency', [value])
-%        Computes R when the frequency is set to [value] Hz
+%        R = PHASEROTATION(theta,phi, centr_shift, 'fc', [value])
+%        Computes R when the central frequency is set to [value] Hz
+%
 %Copyright 2019-2020 NIST/CLT (steve.blandino@nist.gov)
 
 %% Varargin processing
-var_struct = {'frequency'};
+var_struct = {'fc'};
 for k = 1:2:length(varargin)
     if (~any(strcmp(varargin{k}, var_struct)))
         warning(['Cannot specify "', varargin{k}, '" as input value - it will be discarted']);
@@ -21,14 +22,14 @@ for k = 1:2:length(varargin)
     eval([varargin{k},' = varargin{k+1};'])
 end
 clear('k')
-if ~exist('frequency','var'),     frequency=60e9;        end
+if ~exist('frequency','var'),     fc=60e9;        end
 
 dx = centr_shift(:,1);
 dy = centr_shift(:,2);
 dz = centr_shift(:,3);
 
 %% 
-lambda = 3e8/frequency;
+lambda = 3e8/fc;
 k  =  2*pi/lambda; 
 
 kx =  k*(sin(theta).*cos(phi))*dx.';
