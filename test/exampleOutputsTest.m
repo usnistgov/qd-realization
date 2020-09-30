@@ -2,12 +2,16 @@ function tests = exampleOutputsTest
 %EXAMPLEOUTPUTTEST Tests to check whether new fixes, improvements, or
 % changes affect the output of the ray-tracer. The example scenarios are
 % taken as baselines, specifically:
+% - L-Room-rotation
+% - L-Room-rotation-multiPAA 
+% - DataCenter
 % - DenserScenario
 % - Indoor1
 % - Indoor2
 % - L-Room
 % - Outdoor1
 % - SpatialSharing
+% - StreetCanyon
 % The Output/ folders contain the results of the respective scenario run
 % using rng('default'). For the current MATLAB version, the documentation
 % states that: "This way, the same random numbers are produced as if you
@@ -49,7 +53,8 @@ srcFolder = '../src';
 
 addpath(srcFolder,...
     fullfile(srcFolder, 'raytracer'),...
-    fullfile(srcFolder,'utils'))
+    fullfile(srcFolder,'utils'),...
+    fullfile(srcFolder,'quaternions'))
 
 testCase.TestData.examplesFolderPath = fullfile(srcFolder,'examples');
 end
@@ -85,6 +90,18 @@ end
 
 
 %% Tests
+function lRoomRotationTest(testCase)
+exampleName = 'L-Room-rotation';
+runRaytracer(testCase, exampleName);
+checkOutput(testCase, exampleName);
+end
+
+function lRoomRotMIMOTest(testCase)
+exampleName = 'L-Room-rotation-multiPAA';
+runRaytracer(testCase, exampleName);
+checkOutput(testCase, exampleName);
+end
+
 % DataCenter
 function dataCenterTest(testCase)
 exampleName = 'DataCenter';
@@ -183,6 +200,15 @@ for i = 1:length(scenarioFiles)
     
     % extract same file from examples
     exampleFileIdx = find(strcmp({exampleFiles.name},scenarioFileName));
+    %Try if find back-compatibility for MPC
+    if isempty(exampleFileIdx)
+        paaStringIndStart = num2cell(strfind(scenarioFileName,'PAA'));
+        index2rm = cell2mat(cellfun(@(x) x:x+3,paaStringIndStart,'UniformOutput',false));
+        scenarioFileName(index2rm) = [];
+        exampleFileIdx = find(strcmp({exampleFiles.name},scenarioFileName));
+        scenarioFileName = scenarioFiles(i).name;
+%         exampleFiles(exampleFileIdx).name = scenarioFiles(i).name;
+    end
     if length(exampleFileIdx) ~= 1
         verifyLength(testCase, exampleFileIdx, 1,...
             'There should only be one corresponding file in examples')
