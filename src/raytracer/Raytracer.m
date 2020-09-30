@@ -206,8 +206,7 @@ for iterateTimeDivision = 1:paraCfgInput.numberOfTimeDivisions
     % save NodePositionsTrc
     if paraCfgInput.switchSaveVisualizerFiles && ~paraCfgInput.jsonOutput
         filename = sprintf('NodePositionsTrc%d.csv', iterateTimeDivision-1);
-        writematrix([squeeze(nodePosition(iterateTimeDivision,:,:)).'...
-            squeeze(nodeCfgInput.nodeEquivalentRotationAngle(iterateTimeDivision,:, :)).'],fullfile(visualizerPath, filename)...
+        writematrix(squeeze(nodePosition(iterateTimeDivision,:,:)).',fullfile(visualizerPath, filename)...
             );
     end
     
