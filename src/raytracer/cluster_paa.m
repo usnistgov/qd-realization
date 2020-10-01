@@ -40,7 +40,7 @@ function [paaInfo]  = cluster_paa(nodeTimePosition, nodePaaPosition, nodePaaOrie
 %     'fullCorrDistance': Full correlation distance: below this
 %          threshold PAAs are fully correlated (Default: 1)
 %
-%   Copyright 2019-2020 NIST/CLT (steve.blandino@nist.gov)
+%   Copyright 2019-2020 NIST/CTL (steve.blandino@nist.gov)
 
 %#codegen
 
@@ -54,7 +54,7 @@ for k = 1:2:length(varargin)
 end
 
 if ~exist('fc','var'),               fc=60e9;              end % Carrier Frequency
-if ~exist('corrDistance','var'),     corrDistance = 50;    end % Correlation distance: above this threshold PAAs are uncorrelated
+if ~exist('corrDistance','var'),     corrDistance = 1;    end % Correlation distance: above this threshold PAAs are uncorrelated
 if ~exist('fullCorrDistance','var'), fullCorrDistance = 1; end % Full correlation distance: below this threshold PAAs are fully correlated
 
 assert(size(nodeTimePosition,ndims(nodeTimePosition)-1) == 3, ...

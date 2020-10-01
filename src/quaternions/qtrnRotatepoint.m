@@ -4,7 +4,7 @@ function P = qtrnRotatepoint(q,v)
 %   using the quaternion Q.
 %
 %
-%   Copyright 2020 NIST/CLT (steve.blandino@nist.gov)
+%   Copyright 2020 NIST/CTL (steve.blandino@nist.gov)
 
 %#codegen
 

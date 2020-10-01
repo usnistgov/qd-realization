@@ -1,5 +1,5 @@
 function b = isMpcJsonCoordinates(path)
-%ISQDJSONFILE Function that checks whether the given path matches with
+%ISMPCJSONCOORDINATES Function that checks whether the given path matches with
 % the expected QD file output file position (as given by the
 % documentation). This allows to safely read the file later.
 %
@@ -24,6 +24,9 @@ function b = isMpcJsonCoordinates(path)
 % WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 % See the License for the specific language governing permissions and
 % limitations under the License.
+%
+%   Copyright 2019-2020 NIST/CTL (steve.blandino@nist.gov)
+
 
 [remainingPath, fileName, extension] = fileparts(path);
 b = strcmp([fileName, extension], 'Mpc.json');

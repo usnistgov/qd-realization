@@ -2,7 +2,7 @@ function [dod, doa, AOD_az, AOD_el, AOA_az, AOA_el] = frameRotation(frmRotMpInfo
 %%FRAMEROTATION extracts the angular information from frmRotMpInfo and
 %%converts aoa and aod from global coordinates to local coordinates 
 %
-%Copyright 2019-2020 NIST/CLT (steve.blandino@nist.gov)
+%Copyright 2019-2020 NIST/CTL (steve.blandino@nist.gov)
  
 % Extract info and apply frame rotation 
 dod = reshape(cell2mat(arrayfun(@(x) coordinateRotation(x.dod, [0 0 0], orientation.tx, 'frame'), frmRotMpInfo, 'UniformOutput', false)), 3, []);

@@ -17,7 +17,7 @@ function ch_out =  generateChannelPaa(ch_in, infoPAA)
 %   PAA_TX x PAA_RX is the number of channel connecting the i_th TX node
 %   and j_th RX node
 %
-%   Copyright 2019-2020 NIST/CLT (steve.blandino@nist.gov)
+%   Copyright 2019-2020 NIST/CTL (steve.blandino@nist.gov)
 
 %% Input processing 
 numNodes = length(infoPAA);

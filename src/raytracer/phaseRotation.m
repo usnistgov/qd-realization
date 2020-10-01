@@ -11,7 +11,7 @@ function[R]= phaseRotation(theta,phi, centr_shift , varargin)
 %        R = PHASEROTATION(theta,phi, centr_shift, 'fc', [value])
 %        Computes R when the central frequency is set to [value] Hz
 %
-%Copyright 2019-2020 NIST/CLT (steve.blandino@nist.gov)
+%Copyright 2019-2020 NIST/CTL (steve.blandino@nist.gov)
 
 %% Varargin processing
 var_struct = {'fc'};

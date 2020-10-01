@@ -5,7 +5,7 @@ function P= qtrnVectorrotate(q,v)
 %   rotating the vector v by a quaternion q.
 %
 %
-%   Copyright 2020 NIST/CLT (steve.blandino@nist.gov)    
+%   Copyright 2020 NIST/CTL (steve.blandino@nist.gov)    
     
 P = qtrnMultiply(qtrnMultiply(q,v),qtrnConj(q));
 

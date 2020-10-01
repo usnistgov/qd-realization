@@ -1,14 +1,20 @@
 function frmRotMpInfoOut = reverseFrmRotMpInfo(frmRotMpInfo)
+%REVERSEFRMROTMPINFO return symmetric link info, eg replace DOA with DOD
+%
+% INPUTS:
+% - frmRotMpInfo
+%
+% OUTPUTS:
+% - frmRotMpInfo
+%
+% Copyright 2019-2020 NIST/CTL (steve.blandino@nist.gov)
+
 L = length(frmRotMpInfo);
 
 if isempty(frmRotMpInfo)
     frmRotMpInfoOut = frmRotMpInfo;
 else
-%     frmRotMpInfoOut = struct('dod' ,mat2cell(reshape([frmRotMpInfo.doa], 3, []).', ones(1,L)).', ...
-%         'doa' ,mat2cell(reshape([frmRotMpInfo.dod], 3, []).', ones(1,L)).', ...
-%         'TxVel' ,mat2cell(reshape([frmRotMpInfo.RxVel], 3, []).', ones(1,L)).', ...
-%         'RxVel' ,mat2cell(reshape([frmRotMpInfo.TxVel], 3, []).', ones(1,L)).' ...
-%         );
+
     frmRotMpInfoOut = struct('dod', cell(1,L), ...
         'doa',  cell(1,L), ...
         'TxVel', cell(1,L), ...

@@ -9,7 +9,7 @@ function varargout = isPAACentroidValid(roomCoordinates, centroidCoordinate)
 %   Return false if the centroid coordinates centroidCoordinate are
 %   outside the area defined in roomCoordinates
 %
-%   Copyright 2019-2020 NIST/CLT (steve.blandino@nist.gov)
+%   Copyright 2019-2020 NIST/CTL (steve.blandino@nist.gov)
 
 %#codegen
 

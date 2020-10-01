@@ -2,7 +2,7 @@ function Q =  qtrnConj(Q)
 %QTRNCONJ Quaternion conjugate operation
 %   P = QTRNCONJ(Q) given a quaternion Q returns the quaternion P = Q*
 %
-%   Copyright 2020 NIST/CLT (steve.blandino@nist.gov)
+%   Copyright 2020 NIST/CTL (steve.blandino@nist.gov)
 
 %#codegen
 

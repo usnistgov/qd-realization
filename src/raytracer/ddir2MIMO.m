@@ -3,7 +3,7 @@ function [ch, varargout] = ddir2MIMO(ddir, info, frmRotMpInfo, ptr)
 % channel matrix assigning phase rotations according with PAA centroids 
 % positions and angles of departure/arrival
 %
-%Copyright 2019-2020 NIST/CLT (steve.blandino@nist.gov)
+%Copyright 2019-2020 NIST/CTL (steve.blandino@nist.gov)
 
 
 [~,b] = unique(info{ptr.nt}.centroids);

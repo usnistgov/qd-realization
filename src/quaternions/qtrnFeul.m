@@ -11,7 +11,7 @@ function [q] = qtrnFeul(ein, rot)
 %   Valid sequences: 'YZY','YXY','ZYZ','ZXZ','XYX','XZX','XYZ','YZX','ZXY',
 %   'XZY','ZYX','YXZ'.
 %
-%   Copyright 2020 NIST/CLT (steve.blandino@nist.gov)
+%   Copyright 2020 NIST/CTL (steve.blandino@nist.gov)
 
 %#codegen
 

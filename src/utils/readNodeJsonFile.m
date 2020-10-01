@@ -1,4 +1,13 @@
 function out = readNodeJsonFile(path)
+%READNODEJSONFILE extracts the node information from the output JSON file
+%
+% INPUTS:
+% - path: file path. This could be either and absolute path, or a relative
+% path, starting at least from the Output/ folder.
+%
+% OUTPUTS:
+% - out: array of JSON struct
+% Copyright 2019-2020 NIST/CTL (steve.blandino@nist.gov)
 
 fid = fopen(path);
 

@@ -1,43 +1,20 @@
-function writeQdJsonOutput(output, paaNodes, qdFilesPath, precision)
-%WRITEQDFILEOUTPUT Writes timestamp information to QdFile
+function writeQdJsonOutput(output, paaNodes, qdFilesPath)
+%WRITEQDJSONFILEOUTPUT Writes information to QdFile
 %
 % INPUTS:
-% - output: output matrix formatted as in MULTIPATH and LOSOUTPUTGENERATOR
-% - useOptimizedOutputToFile: see PARAMETERCFG
-% - fids: see GETQDFILESIDS
-% - iTx: index of the TX
-% - iRx: index of the RX
+% - output: output matrix 
+% - paaNodes: vector of PAAs per node
 % - qdFilesPath: path to Output/Ns3/QdFiles
-% - precision: floating point output precision in number of digits
 %
-% SEE ALSO: GETQDFILESIDS, CLOSEQDFILESIDS, MULTIPATH, LOSOUTPUTGENERATOR, PARAMETERCFG
+%   Copyright 2019-2020 NIST/CTL (steve.blandino@nist.gov)
 
 
-% Copyright (c) 2019, University of Padova, Department of Information
-% Engineering, SIGNET lab.
-%
-% Licensed under the Apache License, Version 2.0 (the "License");
-% you may not use this file except in compliance with the License.
-% You may obtain a copy of the License at
-%
-%    http://www.apache.org/licenses/LICENSE-2.0
-%
-% Unless required by applicable law or agreed to in writing, software
-% distributed under the License is distributed on an "AS IS" BASIS,
-% WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-% See the License for the specific language governing permissions and
-% limitations under the License.
 
-% if ~useOptimizedOutputToFile
-%     filename = sprintf('Tx%dRx%d.txt', iTx - 1, iRx - 1);
 filepath = fullfile(qdFilesPath, 'qdOutput.json');
 fid = fopen(filepath, 'w');
-% else
-% %     fid = fids(iTx, iRx);
-% end
 NODES = size(output,1);
-ITER  = size(output,3);
-floatFormat = sprintf('%%.%dg',precision);
+% ITER  = size(output,3);
+% floatFormat = sprintf('%%.%dg',precision);
 nodeList = 1:NODES;
 Noutput = 21;
 

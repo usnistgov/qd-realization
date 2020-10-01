@@ -21,7 +21,7 @@ function [P, varargout] = coordinateRotation(P, C, euler, varargin)
 %  [P SUCCESSIVE_EUL] = COORDINATEROTATION(..) returns the euler angle
 %  SUCCESSIVE_EUL equivalent to the consecutive rotations in EUL
 %
-%   Copyright 2020 NIST/CLT (steve.blandino@nist.gov)
+%   Copyright 2020 NIST/CTL (steve.blandino@nist.gov)
 
 %% Vargin processing
 if isempty(varargin)

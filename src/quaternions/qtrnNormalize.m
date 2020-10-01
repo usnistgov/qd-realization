@@ -4,7 +4,7 @@ function q = qtrnNormalize(q)
 %   is 1.
 %   Q is a 4 dimensional vector or a Nx4 matrix collection N quaternions.
 %
-%   Copyright 2020 NIST/CLT (steve.blandino@nist.gov)
+%   Copyright 2020 NIST/CTL (steve.blandino@nist.gov)
 
 %#codegen
 
