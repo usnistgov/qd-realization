@@ -1,4 +1,4 @@
-function ch_out =  generateChannelPaa(ch_in, infoPAA)
+function ch_out = generateChannelPaa(ch_in, infoPAA)
 %GENERATECHANNEL_PAA returns the QD channel for each PAA_TX - PAA_RX
 %combination.
 %
