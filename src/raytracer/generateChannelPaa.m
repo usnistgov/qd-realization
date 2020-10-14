@@ -23,7 +23,7 @@ function ch_out = generateChannelPaa(ch_in, infoPAA)
 numNodes = length(infoPAA);
 nodesVector = 1:numNodes;
 ch_out = cell(size(ch_in));
-nvar =21;
+nvar = 21;
 paa_comb_struct = {};
 
 %% Generate channel for each PAA
