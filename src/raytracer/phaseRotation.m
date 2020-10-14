@@ -17,7 +17,7 @@ function R = phaseRotation(theta, phi, centrShift, varargin)
 var_struct = {'fc'};
 for k = 1:2:length(varargin)
     if (~any(strcmp(varargin{k}, var_struct)))
-        warning(['Cannot specify "', varargin{k}, '" as input value - it will be discarted']);
+        warning('Cannot specify "%s" as input value - it will be discarded', varargin{k});
     end
     eval([varargin{k},' = varargin{k+1};'])
 end
@@ -38,4 +38,3 @@ kz =  k*cos(theta)*dz.';
 
 R = (exp(1i*kz).*exp(1i*ky).*exp(1i*kx)); %6.87A Balanis 4ed
 end
-
