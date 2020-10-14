@@ -96,7 +96,7 @@ end
 
 end
 %% Append NAN
-function x = appendNan(x,M,nvar)
+function x = appendNan(x, M, nvar)
 if size(x,1)<M
     x(end+1:M,1:nvar,:) = nan;
 end
