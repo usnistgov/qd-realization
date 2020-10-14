@@ -88,8 +88,8 @@ c=3e8;
 dopplerFactor=(velocityRxAlongDirectionOfDeparture-velocityTxAlongDirectionOfDeparture)/(c);
 % To verify whether DoA vector exists
 % vector=Tx-Rx;
-[isLOS]=verifyPath(Tx,Rx,doaNoRot,[0,0,0],...
-    [0,0,0],CADoutput,2,false);
+isLOS = verifyPath(Tx, Rx, doaNoRot, [0,0,0],...
+    [0,0,0], CADoutput, 2, false);
 
 if isLOS==1 % if DoA exists
     output1 = nan(1,21);
