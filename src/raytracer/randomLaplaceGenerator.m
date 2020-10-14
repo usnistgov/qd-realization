@@ -50,6 +50,6 @@ sign = zeros(sz);
 sign(u<0.5) = -1;
 sign(u>=0.5) = 1;
 % generation of a numbers with Laplace distribution
-x = sign.*randomExponetialGenerator(ones(n,1));
+x = sign .* randomExponetialGenerator(ones(sz));
 
 end
