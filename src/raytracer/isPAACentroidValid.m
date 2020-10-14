@@ -1,4 +1,4 @@
-function varargout = isPAACentroidValid(roomCoordinates, centroidCoordinate)
+function check = isPAACentroidValid(roomCoordinates, centroidCoordinate)
 %ISPAACENTROIDVALID returns check if the centroid inside the defined area (box).
 %
 %   ISPAACENTROIDVALID(roomCoordinates, centroidCoordinate)
@@ -22,9 +22,9 @@ if ~all(reshape(centroidCoordinate>= minCoord & centroidCoordinate<= maxCoord, [
     warning OFF BACKTRACE
     warning('PAA outside defined area')
     warning ON BACKTRACE
-    varargout{1} = false;
+    check = false;
 else
-    varargout{1} = true;
+    check = true;
 end
 
 end
