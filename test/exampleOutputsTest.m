@@ -96,7 +96,7 @@ runRaytracer(testCase, exampleName);
 checkOutput(testCase, exampleName);
 end
 
-function lRoomRotMIMOTest(testCase)
+function lRoomRotMimoTest(testCase)
 exampleName = 'L-Room-rotation-multiPAA';
 runRaytracer(testCase, exampleName);
 checkOutput(testCase, exampleName);
