@@ -36,5 +36,5 @@ kx =  k*(sin(theta).*cos(phi))*dx.';
 ky =  k*sin(theta).*sin(phi)*dy.';
 kz =  k*cos(theta)*dz.';
 
-R = (exp(1i*kz).*exp(1i*ky).*exp(1i*kx)); %6.87A Balanis 4ed
+R = exp(1i*(kz + ky + kx)); %6.87A Balanis 4ed
 end
