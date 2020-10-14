@@ -134,7 +134,7 @@ end
 node = reshape(node, [1 size(node)]);
 end
 
-function nodePAA = updatePAAposition(nodePAA,nodeShift,t)
+function nodePAA = updatePAAposition(nodePAA, nodeShift, t)
 squeezeAndReshape = @(x) reshape(squeeze(x), [], 3); 
 
 if isempty(nodePAA)
