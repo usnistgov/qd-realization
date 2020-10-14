@@ -432,7 +432,7 @@ if ~paraCfgInput.jsonOutput || keepBothQDOutput
 end
 
 %% Write useful output information. 
-writeReportOutput =0 ; %Set to 0 to allow succeful test.
+writeReportOutput = 0 ; %Set to 0 to allow succeful test.
 if writeReportOutput
     f = fopen(strcat(outputPath, filesep,'report.dat'), 'w'); %#ok<UNRCH>
 %     elapsedTime = toc;
