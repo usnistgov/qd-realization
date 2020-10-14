@@ -30,7 +30,7 @@ dz = centr_shift(:,3);
 
 %% 
 lambda = 3e8/fc;
-k  =  2*pi/lambda; 
+k = 2*pi/lambda; 
 
 kx =  k*(sin(theta).*cos(phi))*dx.';
 ky =  k*sin(theta).*sin(phi)*dy.';
