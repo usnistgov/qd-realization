@@ -31,7 +31,7 @@ for nt = nodesVector % Loop on tx nodes
     for nr = nodesVector(nodesVector~=nt)% Loop on rx nodes
         chMIMOtx_rx = []; % Channel between one tx and one rx
         paa_comb = [];
-        i =0;
+        i = 0;
         for c_t = 1:infoPAA{nt}.nPAA_centroids % Loop on transmitter centroid
             for c_r = 1:infoPAA{nr}.nPAA_centroids % Loop on receiver centroid
                 chMIMOcentroid = []; % Channel between tx and rx centroid
