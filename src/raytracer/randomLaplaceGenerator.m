@@ -1,4 +1,4 @@
-function x = randomLaplaceGenerator(varargin)
+function x = randomLaplaceGenerator(sz)
 % Function which generates a random number using laplace distribution
 %
 % function: x  = randomLaplaceGenerator()
