@@ -55,7 +55,7 @@ end
 %% Apply rotations and compute equivalent quaternion
 for j = 1:Nrotations    
     P = qtrnRotatepoint(Q(j,:),P-C(j,:))+C(j,:);    
-    if j<=Nrotations-1
+    if j <= Nrotations - 1
         Q(j,:) = qtrnMultiply(Q(j,:), Q(j+1,:)); % Store at index j the prod 1:j+1
     end
 end

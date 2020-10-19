@@ -1,4 +1,4 @@
-function [paaInfo]  = cluster_paa(nodeTimePosition, nodePaaPosition, nodePaaOrientation, varargin)
+function paaInfo = cluster_paa(nodeTimePosition, nodePaaPosition, nodePaaOrientation, varargin)
 %CLUSTER_PAA returns the cell array paaInfo of lenght 1xN being N the nodes.
 % Each entry of the array is a struct storing information about the PAAs
 % in a node.

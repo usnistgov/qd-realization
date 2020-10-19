@@ -96,7 +96,7 @@ runRaytracer(testCase, exampleName);
 checkOutput(testCase, exampleName);
 end
 
-function lRoomRotMIMOTest(testCase)
+function lRoomRotMimoTest(testCase)
 exampleName = 'L-Room-rotation-multiPAA';
 runRaytracer(testCase, exampleName);
 checkOutput(testCase, exampleName);
@@ -200,7 +200,7 @@ for i = 1:length(scenarioFiles)
     
     % extract same file from examples
     exampleFileIdx = find(strcmp({exampleFiles.name},scenarioFileName));
-    %Try if find back-compatibility for MPC
+    % Check backward compatibility for MPC
     if isempty(exampleFileIdx)
         paaStringIndStart = num2cell(strfind(scenarioFileName,'PAA'));
         index2rm = cell2mat(cellfun(@(x) x:x+3,paaStringIndStart,'UniformOutput',false));

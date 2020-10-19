@@ -1,4 +1,4 @@
-function[R]= phaseRotation(theta,phi, centr_shift , varargin)
+function R = phaseRotation(theta, phi, centrShift, varargin)
 %%PHASEROTATION returns the channel phase rotation R with respect the
 %%centroid position in a 60GHz channel.
 %        R = phaseRotation(theta,phi, centr_shift)
@@ -17,7 +17,7 @@ function[R]= phaseRotation(theta,phi, centr_shift , varargin)
 var_struct = {'fc'};
 for k = 1:2:length(varargin)
     if (~any(strcmp(varargin{k}, var_struct)))
-        warning(['Cannot specify "', varargin{k}, '" as input value - it will be discarted']);
+        warning('Cannot specify "%s" as input value - it will be discarded', varargin{k});
     end
     eval([varargin{k},' = varargin{k+1};'])
 end
@@ -30,13 +30,11 @@ dz = centr_shift(:,3);
 
 %% 
 lambda = 3e8/fc;
-k  =  2*pi/lambda; 
+k = 2*pi/lambda; 
 
 kx =  k*(sin(theta).*cos(phi))*dx.';
 ky =  k*sin(theta).*sin(phi)*dy.';
 kz =  k*cos(theta)*dz.';
 
-R = (exp(1i*kz).*exp(1i*ky).*exp(1i*kx)); %6.87A Balanis 4ed
+R = exp(1i*(kz + ky + kx)); %6.87A Balanis 4ed
 end
-
-

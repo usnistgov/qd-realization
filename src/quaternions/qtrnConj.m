@@ -6,8 +6,7 @@ function Q =  qtrnConj(Q)
 
 %#codegen
 
-[~,c] = size(Q);
-assert(c==4, 'Expected input to be an array with 4 columns');
+assert(size(Q, 2) == 4, 'Expected input to be an array with 4 columns');
 
 Q(:, 2:end) = -Q(:, 2:end);
 end

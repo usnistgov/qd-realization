@@ -1,4 +1,4 @@
-function x = randomLaplaceGenerator(varargin)
+function x = randomLaplaceGenerator(sz)
 % Function which generates a random number using laplace distribution
 %
 % function: x  = randomLaplaceGenerator()
@@ -45,11 +45,11 @@ else
 end
 
 % generation of a numbers with Uniform distribution
-u=rand(n,1);
-sign = zeros(n,1);
+u = rand(sz);
+sign = zeros(sz);
 sign(u<0.5) = -1;
 sign(u>=0.5) = 1;
 % generation of a numbers with Laplace distribution
-x = sign.*randomExponetialGenerator(ones(n,1));
+x = sign .* randomExponetialGenerator(ones(sz));
 
 end
