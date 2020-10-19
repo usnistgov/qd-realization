@@ -348,8 +348,7 @@ end
 % QD output
 if paraCfgInput.jsonOutput
     writeQdJsonOutput(outputPAATime,cellfun(@(x) x.nPaa,  nodeCfgInput.PAA_info),...
-        qdFilesPath,...
-        paraCfgInput.qdFilesFloatPrecision);
+        qdFilesPath);
     
     Mpc(:,:,:,:,:,1) = [];
 end
@@ -365,14 +364,21 @@ if paraCfgInput.switchSaveVisualizerFiles && paraCfgInput.jsonOutput
                     for iteratePaaRx = 1:nPAA_centroids(iterateRx)
                         nodeRxCluster  = nodeCfgInput.PAA_info{iterateRx}.paaInCluster{iteratePaaRx};
                         for rxPaaCluster = 1:length(nodeRxCluster)
-                            for reflOrd = 1:paraCfgInput.totalNumberOfReflections+1
-                                Mpc_t = squeeze((Mpc(iterateTx,iteratePaaTx,...
-                                    iterateRx,iteratePaaRx,reflOrd,:)));
+                            for reflOrd = 1:paraCfgInput.totalNumberOfReflections+1                                
                                 s = struct('TX', iterateTx-1, 'PAA_TX', nodeTxCluster(txPaaCluster)-1,...
                                     'RX', iterateRx-1, 'PAA_RX', nodeRxCluster(rxPaaCluster)-1, ...
                                     'Rorder', reflOrd-1);
-                                s.MPC =  Mpc_t;
-                                json = jsonencode(s);
+                                Mpc_t = squeeze((Mpc(iterateTx,iteratePaaTx,...
+                                    iterateRx,iteratePaaRx,reflOrd,:)));
+                                maxSize = max(cell2mat(cellfun(@size ,Mpc_t ,'UniformOutput' ,false)));
+                                    Mpc_t= cellfun(@(x) padNan(x, maxSize),Mpc_t,'UniformOutput',false);     
+
+%                                     Mpc_t= cellfun(@(x) appendNan(x),Mpc_t,'UniformOutput',false);     
+                                
+                                    s.MPC =  Mpc_t;
+                                    json = jsonencode(s);
+%                                     json = strrep(json, ',null],','],');
+%                                     json = strrep(json, 'null', '[[]]');
                                 fprintf(f, '%s\n', json);
                             end
                         end
@@ -443,4 +449,18 @@ if writeReportOutput
 %     isPAAcentered = 'true';
     fprintf(f, 'PAA centered:\t%d\n', paraCfgInput.isPAAcentered);
     fclose(f);
+end
+end
+function x = appendNan(x)
+% if isempty(x)
+    x(:,end+1) = nan;
+% end
+end
+
+
+function x = padNan(x, maxSize)
+if ~all(size(x) == maxSize)
+    sizeX = size(x);
+    x(sizeX(1)+1:maxSize(1),sizeX(2)+1:maxSize(2)) = nan;
+end
 end
