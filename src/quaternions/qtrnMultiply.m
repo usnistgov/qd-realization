@@ -1,4 +1,4 @@
-function qout = qtrnMultiply( q, varargin )
+function qout = qtrnMultiply(q, varargin)
 %  QUATMULTIPLY Calculate the product of two quaternions.
 %   N = QUATMULTIPLY( Q, R ) calculates the quaternion product, N, for two
 %   given quaternions, Q and R.  Inputs Q and R can be either M-by-4 matrices 
