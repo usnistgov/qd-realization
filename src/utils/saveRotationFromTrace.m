@@ -1,4 +1,4 @@
-function  [] =  saveRotationFromTrace(nameTraceFile,nameFile, varargin)
+function saveRotationFromTrace(nameTraceFile, nameFile, varargin)
 if isempty(varargin)
     captureId = 's1';
 else
