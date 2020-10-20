@@ -44,7 +44,7 @@ if isstruct(output)
     for i = 1:numel(fn)
         sz_paa = [size(output.(fn{i})),1];
         id_end= id_st+sz_paa(3)-1;        
-        output_cell(:, :, id_st:id_end) = mat2cell(eval(['output.',fn{i}]), sz_paa(1), sz_paa(2), ones(1,sz_paa(3)));
+        output_cell(:, :, id_st:id_end) = mat2cell(output.(fn{i}), sz_paa(1), sz_paa(2), ones(1,sz_paa(3)));
         id_st=id_st+sz_paa(3);
     end
     output = squeeze(output_cell);
