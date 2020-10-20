@@ -80,7 +80,7 @@ function [QD, switchQD, output, multipath, indexMultipath, indexQD,varargout] =.
 % Modified by: Mattia Lecci <leccimat@dei.unipd.it>, Used MATLAB functions instead of custom ones,
 %    vectorized code, improved access to MaterialLibrary
 
-var_struct = {'indStoc', 'qTx', 'qRx'}; 
+varStruct = {'indStoc', 'qTx', 'qRx'}; 
 for k = 1:2:length(varargin)
     if (~any(strcmp(varargin{k}, var_struct)))
         warning(['Cannot specify "', varargin{k}, '" as input value - it will be discarted']);
