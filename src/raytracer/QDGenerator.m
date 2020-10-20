@@ -197,7 +197,7 @@ for i1 = 1:2
         end
         
         mu = acosd(dod(3)/norm(dod));
-        thetaCursor = repmat(mu, 1, indStoc);
+        thetaCursor  = repmat(mu, 1, indStoc);
         
         % generates angular spread for Aod elevation
         Aod_el = zeros(n, indStoc);
@@ -214,23 +214,23 @@ for i1 = 1:2
         PG_cursor = squeeze(10.^(output(count-1,9,1:indStoc)/20)).';
         PG_cursor1 = squeeze(output(count-1,9,1:indStoc)).';
         
-        mu_1 = (sum(PG.*Aod_el)+(PG_cursor.*theta_cursor))...
+        mu_1 = (sum(PG.*Aod_el)+(PG_cursor.*thetaCursor))...
             ./(sum(PG)+PG_cursor);
         sigma_1 = sqrt(((sum(PG.*((Aod_el-mu_1).*...
             (Aod_el-mu_1))))+(PG_cursor.*...
-            ((theta_cursor-mu_1).^2)))./(sum(PG)+PG_cursor));
+            ((thetaCursor-mu_1).^2)))./(sum(PG)+PG_cursor));
         s = sigmaAodEl.'./sigma_1;
-        Aod_el1 = [theta_cursor;Aod_el];
-        x = (s.^2)-((PG_cursor.*((theta_cursor-mu_1).^2))/...
+        Aod_el1 = [thetaCursor;Aod_el];
+        x = (s.^2)-((PG_cursor.*((thetaCursor-mu_1).^2))/...
             ((sum(PG.*((Aod_el-mu_1).*(Aod_el-mu_1))))+...
-            (PG_cursor.*((theta_cursor-mu_1).^2))));
-        a=((sum(PG.*((Aod_el-mu_1).*(Aod_el-mu_1))))+(PG_cursor.*((theta_cursor-mu_1).^2)));
-        b=PG_cursor.*((theta_cursor-mu_1).^2);
+            (PG_cursor.*((thetaCursor-mu_1).^2))));
+        a=((sum(PG.*((Aod_el-mu_1).*(Aod_el-mu_1))))+(PG_cursor.*((thetaCursor-mu_1).^2)));
+        b=PG_cursor.*((thetaCursor-mu_1).^2);
         s1=abs(x.*(1+(b./a)));
         Aod_el=((Aod_el-mu_1).*sqrt(s1))+(mu_1);
         
         mu=squeeze(output(mpcIdx-1,10,1:indStoc));
-        theta_cursor=mu.';
+        thetaCursor=mu.';
         % generates angular spread for Aod azimuth
         ran = [];
         for i=1:n
@@ -243,16 +243,16 @@ for i1 = 1:2
         mu_1=sum(PG.*Aod_az)./sum(PG);
         sigma_1=sqrt((sum(PG.*((Aod_az-mu_1).*(Aod_az-mu_1))))./sum(PG));
         s=sigmaAodAz.'./sigma_1;
-        Aod_az1=[theta_cursor;Aod_az];
-        x=(s.^2)-((PG_cursor.*((theta_cursor-mu_1).^2))./((sum(PG.*((Aod_az-mu_1).*(Aod_az-mu_1))))+(PG_cursor.*((theta_cursor-mu_1).^2))));
-        a=((sum(PG.*((Aod_az-mu_1).*(Aod_az-mu_1))))+(PG_cursor.*((theta_cursor-mu_1).^2)));
-        b=PG_cursor.*((theta_cursor-mu_1).^2);
+        Aod_az1=[thetaCursor;Aod_az];
+        x=(s.^2)-((PG_cursor.*((thetaCursor-mu_1).^2))./((sum(PG.*((Aod_az-mu_1).*(Aod_az-mu_1))))+(PG_cursor.*((thetaCursor-mu_1).^2))));
+        a=((sum(PG.*((Aod_az-mu_1).*(Aod_az-mu_1))))+(PG_cursor.*((thetaCursor-mu_1).^2)));
+        b=PG_cursor.*((thetaCursor-mu_1).^2);
         s1=abs(x.*(1+(b./a)));
         Aod_az=((Aod_az-mu_1).*sqrt(s1))+(mu_1);
         
         
         mu=squeeze(output(mpcIdx-1,12,1:indStoc));
-        theta_cursor=mu.';
+        thetaCursor=mu.';
         % generates angular spread for Aoa azimuth
         
         ran = [];
@@ -266,15 +266,15 @@ for i1 = 1:2
         mu_1=sum(PG.*Aoa_az)./sum(PG);
         sigma_1=sqrt((sum(PG.*((Aoa_az-mu_1).*(Aoa_az-mu_1))))./sum(PG));
         s=sigmaAoaAz.'./sigma_1;
-        Aoa_az1=[theta_cursor;Aoa_az];
-        x=(s.^2)-((PG_cursor.*((theta_cursor-mu_1).^2))./((sum(PG.*((Aoa_az-mu_1).*(Aoa_az-mu_1))))+(PG_cursor.*((theta_cursor-mu_1).^2))));
-        a=((sum(PG.*((Aoa_az-mu_1).*(Aoa_az-mu_1))))+(PG_cursor.*((theta_cursor-mu_1).^2)));
-        b=PG_cursor.*((theta_cursor-mu_1).^2);
+        Aoa_az1=[thetaCursor;Aoa_az];
+        x=(s.^2)-((PG_cursor.*((thetaCursor-mu_1).^2))./((sum(PG.*((Aoa_az-mu_1).*(Aoa_az-mu_1))))+(PG_cursor.*((thetaCursor-mu_1).^2))));
+        a=((sum(PG.*((Aoa_az-mu_1).*(Aoa_az-mu_1))))+(PG_cursor.*((thetaCursor-mu_1).^2)));
+        b=PG_cursor.*((thetaCursor-mu_1).^2);
         s1=abs(x.*(1+(b./a)));
         Aoa_az=((Aoa_az-mu_1).*sqrt(s1))+(mu_1);
         
         mu=acosd(doa(3)/norm(doa));
-        theta_cursor = repmat(mu,1,indStoc);
+        thetaCursor = repmat(mu,1,indStoc);
 
         ran = [];
         % generates angular spread for Aoa elevation
@@ -288,10 +288,10 @@ for i1 = 1:2
         mu_1=sum(PG.*Aoa_el)./sum(PG);
         sigma_1=sqrt((sum(PG.*((Aoa_el-mu_1).*(Aoa_el-mu_1))))./sum(PG));
         s=sigmaAoaEl.'./sigma_1;
-        Aoa_el1=[theta_cursor;Aoa_el];
-        x=(s.^2)-((PG_cursor.*((theta_cursor-mu_1).^2))/((sum(PG.*((Aoa_el-mu_1).*(Aoa_el-mu_1))))+(PG_cursor.*((theta_cursor-mu_1).^2))));
-        a=((sum(PG.*((Aoa_el-mu_1).*(Aoa_el-mu_1))))+(PG_cursor.*((theta_cursor-mu_1).^2)));
-        b=PG_cursor.*((theta_cursor-mu_1).^2);
+        Aoa_el1=[thetaCursor;Aoa_el];
+        x=(s.^2)-((PG_cursor.*((thetaCursor-mu_1).^2))/((sum(PG.*((Aoa_el-mu_1).*(Aoa_el-mu_1))))+(PG_cursor.*((thetaCursor-mu_1).^2))));
+        a=((sum(PG.*((Aoa_el-mu_1).*(Aoa_el-mu_1))))+(PG_cursor.*((thetaCursor-mu_1).^2)));
+        b=PG_cursor.*((thetaCursor-mu_1).^2);
         s1=abs(x.*(1+(b./a)));
         Aoa_el=((Aoa_el-mu_1).*sqrt(s1))+(mu_1);
         
