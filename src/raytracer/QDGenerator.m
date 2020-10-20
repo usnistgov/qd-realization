@@ -197,7 +197,7 @@ for i1 = 1:2
         end
         
         mu = acosd(dod(3)/norm(dod));
-        theta_cursor = repmat(mu,1,indStoc);
+        thetaCursor = repmat(mu, 1, indStoc);
         
         % generates angular spread for Aod elevation
         Aod_el = zeros(n, indStoc);
