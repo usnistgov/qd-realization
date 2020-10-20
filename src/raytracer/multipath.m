@@ -149,8 +149,8 @@ if numberOfRowsArraysOfPlanes>0
             multipath,indexMultipath,velocityTx,velocityRx,PolarizationSwitchTemporary,...
             PolarizationTx,AntennaOrientationTx,PolarizationRx,...
             AntennaOrientationRx,nt_array,switchCrossPolarization);
-            dod=  coordinateRotation(dodNoRot,[0 0 0], qTx.angle, 'frame');
-            doa=  coordinateRotation(doaNoRot,[0 0 0], qRx.angle, 'frame'); 
+            dod = coordinateRotation(dodNoRot,[0 0 0], qTx.angle, 'frame');
+            doa = coordinateRotation(doaNoRot,[0 0 0], qRx.angle, 'frame'); 
         if isMPC == 1
             for i = 1:indexMultipath - 1
                 switch3 = 1;
