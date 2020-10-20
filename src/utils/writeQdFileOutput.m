@@ -70,7 +70,7 @@ floatFormat = sprintf('%%.%dg',precision);
 formatSpec = [repmat([floatFormat,','],1,numRays-1), [floatFormat,'\n']];
 numChanV = 1:numChan;
 for id = numChanV(~idEmpty)
-    output_id = output{id};
+    outputId = output{id};
     numRays = size(output_id,1);
     fprintf(fid, '%d\n', numRays);
     formatSpec = [repmat([floatFormat,','],1,numRays-1), [floatFormat,'\n']];
