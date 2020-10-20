@@ -1,6 +1,6 @@
-function [output, mpcIdx, switch_QD,paramsRotation] = QDGenerator(order_of_R,output,...
-    array_of_materials, number, MaterialLibrary, distance, freq, mpcIdx,...
-    dod, doa, vtx, v_temp, count, indexReference, paramsRotation, varargin)
+function [output, mpcIdx, switchQd,paramsRotation] = QDGenerator(reflOrder,output,...
+    arrayMaterials, number, materialLibrary, distance, freq, mpcIdx,...
+    dod, doa, vtx, vTemp, count, indexReference, paramsRotation, varargin)
 %INPUT -
 %order_of_R -  Order of reflection
 %output - multipath parameters
@@ -66,39 +66,40 @@ function [output, mpcIdx, switch_QD,paramsRotation] = QDGenerator(order_of_R,out
 % Modified by: Mattia Lecci <leccimat@dei.unipd.it>, Improved access to MaterialLibrary
 % Modified by: Neeraj Varshney <neeraj.varshney@nist.gov>, Included residual
 % error in QD model
-var_struct = {'indStoc', 'Nprec', 'Npost'}; 
-for k = 1:2:length(varargin)
-    if (~any(strcmp(varargin{k}, var_struct)))
-        warning(['Cannot specify "', varargin{k}, '" as input value - it will be discarted']);
-    end
-    eval([varargin{k},' = varargin{k+1};'])
-end
-if ~exist('indStoc','var'),     indStoc=1;        end
-if ~exist('Nprec','var'),       Nprec=3;        end
-if ~exist('Npost','var'),       Npost=16;        end
 
+%% Varargin processing
+p = inputParser;
+addParameter(p,'indStoc',1)
+addParameter(p,'Nprec', 3)
+addParameter(p,'Npost', 16)
+indStoc = p.Results.indStoc;
+Nprec = p.Results.Nprec;
+Npost = p.Results.Npost;
+
+%% Init
 c = getLightSpeed;
+pathLossSum = 0;
+switchQd = 0;
+
 % if  switch_material==1 && QD_gen==1
 % To demonstrate that even higher order reflections can be taken care of
 % but for accurate results higer order reflections are not valid i.e.,
 % above first order. For higher order reflections the physical measurements
 % are in progress.
 %  if  switch_material==1 && order_of_R==1
-PathlossSum = 0;
-switch_QD = 0;
-for order_of_R_temp = 1:order_of_R
+for reflOrderId = 1:reflOrder
     
     
-    Material = array_of_materials(number,order_of_R_temp);
-    if order_of_R_temp == order_of_R
-        output(mpcIdx-1,21, 1:indStoc) = Material;
+    material = arrayMaterials(number,reflOrderId);
+    if reflOrderId == reflOrder
+        output(mpcIdx-1,21, 1:indStoc) = material;
     end
     
-    [Pathloss] = PathlossQD(MaterialLibrary,...
-        array_of_materials(number,:),1);
-    PathlossSum=PathlossSum+Pathloss;
+    pathLoss = PathlossQD(materialLibrary,...
+        arrayMaterials(number,:),1);
+    pathLossSum=pathLossSum+pathLoss;
 end
-output(mpcIdx-1,9, 1:indStoc) = output(mpcIdx-1,9,1:indStoc)-(PathlossSum);
+output(mpcIdx-1,9, 1:indStoc) = output(mpcIdx-1,9,1:indStoc)-(pathLossSum);
 pathGain = squeeze(output(mpcIdx-1,9,1:indStoc));
 
 % i1 is for generating precursors and i2 is for generating postcursors.
@@ -107,36 +108,33 @@ for i1 = 1:2
     % and different parameters are generated.
     
     if i1 == 1
-        muk = MaterialLibrary.mu_k_Precursor(Material);
-        sigmak = MaterialLibrary.sigma_k_Precursor(Material);
-        muy = MaterialLibrary.mu_Y_Precursor(Material);
-        sigmay = MaterialLibrary.sigma_Y_Precursor(Material);
-        mul = MaterialLibrary.mu_lambda_Precursor(Material);
-        sigmal = MaterialLibrary.sigma_lambda_Precursor(Material);
-        muSigmas = MaterialLibrary.mu_SigmaS_Precursor(Material);
-        sigmaSigmas = MaterialLibrary.sigma_SigmaS_Precursor(Material);
-        % A total of 3 precursors are generated. they can be adjusted by
-        % changing n
+        muk = materialLibrary.mu_k_Precursor(material);
+        sigmak = materialLibrary.sigma_k_Precursor(material);
+        muy = materialLibrary.mu_Y_Precursor(material);
+        sigmay = materialLibrary.sigma_Y_Precursor(material);
+        mul = materialLibrary.mu_lambda_Precursor(material);
+        sigmal = materialLibrary.sigma_lambda_Precursor(material);
+        muSigmas = materialLibrary.mu_SigmaS_Precursor(material);
+        sigmaSigmas = materialLibrary.sigma_SigmaS_Precursor(material);
         n = Nprec;
         
     else
-        muk = MaterialLibrary.mu_k_Postcursor(Material);
-        sigmak = MaterialLibrary.sigma_k_Postcursor(Material);
-        muy = MaterialLibrary.mu_Y_Postcursor(Material);
-        sigmay = MaterialLibrary.sigma_Y_Postcursor(Material);
-        mul = MaterialLibrary.mu_lambda_Postcursor(Material);
-        sigmal = MaterialLibrary.sigma_lambda_Postcursor(Material);
-        muSigmas = MaterialLibrary.mu_SigmaS_Postcursor(Material);
-        sigmaSigmas = MaterialLibrary.sigma_SigmaS_Postcursor(Material);
-        % A total of 16 post cursors are genearted
+        muk = materialLibrary.mu_k_Postcursor(material);
+        sigmak = materialLibrary.sigma_k_Postcursor(material);
+        muy = materialLibrary.mu_Y_Postcursor(material);
+        sigmay = materialLibrary.sigma_Y_Postcursor(material);
+        mul = materialLibrary.mu_lambda_Postcursor(material);
+        sigmal = materialLibrary.sigma_lambda_Postcursor(material);
+        muSigmas = materialLibrary.mu_SigmaS_Postcursor(material);
+        sigmaSigmas = materialLibrary.sigma_SigmaS_Postcursor(material);
         n = Npost;
         
     end
     
-    muTheta = MaterialLibrary.mu_sigmaThetaAZ(Material);
-    sigmaTheta = MaterialLibrary.sigma_sigmaThetaAZ(Material);
-    muPhi = MaterialLibrary.mu_sigmaThetaEL(Material);
-    sigmaPhi = MaterialLibrary.sigma_sigmaThetaEL(Material);
+    muTheta = materialLibrary.mu_sigmaThetaAZ(material);
+    sigmaTheta = materialLibrary.sigma_sigmaThetaAZ(material);
+    muPhi = materialLibrary.mu_sigmaThetaEL(material);
+    sigmaPhi = materialLibrary.sigma_sigmaThetaEL(material);
     
     %%
     if  muk~=0
@@ -327,7 +325,7 @@ for i1 = 1:2
             
             
             vtx_along_dod = dot(repmat(vtx, indStoc,1).', -dod_temp);
-            vrx_along_dod = dot(repmat(v_temp, indStoc,1).', -dod_temp);
+            vrx_along_dod = dot(repmat(vTemp, indStoc,1).', -dod_temp);
             doppler_factor = freq * (vrx_along_dod - vtx_along_dod) / c;
             output(mpcIdx+i-1,20,1:indStoc) = doppler_factor;
             output(mpcIdx+i-1,18,1:indStoc) = rand*2*pi;
@@ -336,7 +334,7 @@ for i1 = 1:2
             paramsRotation(mpcIdx+i-1).doa = reshape(doa_stochMPC, [],3);
             paramsRotation(mpcIdx+i-1).TxVel = vtx_along_dod;
             paramsRotation(mpcIdx+i-1).RxVel = vrx_along_dod;
-            switch_QD = 1;
+            switchQd = 1;
         end
         
         mpcIdx=mpcIdx+i;

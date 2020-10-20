@@ -80,17 +80,17 @@ function [QD, switchQD, output, multipath, indexMultipath, indexQD,varargout] =.
 % Modified by: Mattia Lecci <leccimat@dei.unipd.it>, Used MATLAB functions instead of custom ones,
 %    vectorized code, improved access to MaterialLibrary
 
-varStruct = {'indStoc', 'qTx', 'qRx'}; 
-for k = 1:2:length(varargin)
-    if (~any(strcmp(varargin{k}, var_struct)))
-        warning(['Cannot specify "', varargin{k}, '" as input value - it will be discarted']);
-    end
-    eval([varargin{k},' = varargin{k+1};'])
-end
-if ~exist('indStoc','var'),     indStoc=1;        end
-if ~exist('qTx','var'),     qTx.center = Tx;  qTx.angle = zeros(1,3);   end
-if ~exist('qRx','var'),     qRx.center = Rx;  qRx.angle = zeros(1,3);   end
+%% Varargin processing 
+p = inputParser;
+addParameter(p,'indStoc',1)
+addParameter(p,'qTx',struct('center', Tx, 'angle', [0 0 0]))
+addParameter(p,'qRx',struct('center', Rx, 'angle', [0 0 0]))
+parse(p, varargin{:});
+indStoc = p.Results.indStoc;
+qTx = p.Results.qTx;
+qRx = p.Results.qRx;
 
+%% Init
 switchQD = 0;
 QD = [];
 indexMultipath = 1;
@@ -98,11 +98,12 @@ indexOutput = 1;
 indexQD = 1;
 sizeArrayOfPlanes = size(ArrayOfPlanes);
 paramsRotation = [];
-
 output = zeros(sizeArrayOfPlanes(1), 21, indStoc);
 multipath = [];
 LIGHTVELOCITY = getLightSpeed;
 wavelength = LIGHTVELOCITY / frequency;
+
+%%
 if numberOfRowsArraysOfPlanes>0
     orderOfReflection = ArrayOfPlanes(1,1);
     

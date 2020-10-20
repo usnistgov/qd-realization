@@ -69,7 +69,6 @@ elseif isPaaPositionsJson(scenarioFilePath)
 else
     verifyTrue(testCase,false,...
         sprintf('File path ''%s'' not recognized', scenarioFilePath))
-% scenarioOut =  [];
 end
 
 % check equivalence of output file

@@ -207,7 +207,6 @@ for i = 1:length(scenarioFiles)
         scenarioFileName(index2rm) = [];
         exampleFileIdx = find(strcmp({exampleFiles.name},scenarioFileName));
         scenarioFileName = scenarioFiles(i).name;
-%         exampleFiles(exampleFileIdx).name = scenarioFiles(i).name;
     end
     if length(exampleFileIdx) ~= 1
         verifyLength(testCase, exampleFileIdx, 1,...
