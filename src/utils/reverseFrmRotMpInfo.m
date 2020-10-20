@@ -6,7 +6,8 @@ function frmRotMpInfoOut = reverseFrmRotMpInfo(frmRotMpInfo)
 %
 % OUTPUTS:
 % - frmRotMpInfo
-%
+
+
 % NIST-developed software is provided by NIST as a public service. You may 
 % use, copy and distribute copies of the software in any medium, provided 
 % that you keep intact this entire notice. You may improve,modify and 

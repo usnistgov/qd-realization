@@ -91,8 +91,7 @@ if switchRandomization == 1
 end
 
 %% Extracting data from nodes.dat and nodeVelocities.dat file.
-% nodes.dat file contains nodes locations and nodeVelocities contains their
-% velocities
+% nodeVelocities contains node velocities
 if switchRandomization == 0
     if mobilitySwitch && mobilityType ==1
         try
@@ -111,66 +110,55 @@ if switchRandomization == 0
         end
     end
     
-    %% Load mobility matrix and write NodePositionX.dat and NodeRotationX.dat
+    %% Load NodePositionX.dat and NodeRotationX.dat
     listing = dir(fullfile(scenarioNameStr, 'Input'));
     countListing = 0;
+    nodePositionTimeRaw = cell(numberOfNodes,1);
+    nodeRotationTimeRaw = cell(numberOfNodes,1);
     
-    for iterateNumberOfNodes = 1:numberOfNodes
-        % If mobility matrix is present
-        if sum(arrayfun(@(x) strcmp(x.name,['node',num2str(iterateNumberOfNodes-1),'mobility.mat']), listing))
-            savePositionFromTrace(fullfile(inputPath, sprintf('node%dmobility.mat', iterateNumberOfNodes-1)),...
-                fullfile(inputPath,sprintf('NodePosition%d.dat', iterateNumberOfNodes-1)) );
-            saveRotationFromTrace(fullfile(inputPath, sprintf('node%dmobility.mat', iterateNumberOfNodes-1)),...
-                fullfile(inputPath,sprintf('NodeRotation%d.dat', iterateNumberOfNodes-1)) );
-            % If mobility matrix is not present check for NodePosition and
-            % NodeRotation
-        else
-            % If only NodePosition is present, initialize NodeRotation to
-            % [0,0,0]
-            if sum(arrayfun(@(x) strcmp(x.name,['NodePosition',num2str(iterateNumberOfNodes-1),'.dat']), listing)) && ...
-                    ~ sum(arrayfun(@(x) strcmp(x.name,['NodeRotation',num2str(iterateNumberOfNodes-1),'.dat']), listing))
-                nlines = size(readmatrix(fullfile(inputPath,sprintf('NodePosition%d.dat', iterateNumberOfNodes-1))),1);
-                writematrix(repmat([0 0  0], nlines,1), fullfile(inputPath,sprintf('NodeRotation%d.dat', iterateNumberOfNodes-1)));
-                warning('NodeRotation%d.dat not present. Rotation set to [0,0,0] for all time instances.', iterateNumberOfNodes-1)
-                % If only NodeRotation return error:  NodePosition is needed
-            elseif ~ sum(arrayfun(@(x) strcmp(x.name,['NodePosition',num2str(iterateNumberOfNodes-1),'.dat']), listing)) && ...
-                    sum(arrayfun(@(x) strcmp(x.name,['NodeRotation',num2str(iterateNumberOfNodes-1),'.dat']), listing))
-                error('NodePosition%d.dat is not present.', iterateNumberOfNodes-1);
-                % If NodePosition and NodeRotation are present no further
-                % actions are needed
-            elseif sum(arrayfun(@(x) strcmp(x.name,['NodePosition',num2str(iterateNumberOfNodes-1),'.dat']), listing)) && ...
-                    sum(arrayfun(@(x) strcmp(x.name,['NodeRotation',num2str(iterateNumberOfNodes-1),'.dat']), listing))
-                
-                % If NodePosition and NodeRotation are not present return error
-            else
-                error('NodePosition%d.dat and NodeRotation%d.dat are not present.', iterateNumberOfNodes-1,  iterateNumberOfNodes-1);
+    for iterateNumberOfNodes = 1:numberOfNodes        
+            nodePositionFile = sprintf('NodePosition%d.dat',iterateNumberOfNodes-1);
+            nodeRotationFile = sprintf('NodeRotation%d.dat',iterateNumberOfNodes-1);
+            isNodePosition = any(arrayfun(@(x) strcmp(x.name,nodePositionFile), listing));
+            isNodeRotation = any(arrayfun(@(x) strcmp(x.name,nodeRotationFile), listing));
+
+            if ~isNodePosition 
+                error([ nodePositionFile, ' not defined.']);
             end
-        end
+            nodePositionTimeRaw{iterateNumberOfNodes} = readmatrix(fullfile(inputPath,nodePositionFile));
+
+            if ~isNodeRotation
+                nlines = size(nodePositionTimeRaw{iterateNumberOfNodes},1);
+                nodeRotationTimeRaw{iterateNumberOfNodes} = repmat([0 0  0], nlines,1);
+                writematrix(nodeRotationTimeRaw{iterateNumberOfNodes}, fullfile(inputPath,nodeRotationFile));
+                warning([nodeRotationFile, ' not defined. Rotation set to [0,0,0] for all time instances.'])
+            else
+                nodeRotationTimeRaw{iterateNumberOfNodes} = readmatrix(fullfile(inputPath,nodeRotationFile));
+            end
     end
     
     %%  Load NodePositionX.dat and NodeRotationX.dat
     for iterateNumberOfNodes = 1:numberOfNodes
         
         % NodePosition processing
-        ln = sprintf('NodePosition%d.dat', iterateNumberOfNodes-1);
-        nodePositionTimeTmp = load(fullfile(inputPath, ln));
-        
+        nodePositionTimeTmp = nodePositionTimeRaw{iterateNumberOfNodes};
         if mobilityType == 1 && mobilitySwitch
             nodeInitialPosition(iterateNumberOfNodes,:) = nodePositionTimeTmp;
             countListing = countListing + 1;
             
         else
             
-            if  size(nodePositionTimeTmp,1)< size(nodePositionTime,1) &&  ...
-                    size(nodePositionTimeTmp,1) > 1
-                nodePositionTime = nodePositionTime(1:size(nodeRotationTimeTemp,1), :,:);
-                paraCfg.numberOfTimeDivisions = size(nodeRotationTimeTemp,1) ;
+            timeSamplesFile = size(nodePositionTimeTmp,1);
+            if  timeSamplesFile< paraCfg.numberOfTimeDivisions &&  ...
+                    timeSamplesFile > 1
+                nodePositionTime = nodePositionTime(1:timeSamplesFile, :,:);
+                paraCfg.numberOfTimeDivisions = timeSamplesFile;
                 numberOfTimeDivisions = paraCfg.numberOfTimeDivisions;
                 warning('Time divisition too long.')
             end
             
             try
-                numberTracePoints = min(size(nodePositionTimeTmp,1),paraCfg.numberOfTimeDivisions);
+                numberTracePoints = min(timeSamplesFile,paraCfg.numberOfTimeDivisions);
                 nodePositionTime(1:numberTracePoints, :, iterateNumberOfNodes) = nodePositionTimeTmp(1:numberTracePoints,:);
                 nodePositionTime(numberTracePoints+1:end, :, iterateNumberOfNodes) = repmat(nodePositionTimeTmp, [paraCfg.numberOfTimeDivisions-numberTracePoints,1,1]);
                 nodeInitialPosition(iterateNumberOfNodes,:) = squeeze(nodePositionTime(1,:,iterateNumberOfNodes));
@@ -182,8 +170,7 @@ if switchRandomization == 0
         end
         
         % NodeRotation processing
-        ln  = sprintf('NodeRotation%d.dat', iterateNumberOfNodes-1);
-        nodeRotationTimeTemp = load(fullfile(inputPath, ln));
+        nodeRotationTimeTemp = nodeRotationTimeRaw{iterateNumberOfNodes};
         if mobilityType == 1 && mobilitySwitch
             nodeOrientation(iterateNumberOfNodes,:) = squeeze(nodeRotationTime(1,:,iterateNumberOfNodes));
             countListing = countListing + 1;
@@ -257,27 +244,40 @@ end
 %% PAA init
 iterateNumberOfNodes = 1;
 nodePolarization       = zeros(iterateNumberOfNodes, 2);
-nodePaaInitialPosition       = cell(numberOfNodes,1); %PAA vector position w.r.t node center
-nodePaaOrientation       = cell(numberOfNodes,1); %PAA vector position w.r.t node center
+nodePaaInitialPosition = cell(numberOfNodes,1); %PAA vector position w.r.t node center
+nodePaaOrientation     = cell(numberOfNodes,1); %PAA vector position w.r.t node center
 
 while iterateNumberOfNodes <= numberOfNodes
     nodePolarization(iterateNumberOfNodes, :) = [1, 0];
-    % If nodeXpaa.dat is present
-    if isfile(strcat(inputPath, [filesep 'node'], num2str(iterateNumberOfNodes-1), 'paa.dat' ))
-        nodePaaInfo =  load(strcat(inputPath, [filesep 'node'], num2str(iterateNumberOfNodes-1), 'paa.dat' ));
+    paaFile = fullfile(inputPath, sprintf('node%dpaa.dat', iterateNumberOfNodes-1));
+
+    % If nodeXpaa.dat is defined
+    if isfile(paaFile)
+        nodePaaInfo =  readmatrix(paaFile);
+
         if isempty(nodePaaInfo)
             nodePaaInitialPosition{iterateNumberOfNodes}  = nodePaaInfo;
+
         else
             nodePaaInitialPosition{iterateNumberOfNodes}  = nodePaaInfo(:, 1:3);
+
         end
-        if size(nodePaaInfo,2) ==3
+
+        % PAA orientation not defined
+        if size(nodePaaInfo, 2) == 3
             nodePaaOrientation{iterateNumberOfNodes}  = zeros(size(nodePaaInfo));
-        elseif size(nodePaaInfo,2) ==6
+        
+        % PAA orientation
+        elseif size(nodePaaInfo, 2) == 6
             nodePaaOrientation{iterateNumberOfNodes}  = nodePaaInfo(:,4:6);
+
         end
+
+    % If nodeXpaa.dat is not defined
     else
         nodePaaInitialPosition{iterateNumberOfNodes} = zeros(1,3);
         nodePaaOrientation{iterateNumberOfNodes}  = zeros(1,3);
+
     end
     
     if switchRandomization == 1 && iterateNumberOfNodes > 0
@@ -314,7 +314,7 @@ end
 
 %% Process PAA position
 
-[PAA_info]  = cluster_paa(nodePositionTime, nodePaaInitialPosition, nodePaaOrientation);
+paaInfo  = cluster_paa(nodePositionTime, nodePaaInitialPosition, nodePaaOrientation);
 
 %% Output
 switchRandomization = 0;
@@ -333,22 +333,20 @@ paraCfg.numberOfNodes = numberOfNodes;
 paraCfg.numberOfTimeDivisions = numberOfTimeDivisions;
 paraCfg.switchRandomization = switchRandomization;
 
-nodeCfg.nodeLoc = nodeInitialPosition;%cell2mat(...
-%     arrayfun(@(x) x{:}.node_centroid, PAA_info, 'UniformOutput', false));
-
+nodeCfg.nodeLoc = nodeInitialPosition;
 nodeCfg.nodeAntennaOrientation = nodePaaOrientation;
 nodeCfg.nodeOrientation = nodeOrientation;
 
 nodeCfg.nodePolarization = nodePolarization;
-nodeCfg.nodePosition = reshape(nodePositionTime, [], 3,numberOfNodes);
+nodeCfg.nodePosition = reshape(nodePositionTime, [], 3, numberOfNodes);
 if isempty(nodeRotationTime)
     nodeCfg.nodeRotation = zeros(size(nodeCfg.nodeLoc));
 else
     nodeCfg.nodeRotation = nodeRotationTime;
 end
 nodeCfg.nodeVelocities = nodeVelocities;
-nodeCfg.PAA_info  = PAA_info;
-paraCfg.isInitialOrientationOn =  any(cellfun(@(x) any(reshape(x, [],1)), nodePaaOrientation));
+nodeCfg.PAA_info = paaInfo;
+paraCfg.isInitialOrientationOn = any(cellfun(@(x) any(reshape(x, [],1)), nodePaaOrientation));
 paraCfg.isDeviceRotationOn = any(nodeRotationTime(:));
-paraCfg.isPAAcentered =  ~any(cellfun(@(x) any(x(:)), nodePaaInitialPosition));
+paraCfg.isPaaCentered = ~any(cellfun(@(x) any(x(:)), nodePaaInitialPosition));
 end
