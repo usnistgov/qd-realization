@@ -1,4 +1,4 @@
-function  [] =  saveEuclidianFromTrace(nameTraceFile,nameFile, varargin)
+function saveEuclidianFromTrace(nameTraceFile, nameFile, varargin)
 if isempty(varargin)
     captureId = 's1';
 else
