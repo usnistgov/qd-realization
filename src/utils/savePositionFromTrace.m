@@ -1,4 +1,4 @@
-function  [] =  savePositionFromTrace(nameTraceFile,nameFile, varargin)
+function savePositionFromTrace(nameTraceFile, nameFile, varargin)
 if isempty(varargin)
     captureId = 's1';
 else
