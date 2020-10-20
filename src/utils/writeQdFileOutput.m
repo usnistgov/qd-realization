@@ -71,30 +71,30 @@ formatSpec = [repmat([floatFormat,','],1,numRays-1), [floatFormat,'\n']];
 numChanV = 1:numChan;
 for id = numChanV(~idEmpty)
     outputId = output{id};
-    numRays = size(output_id,1);
+    numRays = size(outputId,1);
     fprintf(fid, '%d\n', numRays);
     formatSpec = [repmat([floatFormat,','],1,numRays-1), [floatFormat,'\n']];
 
     % Stores delay [s]
-    fprintf(fid,formatSpec,output_id(:,8));
+    fprintf(fid,formatSpec,outputId(:,8));
     
     % Stores  path gain [dB]
-    fprintf(fid,formatSpec,output_id(:,9));
+    fprintf(fid,formatSpec,outputId(:,9));
     
     % Stores  phase [rad]
-    fprintf(fid,formatSpec,output_id(:,18));
+    fprintf(fid,formatSpec,outputId(:,18));
     
     % Stores Angle of departure elevation [deg]
-    fprintf(fid,formatSpec,output_id(:,11));
+    fprintf(fid,formatSpec,outputId(:,11));
     
     % Stores Angle of departure azimuth [deg]
-    fprintf(fid,formatSpec,output_id(:,10));
+    fprintf(fid,formatSpec,outputId(:,10));
     
     % Stores Angle of arrival elevation [deg]
-    fprintf(fid,formatSpec,output_id(:,13));
+    fprintf(fid,formatSpec,outputId(:,13));
     
     % Stores Angle of arrival azimuth [deg]
-    fprintf(fid,formatSpec,output_id(:,12));
+    fprintf(fid,formatSpec,outputId(:,12));
 end
 if isempty(id)
     fprintf(fid,formatSpec,0);
