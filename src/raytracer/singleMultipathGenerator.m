@@ -95,6 +95,7 @@ function [booleanMultipathExistance, Intersection, directionOfDeparture,...
 PathLoss=0;
 phaseXDimension=0;
 phaseYDimension=0;
+c=getLightSpeed;
 
 % Extracting plane equations from Array_of_planes
 plane = ArrayOfPlanes(iterateNumberOfRowsArraysOfPlanes,...
@@ -131,7 +132,6 @@ else
     velocityTxAlongDirectionofDeparture=dot(velocityTx, -directionOfDeparture) / norm(directionOfDeparture);
     velocityRxAlongDirectionofDeparture=dot(velocityRx, -directionOfDeparture) / norm(directionOfDeparture);
     velocityTemporary=velocityRx;
-    c=3e8;
     dopplerFactor=(velocityRxAlongDirectionofDeparture-velocityTxAlongDirectionofDeparture)/(c);
     % Source of multipath
     Intersection1=Tx;

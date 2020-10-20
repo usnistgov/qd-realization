@@ -200,7 +200,6 @@ for iterateTimeDivision = 1:paraCfgInput.numberOfTimeDivisions
                 );
             nodeCfgInput.nodeEquivalentRotationAngle(iterateTimeDivision,:, nodeId) = nodeEquivalentRotationAngle;
             nodeCfgInput.PAA_info{nodeId}.centroid_position_rot(iterateTimeDivision,:,:) =paaRotatedPosition;
-            isPAACentroidValid(RoomCoordinates,paaRotatedPosition);
     end
     
     % save NodePositionsTrc
@@ -461,6 +460,6 @@ end
 function x = padNan(x, maxSize)
 if ~all(size(x) == maxSize)
     sizeX = size(x);
-    x(sizeX(1)+1:maxSize(1),sizeX(2)+1:maxSize(2)) = nan;
+    x(sizeX(1)+1:maxSize(1),1:maxSize(2)) = nan;
 end
 end

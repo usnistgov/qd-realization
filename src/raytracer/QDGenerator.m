@@ -77,7 +77,7 @@ if ~exist('indStoc','var'),     indStoc=1;        end
 if ~exist('Nprec','var'),       Nprec=3;        end
 if ~exist('Npost','var'),       Npost=16;        end
 
-c = 3e8;
+c = getLightSpeed;
 % if  switch_material==1 && QD_gen==1
 % To demonstrate that even higher order reflections can be taken care of
 % but for accurate results higer order reflections are not valid i.e.,
@@ -328,7 +328,6 @@ for i1 = 1:2
             
             vtx_along_dod = dot(repmat(vtx, indStoc,1).', -dod_temp);
             vrx_along_dod = dot(repmat(v_temp, indStoc,1).', -dod_temp);
-%             c = 3e8;
             doppler_factor = freq * (vrx_along_dod - vtx_along_dod) / c;
             output(mpcIdx+i-1,20,1:indStoc) = doppler_factor;
             output(mpcIdx+i-1,18,1:indStoc) = rand*2*pi;

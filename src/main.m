@@ -51,7 +51,8 @@ end
 
 %% Input
 % Leave empty for default 'ScenarioTest'
-scenarioNameStr = '';
+scenarioNameStr = 'examples\TestScenario';
+% scenarioNameStr = 'examples\L-Room-rotation-multiPAA';
 
 if ~isempty(scenarioNameStr)
     fprintf('Use customized scenario: %s.\n',scenarioNameStr);

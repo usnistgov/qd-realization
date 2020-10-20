@@ -17,7 +17,37 @@ function ch_out = generateChannelPaa(ch_in, infoPAA)
 %   PAA_TX x PAA_RX is the number of channel connecting the i_th TX node
 %   and j_th RX node
 %
-%   Copyright 2019-2020 NIST/CTL (steve.blandino@nist.gov)
+
+% NIST-developed software is provided by NIST as a public service. You may 
+% use, copy and distribute copies of the software in any medium, provided 
+% that you keep intact this entire notice. You may improve,modify and 
+% create derivative works of the software or any portion of the software, 
+% and you may copy and distribute such modifications or works. Modified 
+% works should carry a notice stating that you changed the software and 
+% should note the date and nature of any such change. Please explicitly 
+% acknowledge the National Institute of Standards and Technology as the 
+% source of the software. NIST-developed software is expressly provided 
+% "AS IS." NIST MAKES NO WARRANTY OF ANY KIND, EXPRESS, IMPLIED, IN FACT OR
+% ARISING BY OPERATION OF LAW, INCLUDING, WITHOUT LIMITATION, THE IMPLIED 
+% WARRANTY OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, 
+% NON-INFRINGEMENT AND DATA ACCURACY. NIST NEITHER REPRESENTS NOR WARRANTS 
+% THAT THE OPERATION OF THE SOFTWARE WILL BE UNINTERRUPTED OR ERROR-FREE, 
+% OR THAT ANY DEFECTS WILL BE CORRECTED. NIST DOES NOT WARRANT OR MAKE ANY
+% REPRESENTATIONS REGARDING THE USE OF THE SOFTWARE OR THE RESULTS THEREOF,
+% INCLUDING BUT NOT LIMITED TO THE CORRECTNESS, ACCURACY, RELIABILITY,
+% OR USEFULNESS OF THE SOFTWARE.
+% 
+% You are solely responsible for determining the appropriateness of using 
+% and distributing the software and you assume all risks associated with 
+% its use,including but not limited to the risks and costs of program 
+% errors, compliance with applicable laws, damage to or loss of data, 
+% programs or equipment, and the unavailability or interruption of 
+% operation. This software is not intended to be used in any situation 
+% where a failure could cause risk of injury or damage to property. 
+% The software developed by NIST employees is not subject to copyright 
+% protection within the United States.
+%
+% 2019-2020 NIST/CTL (steve.blandino@nist.gov)
 
 %% Input processing 
 numNodes = length(infoPAA);
@@ -30,15 +60,15 @@ paa_comb_struct = {};
 for nt = nodesVector % Loop on tx nodes
     for nr = nodesVector(nodesVector~=nt)% Loop on rx nodes
         chMIMOtx_rx = []; % Channel between one tx and one rx
-        paa_comb = [];
+        paaComb = [];
         i = 0;
         for c_t = 1:infoPAA{nt}.nPAA_centroids % Loop on transmitter centroid
             for c_r = 1:infoPAA{nr}.nPAA_centroids % Loop on receiver centroid
                 chMIMOcentroid = []; % Channel between tx and rx centroid
                 paaCombtmp = [];
                 frmRotMpInfo = eval(['ch_in{nt,nr}.frmRotMpInfopaaTx', num2str(c_t-1), 'paaRx', num2str(c_r-1),';']);
-                nIidTx = infoPAA{nt}.nodePAAInfo{c_t}.indep_stoch_channel;%numel(infoPAA{nt}.nodePAAInfo{c_t}.rotated_channel);
-                nIidRx = infoPAA{nr}.nodePAAInfo{c_r}.indep_stoch_channel;%numel(infoPAA{nr}.nodePAAInfo{c_r}.rotated_channel)
+                nIidTx = infoPAA{nt}.nodePAAInfo{c_t}.indep_stoch_channel;
+                nIidRx = infoPAA{nr}.nodePAAInfo{c_r}.indep_stoch_channel;
                 for iid_tx = 1:nIidTx
                     % Loop on TX PAA genarated with the same centroid 
                     for iid_rx = 1:nIidRx
@@ -69,12 +99,12 @@ for nt = nodesVector % Loop on tx nodes
                             [chMIMOcluster, paaCombtmp] = ddir2MIMO(ch_siso,infoPAA, frmRotMpInfo, ptr);
                         end
                         chMIMOcentroid = cat(3, chMIMOcentroid, chMIMOcluster);
-                        paa_comb = [paa_comb; paaCombtmp];
+                        paaComb = [paaComb; paaCombtmp];
                     end
                 end
                 i = i+1;
                 chMIMOtx_rx{i} =chMIMOcentroid; %cat(3, ch_t_r, ch_t);
-                paa_comb_struct{i} = paa_comb;
+                paa_comb_struct{i} = paaComb;
             end
         end
         if isempty(chMIMOtx_rx)
@@ -84,8 +114,8 @@ for nt = nodesVector % Loop on tx nodes
             chNanPad= cellfun(@(x) appendNan(x,M,nvar),chMIMOtx_rx,'UniformOutput',false);
             chMIMOtx_rx = cat(3,chNanPad{:});
         end
-        if ~isempty(paa_comb)
-            [~, index_sorted] = sortrows(paa_comb,1);
+        if ~isempty(paaComb)
+            [~, index_sorted] = sortrows(paaComb,1);
             ch_out{nt, nr} = chMIMOtx_rx(:,:, index_sorted);
         else
             ch_out{nt, nr} = chMIMOtx_rx;

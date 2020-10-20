@@ -59,18 +59,16 @@ function [isLOS, output, varargout] = LOSOutputGenerator(CADoutput, Rx, Tx,...
 % States.
 %
 % Modified by: Mattia Lecci <leccimat@dei.unipd.it>, Used MATLAB functions instead of custom ones
+% 2020 NIST/CTL (steve.blandino@nist.gov) 
+
 
 %% Input processing
-var_struct = {'qTx', 'qRx'};
-for k = 1:2:length(varargin)
-    if (~any(strcmp(varargin{k}, var_struct)))
-        warning(['Cannot specify "', varargin{k}, '" as input value - it will be discarted']);
-    end
-    eval([varargin{k},' = varargin{k+1};'])
-end
-
-if ~exist('qTx','var'),     qTx.center = Tx;  qTx.angle = zeros(1,3);   end
-if ~exist('qRx','var'),     qRx.center = Rx;  qRx.angle = zeros(1,3);   end
+p = inputParser;
+addParameter(p,'qTx',struct('center', Tx, 'angle', [0 0 0]))
+addParameter(p,'qRx',struct('center', Rx, 'angle', [0 0 0]))
+parse(p, varargin{:});
+qTx = p.Results.qTx;
+qRx = p.Results.qRx;
 
 % Direction of departure (DoD) is simple the difference of position vectors
 % of Tx and Rx
@@ -84,10 +82,9 @@ doa = coordinateRotation(doaNoRot, [0 0 0], qRx.angle,'frame');
 % Calculating Doppler factor for LOS
 velocityTxAlongDirectionOfDeparture=dot(velocityTx,-1.*dod);
 velocityRxAlongDirectionOfDeparture=dot(velocityRx,-1.*dod);
-c=3e8;
+c=getLightSpeed;
 dopplerFactor=(velocityRxAlongDirectionOfDeparture-velocityTxAlongDirectionOfDeparture)/(c);
 % To verify whether DoA vector exists
-% vector=Tx-Rx;
 isLOS = verifyPath(Tx, Rx, doaNoRot, [0,0,0],...
     [0,0,0], CADoutput, 2, false);
 

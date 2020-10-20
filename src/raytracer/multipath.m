@@ -101,7 +101,7 @@ paramsRotation = [];
 
 output = zeros(sizeArrayOfPlanes(1),21,indStoc);
 multipath = [];
-LIGHTVELOCITY = 3e8;
+LIGHTVELOCITY = getLightSpeed;
 wavelength = LIGHTVELOCITY / frequency;
 if numberOfRowsArraysOfPlanes>0
     orderOfReflection = ArrayOfPlanes(1,1);

@@ -38,11 +38,6 @@ function x = randomLaplaceGenerator(sz)
 % developed by NIST employees is not subject to copyright protection within the United
 % States.
 
-if isempty(varargin)
-    n = 1;
-else
-    n =varargin{1};
-end
 
 % generation of a numbers with Uniform distribution
 u = rand(sz);
