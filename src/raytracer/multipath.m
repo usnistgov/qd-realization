@@ -99,7 +99,7 @@ indexQD = 1;
 sizeArrayOfPlanes = size(ArrayOfPlanes);
 paramsRotation = [];
 
-output = zeros(sizeArrayOfPlanes(1),21,indStoc);
+output = zeros(sizeArrayOfPlanes(1), 21, indStoc);
 multipath = [];
 LIGHTVELOCITY = getLightSpeed;
 wavelength = LIGHTVELOCITY / frequency;
