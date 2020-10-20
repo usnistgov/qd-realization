@@ -157,7 +157,7 @@ if numberOfRowsArraysOfPlanes>0
                 for j = 1:(orderOfReflection * 3) + 6
                     switch3 = switch3 && (multipath(i,j) == multipath(indexMultipath,j));
                 end
-                isMPC = isMPC && (~switch3);
+                isMPC = isMPC && ~switch3;
             end
         end
         
