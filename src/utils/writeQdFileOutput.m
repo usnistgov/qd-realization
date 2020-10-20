@@ -54,7 +54,7 @@ else
     numRays = size(output,1);
     numProp = size(output,2);
     numChan = size(output,3);
-    output = mat2cell(output, numRays,numProp, ones(1,numChan));
+    output = mat2cell(output, numRays, numProp, ones(1, numChan));
 end
 % fprintf(fid, '%d\n', numChan);
 idEmpty = cellfun(@isempty, output);
