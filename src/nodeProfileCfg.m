@@ -345,7 +345,7 @@ else
     nodeCfg.nodeRotation = nodeRotationTime;
 end
 nodeCfg.nodeVelocities = nodeVelocities;
-nodeCfg.PAA_info = paaInfo;
+nodeCfg.paaInfo = paaInfo;
 paraCfg.isInitialOrientationOn = any(cellfun(@(x) any(reshape(x, [],1)), nodePaaOrientation));
 paraCfg.isDeviceRotationOn = any(nodeRotationTime(:));
 paraCfg.isPaaCentered = ~any(cellfun(@(x) any(x(:)), nodePaaInitialPosition));
