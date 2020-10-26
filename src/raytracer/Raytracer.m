@@ -67,7 +67,7 @@ function [outputPath] = Raytracer(paraCfgInput, nodeCfgInput)
 %% Input Parameters Management and preallocation
 nodeLoc(1,:,:) = nodeCfgInput.nodeLoc;
 nodePosition = nodeCfgInput.nodePosition;
-nodeVelocities = nodeCfgInput.nodeVelocities;
+% nodeVelocities = nodeCfgInput.nodeVelocities;
 nPAA_centroids = cellfun(@(x) x.nPAA_centroids ,nodeCfgInput.paaInfo );
 Mpc = cell(paraCfgInput.numberOfNodes,...
     max(nPAA_centroids),...
@@ -110,8 +110,8 @@ end
 %% Init
 Tx = reshape(squeeze(nodeLoc(1,1,:)), [],3);
 Rx = reshape(squeeze(nodeLoc(1,2,:)), [],3);
-vtx = nodeVelocities(1,:);
-vrx = nodeVelocities(2,:);
+vtx = [0,0,0]; %nodeVelocities(1,:);
+vrx = [0,0,0]; %nodeVelocities(2,:);
 switchPolarization = 0;
 switchCp = 0;
 polarizationTx = [1, 0];
@@ -147,10 +147,10 @@ end
 % replace node and node_v with the values of node positions and node
 % velocities repsectively
 
-TxInitial = Tx;
-RxInitial = Rx;
+% TxInitial = Tx;
+% RxInitial = Rx;
 % t - total time period, n - number of divisions
-timeDivisionValue = paraCfgInput.totalTimeDuration / paraCfgInput.numberOfTimeDivisions;
+% timeDivisionValue = paraCfgInput.totalTimeDuration / paraCfgInput.numberOfTimeDivisions;
 
 % Finite difference method to simulate mobility. x=x0 + v*dt.
 % This method ensures the next position wouldnt collide with any of the
@@ -162,27 +162,27 @@ for iterateTimeDivision = 1:paraCfgInput.numberOfTimeDivisions
     end
     
     %% Update Linear mobility
-    if paraCfgInput.mobilityType == 1 && paraCfgInput.mobilitySwitch ==1
-        if paraCfgInput.numberOfNodes == 2
-            [nodeLoc, Tx, Rx, vtx, vrx, nodeVelocities,nodeCfgInput.paaInfo] = LinearMobility...
-                (paraCfgInput.numberOfNodes, paraCfgInput.switchRandomization, ...
-                iterateTimeDivision-1, nodeLoc, nodeVelocities, vtx,...
-                vrx,TxInitial, RxInitial, timeDivisionValue,...
-                CADop, Tx, Rx, nodeCfgInput.paaInfo);
-        else
-            [nodeLoc, Tx, Rx, vtx, vrx, nodeVelocities,nodeCfgInput.paaInfo] = LinearMobility...
-                (paraCfgInput.numberOfNodes, paraCfgInput.switchRandomization,...
-                iterateTimeDivision-1, nodeLoc, nodeVelocities,...
-                [], [], TxInitial, RxInitial, timeDivisionValue, ...
-                CADop, Tx, Rx, nodeCfgInput.paaInfo);
-        end
-        nodePosition(iterateTimeDivision,:,:) = permute(nodeLoc, [1 3 2]);
-    elseif paraCfgInput.mobilityType == 2  && paraCfgInput.mobilitySwitch ==1
-        [nodeLoc, nodeVelocities] = NodeExtractor...
-            (paraCfgInput.numberOfNodes,  paraCfgInput.switchRandomization, ...
-            iterateTimeDivision, nodeLoc, nodeVelocities,...
-            nodeCfgInput.nodePosition, timeDivisionValue);
-    end
+%     if paraCfgInput.mobilityType == 1 && paraCfgInput.mobilitySwitch ==1
+%         if paraCfgInput.numberOfNodes == 2
+%             [nodeLoc, Tx, Rx, vtx, vrx, nodeVelocities,nodeCfgInput.paaInfo] = LinearMobility...
+%                 (paraCfgInput.numberOfNodes, paraCfgInput.switchRandomization, ...
+%                 iterateTimeDivision-1, nodeLoc, nodeVelocities, vtx,...
+%                 vrx,TxInitial, RxInitial, timeDivisionValue,...
+%                 CADop, Tx, Rx, nodeCfgInput.paaInfo);
+%         else
+%             [nodeLoc, Tx, Rx, vtx, vrx, nodeVelocities,nodeCfgInput.paaInfo] = LinearMobility...
+%                 (paraCfgInput.numberOfNodes, paraCfgInput.switchRandomization,...
+%                 iterateTimeDivision-1, nodeLoc, nodeVelocities,...
+%                 [], [], TxInitial, RxInitial, timeDivisionValue, ...
+%                 CADop, Tx, Rx, nodeCfgInput.paaInfo);
+%         end
+%         nodePosition(iterateTimeDivision,:,:) = permute(nodeLoc, [1 3 2]);
+%     elseif paraCfgInput.mobilityType == 2  && paraCfgInput.mobilitySwitch ==1
+% %         [nodeLoc, nodeVelocities] = NodeExtractor...
+% %             (paraCfgInput.numberOfNodes,  paraCfgInput.switchRandomization, ...
+% %             iterateTimeDivision, nodeLoc, nodeVelocities,...
+% %             nodeCfgInput.nodePosition, timeDivisionValue);
+%     end
          
     %% Point rotation: PAAs not centered in the center of the node have a
     % different position in the global frame if the node rotate. Compute
@@ -230,8 +230,8 @@ for iterateTimeDivision = 1:paraCfgInput.numberOfTimeDivisions
                         QRx.angle(1,:) = nodeCfgInput.nodeRotation(iterateTimeDivision,:, iterateRx);
                         
                         % Update node velocity
-                        vtx = nodeVelocities(iterateTx, :);
-                        vrx = nodeVelocities(iterateRx, :);
+                        vtx = [0;0;0];%nodeVelocities(iterateTx, :);
+                        vrx = [0;0;0];%nodeVelocities(iterateRx, :);
                     end
   
                     % LOS Path generation
@@ -241,14 +241,14 @@ for iterateTimeDivision = 1:paraCfgInput.numberOfTimeDivisions
                     
                     if paraCfgInput.switchSaveVisualizerFiles && switchLOS
                         multipath1 = [Tx, Rx];
-                        if ~paraCfgInput.jsonOutput
-                            filename = sprintf('MpcTx%dPAA%dRx%dPAA%dRefl%dTrc%d.csv',...
-                                iterateTx-1, iteratePaaTx-1, iterateRx-1, iteratePaaRx-1, 0, iterateTimeDivision-1);
-                            csvwrite(fullfile(visualizerPath, filename),...
-                                multipath1);
-                        else
+%                         if ~paraCfgInput.jsonOutput
+%                             filename = sprintf('MpcTx%dPAA%dRx%dPAA%dRefl%dTrc%d.csv',...
+%                                 iterateTx-1, iteratePaaTx-1, iterateRx-1, iteratePaaRx-1, 0, iterateTimeDivision-1);
+%                             csvwrite(fullfile(visualizerPath, filename),...
+%                                 multipath1);
+%                         else
                             Mpc{iterateTx,iteratePaaTx,iterateRx,iteratePaaRx, 1, iterateTimeDivision+1} =multipath1;
-                        end
+%                         end
                     end
                     
                     % Higher order reflections (Non LOS)
@@ -282,16 +282,16 @@ for iterateTimeDivision = 1:paraCfgInput.numberOfTimeDivisions
                             
                             multipath1 = multipathTemporary(1:count,...
                                 2:size(multipathTemporary,2));
-                            if  ~paraCfgInput.jsonOutput
-                                filename = sprintf('MpcTx%dPAA%dRx%dPAA%dRefl%dTrc%d.csv',...
-                                    iterateTx-1, iteratePaaTx-1,...
-                                    iterateRx-1, iteratePaaRx-1,...
-                                    iterateOrderOfReflection, iterateTimeDivision-1);
-                                csvwrite(fullfile(visualizerPath, filename),...
-                                    multipath1);
-                            else
+%                             if  ~paraCfgInput.jsonOutput
+%                                 filename = sprintf('MpcTx%dPAA%dRx%dPAA%dRefl%dTrc%d.csv',...
+%                                     iterateTx-1, iteratePaaTx-1,...
+%                                     iterateRx-1, iteratePaaRx-1,...
+%                                     iterateOrderOfReflection, iterateTimeDivision-1);
+%                                 csvwrite(fullfile(visualizerPath, filename),...
+%                                     multipath1);
+%                             else
                                 Mpc{iterateTx,iteratePaaTx,iterateRx,iteratePaaRx, iterateOrderOfReflection+1, iterateTimeDivision+1} =multipath1;
-                            end
+%                             end
                             
                         end
                         if size(output,1)==1
@@ -450,11 +450,11 @@ if writeReportOutput
     fclose(f);
 end
 end
-function x = appendNan(x)
-% if isempty(x)
-    x(:,end+1) = nan;
+% function x = appendNan(x)
+% % if isempty(x)
+%     x(:,end+1) = nan;
+% % end
 % end
-end
 
 
 function x = padNan(x, maxSize)
