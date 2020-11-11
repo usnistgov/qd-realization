@@ -57,18 +57,6 @@ para = fieldToNum(para, 'indoorSwitch', [0,1], 1);
 % = 'Case1'
 para.inputScenarioName = scenarioNameStr;
 
-% % This is switch to turn on or off mobility.
-% % 1 = mobility ON, 0 = mobility OFF (Default)
-% % TODO: can be made smart checking if file exists
-% defaultMobilitySwitch = getDefaultMobilitySwitch(scenarioNameStr);
-% para = fieldToNum(para, 'mobilitySwitch', [0,1], defaultMobilitySwitch);
-% 
-% % This switch lets the user to decide the input to mobility
-% % 1 = Linear (Default), 2 = input from File
-% % TODO: make it smart: is a valid mobility file is present, set 2
-% defaultMobilityType = getDefaultMobilityType(scenarioNameStr, para.mobilitySwitch);
-% para = fieldToNum(para, 'mobilityType', [0,1,2], defaultMobilityType); % TODO: 0 should not be valid
-
 % n is the total number of time divisions. If n  = 100 and t  = 10, then we
 % have 100 time divisions for 10 seconds. Each time division is 0.1 secs in
 % length
@@ -91,22 +79,6 @@ para = fieldToNum(para, 'selectPlanesByDist', [], 0);
 % Switch to turn ON or OFF the Qausi dterministic module
 % 1 = ON, 0 = OFF (Default)
 para = fieldToNum(para, 'switchQDGenerator', [0,1], 0);
-
-% This is switch to turn ON or OFF randomization.
-% 1 = random (Default), 0 = Tx,Rx are determined by Tx,Rx paramters
-% para = fieldToNum(para, 'switchRandomization', [0,1], 1);
-
-% This parameter denotes the number of nodes
-% = 2  (Default)
-% switch(para.switchRandomization)
-%     case 0
-%         defaultNumberOfNodes = []; % specified by nodes.dat
-%     case 1
-%         defaultNumberOfNodes = 2;
-%     otherwise
-%         error('Cannot handle switchRandomization=%f',para.switchRandomization)
-% end
-% para = fieldToNum(para, 'numberOfNodes', [], defaultNumberOfNodes);
 
 % Order of reflection.
 % 1 = multipath until first order, 2 = multipath until second order (Default)

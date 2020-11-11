@@ -29,18 +29,8 @@ function b = isRoomCoordinates(path)
 b = strcmp([fileName, extension], 'RoomCoordinates.csv');
 
 [remainingPath, visualizerFolder] = fileparts(remainingPath);
-[isFolder, config] = ismember(visualizerFolder, {'RoomCoordinates', 'Visualizer'});
-b = b && isFolder;
 
-switch config
-    case 1
-        [remainingPath, visualizerFolder] = fileparts(remainingPath);
-        b = b && strcmp(visualizerFolder, 'Visualizer');
-        
-        [~, outputFolder] = fileparts(remainingPath);
-        b = b && strcmp(outputFolder, 'Output');
-    case 2
-        [~, outputFolder] = fileparts(remainingPath);
-        b = b && strcmp(outputFolder, 'Output');
-end
+[~, outputFolder] = fileparts(remainingPath);
+b = b && strcmp(outputFolder, 'Output');
+
 end

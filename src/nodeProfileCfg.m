@@ -179,7 +179,6 @@ for iterateNumberOfNodes = 1:numberOfNodes
         
     end
     
-    iterateNumberOfNodes = iterateNumberOfNodes + 1;
 end
 
 %% Process PAA position
