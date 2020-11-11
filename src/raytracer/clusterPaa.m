@@ -1,9 +1,9 @@
-function paaInfo = cluster_paa(nodeTimePosition, nodePaaPosition, nodePaaOrientation, varargin)
-%CLUSTER_PAA returns the cell array paaInfo of lenght 1xN being N the nodes.
+function paaInfo = clusterPaa(nodeTimePosition, nodePaaPosition, nodePaaOrientation, varargin)
+%CLUSTERPAA returns the cell array paaInfo of lenght 1xN being N the nodes.
 % Each entry of the array is a struct storing information about the PAAs
 % in a node.
 %
-%   paaInfo  =  CLUSTER_PAA(nodeTimePosition, nodePaaPosition, nodePaaOrientation)
+%   paaInfo  =  CLUSTERPAA(nodeTimePosition, nodePaaPosition, nodePaaOrientation)
 %   **nodeTimePosition is the Tx3xN matrix containing the 3D coordinates of the N
 %   nodes at different T time instances
 %   **nodePaaPosition is the Nx1 cell array containing the 3D coordinates of
