@@ -1,4 +1,4 @@
-function [outputPath] = Raytracer(paraCfgInput, nodeCfgInput)
+function outputPath = Raytracer(paraCfgInput, nodeCfgInput)
 %%RAYTRACER generates the QD channel model.
 % Inputs:
 % paraCfgInput - Simulation configuration
@@ -41,9 +41,9 @@ function [outputPath] = Raytracer(paraCfgInput, nodeCfgInput)
 %              Steve Blandino <steve.blandino@nist.gov>
 
 %% Input Parameters Management and preallocation
-nodeLoc(1,:,:) = nodeCfgInput.nodeLoc;
+% nodeLoc(1,:,:) = nodeCfgInput.nodeLoc;
 nodePosition = nodeCfgInput.nodePosition;
-nPAA_centroids = cellfun(@(x) x.nPAA_centroids ,nodeCfgInput.paaInfo );
+nPAA_centroids = cellfun(@(x) x.nPAA_centroids, nodeCfgInput.paaInfo );
 Mpc = cell(paraCfgInput.numberOfNodes,...
     max(nPAA_centroids),...
     paraCfgInput.numberOfNodes,...
@@ -51,9 +51,11 @@ Mpc = cell(paraCfgInput.numberOfNodes,...
     paraCfgInput.totalNumberOfReflections+1,...
     paraCfgInput.numberOfTimeDivisions+1 );
 frmRotMpInfo = cell(1, paraCfgInput.totalNumberOfReflections+1);
-keepBothQDOutput =0; % If 1 when using JSON output, it will keep also previous QD output
+keepBothQDOutput = strcmp(paraCfgInput.outputFormat, 'both'); 
+isJsonOutput = strcmp(paraCfgInput.outputFormat, 'json');
 displayProgress = 1;
 ts = paraCfgInput.totalTimeDuration/paraCfgInput.numberOfTimeDivisions;
+outputPaa = cell(paraCfgInput.numberOfNodes,paraCfgInput.numberOfNodes);
 
 % Input checking
 if paraCfgInput.switchQDGenerator == 1 &&...
@@ -78,16 +80,16 @@ if ~isfolder(qdFilesPath)
 end
 
 % Init output files
-if ~paraCfgInput.jsonOutput || keepBothQDOutput
+if ~isJsonOutput || keepBothQDOutput
     fids = getQdFilesIds(qdFilesPath, paraCfgInput.numberOfNodes,...
         paraCfgInput.useOptimizedOutputToFile);
 end
 
 %% Init
-Tx = reshape(squeeze(nodeLoc(1,1,:)), [],3);
-Rx = reshape(squeeze(nodeLoc(1,2,:)), [],3);
-vtx = [0,0,0]; %nodeVelocities(1,:);
-vrx = [0,0,0]; %nodeVelocities(2,:);
+% Tx = reshape(squeeze(nodeLoc(1,1,:)), [],3);
+% Rx = reshape(squeeze(nodeLoc(1,2,:)), [],3);
+% vtx = [0,0,0]; %nodeVelocities(1,:);
+% vrx = [0,0,0]; %nodeVelocities(2,:);
 switchPolarization = 0;
 switchCp = 0;
 polarizationTx = [1, 0];
@@ -123,8 +125,9 @@ for iterateTimeDivision = 1:paraCfgInput.numberOfTimeDivisions
         disp([fprintf('%2.2f', iterateTimeDivision/paraCfgInput.numberOfTimeDivisions*100),'%'])
     end
              
-    %% Point rotation: PAAs not centered in the center of the node have a
-    % different position in the global frame if the node rotate. Compute
+    %% Point rotation
+    % PAAs not centered [0,0,0] have a
+    % different position in the global frame if the node rotates. Compute
     % the new PAAs position as well as the equivalent angle resulting from
     % successive transformations (initial PAA orientation + rotation of the
     % node over time)
@@ -139,14 +142,7 @@ for iterateTimeDivision = 1:paraCfgInput.numberOfTimeDivisions
                 );
             nodeCfgInput.nodeEquivalentRotationAngle(iterateTimeDivision,:, nodeId) = nodeEquivalentRotationAngle;
             nodeCfgInput.paaInfo{nodeId}.centroid_position_rot(iterateTimeDivision,:,:) =paaRotatedPosition;
-    end
-    
-    % save NodePositionsTrc
-    if paraCfgInput.switchSaveVisualizerFiles && ~paraCfgInput.jsonOutput
-        filename = sprintf('NodePositionsTrc%d.csv', iterateTimeDivision-1);
-        writematrix(squeeze(nodePosition(iterateTimeDivision,:,:)).',fullfile(visualizerPath, filename)...
-            );
-    end
+    end   
     
     %% Iterates through all the PAA centroids
     for iterateTx = 1:paraCfgInput.numberOfNodes
@@ -157,27 +153,25 @@ for iterateTimeDivision = 1:paraCfgInput.numberOfTimeDivisions
                 
                 for iteratePaaRx = 1:nPAA_centroids(iterateRx)
                     output = [];
-                    if (paraCfgInput.numberOfNodes >= 2 || paraCfgInput.switchRandomization == 1)
                         
-                        % Update centroids position
-                        Tx = squeeze(nodeCfgInput.paaInfo{iterateTx}.centroid_position_rot(iterateTimeDivision,iteratePaaTx,:)).';
-                        Rx = squeeze(nodeCfgInput.paaInfo{iterateRx}.centroid_position_rot(iterateTimeDivision,iteratePaaRx,:)).';
-                        
-                        % Update rotation Tx struct
-                        QTx.center(1,:) = nodePosition(iterateTimeDivision,:,iterateTx);
-                        QTx.angle(1,:) = nodeCfgInput.nodeRotation(iterateTimeDivision,:, iterateTx);
-                        
-                        % Update rotation Rx struct
-                        QRx.center(1,:) = nodePosition(iterateTimeDivision,:,iterateRx);         
-                        QRx.angle(1,:) = nodeCfgInput.nodeRotation(iterateTimeDivision,:, iterateRx);
-                        
-                        % Update node velocity
-                        previousTxPosition =  squeeze(nodeCfgInput.paaInfo{iterateTx}.centroid_position_rot(max(iterateTimeDivision-1,1),iteratePaaTx,:)).';
-                        previousRxPosition =  squeeze(nodeCfgInput.paaInfo{iterateRx}.centroid_position_rot(max(iterateTimeDivision-1,1),iteratePaaTx,:)).';
-
-                        vtx = (Tx-previousTxPosition)./ts;
-                        vrx = (Rx-previousRxPosition)./ts;
-                    end
+                    % Update centroids position
+                    Tx = squeeze(nodeCfgInput.paaInfo{iterateTx}.centroid_position_rot(iterateTimeDivision,iteratePaaTx,:)).';
+                    Rx = squeeze(nodeCfgInput.paaInfo{iterateRx}.centroid_position_rot(iterateTimeDivision,iteratePaaRx,:)).';
+                    
+                    % Update rotation Tx struct
+                    QTx.center(1,:) = nodePosition(iterateTimeDivision,:,iterateTx);
+                    QTx.angle(1,:) = nodeCfgInput.nodeRotation(iterateTimeDivision,:, iterateTx);
+                    
+                    % Update rotation Rx struct
+                    QRx.center(1,:) = nodePosition(iterateTimeDivision,:,iterateRx);
+                    QRx.angle(1,:) = nodeCfgInput.nodeRotation(iterateTimeDivision,:, iterateRx);
+                    
+                    % Update node velocity
+                    previousTxPosition =  squeeze(nodeCfgInput.paaInfo{iterateTx}.centroid_position_rot(max(iterateTimeDivision-1,1),iteratePaaTx,:)).';
+                    previousRxPosition =  squeeze(nodeCfgInput.paaInfo{iterateRx}.centroid_position_rot(max(iterateTimeDivision-1,1),iteratePaaRx,:)).';
+                    
+                    vtx = (Tx-previousTxPosition)./ts;
+                    vrx = (Rx-previousRxPosition)./ts;
   
                     % LOS Path generation
                     [switchLOS, output, frmRotMpInfo{1}] = LOSOutputGenerator(CADop, Rx, Tx,...
@@ -202,7 +196,7 @@ for iterateTimeDivision = 1:paraCfgInput.numberOfTimeDivisions
                         
                         numberOfPlanes = numberOfPlanes - 1;
                         
-                        Nrealizations = nodeCfgInput.paaInfo{iterateTx}.nodePAAInfo{iteratePaaTx}.indep_stoch_channel*...
+                        nRealizations = nodeCfgInput.paaInfo{iterateTx}.nodePAAInfo{iteratePaaTx}.indep_stoch_channel*...
                             nodeCfgInput.paaInfo{iterateRx}.nodePAAInfo{iteratePaaRx}.indep_stoch_channel;
                         [~, ~, outputTemporary, multipathTemporary,...
                             count, ~, frmRotMpInfo{iterateOrderOfReflection+1}] = multipath(...
@@ -213,7 +207,7 @@ for iterateTimeDivision = 1:paraCfgInput.numberOfTimeDivisions
                             switchPolarization, polarizationTx, [],...
                             polarizationRx, [], switchCp,...
                             paraCfgInput.switchQDGenerator,...
-                            paraCfgInput.carrierFrequency,'indStoc', Nrealizations,...
+                            paraCfgInput.carrierFrequency,'indStoc', nRealizations,...
                             'qTx', QTx, 'qRx', QRx);
                         
                         %Store MPC
@@ -227,7 +221,7 @@ for iterateTimeDivision = 1:paraCfgInput.numberOfTimeDivisions
                         
                         %Store QD output
                         if size(output,1)==1
-                            output = repmat(output, 1,1,Nrealizations);
+                            output = repmat(output, 1,1,nRealizations);
                         end
                         
                         if size(output) > 0
@@ -246,12 +240,18 @@ for iterateTimeDivision = 1:paraCfgInput.numberOfTimeDivisions
                     % - paaTxXXpaaRxYY: channel between paaTx XX and paaRx
                     % YY.
                     % -frmRotMpInfopaaTxXXpaaRxXX. Information to perform
-                    % frame rotation after raytracing                    
-                    eval(['outputPAA{iterateTx, iterateRx}.frmRotMpInfopaaTx',num2str(iteratePaaTx-1),'paaRx', num2str(iteratePaaRx-1), '= [frmRotMpInfo{:}];'] );
-                    eval(['outputPAA{iterateRx, iterateTx}.frmRotMpInfopaaTx',num2str(iteratePaaRx-1),'paaRx', num2str(iteratePaaTx-1), '= reverseFrmRotMpInfo([frmRotMpInfo{:}]);'] );
-                    frmRotMpInfo = {};                    
-                    eval(['outputPAA{iterateTx, iterateRx}.paaTx',num2str(iteratePaaTx-1),'paaRx', num2str(iteratePaaRx-1), '= output;'] );
-                    eval(['outputPAA{iterateRx, iterateTx}.paaTx',num2str(iteratePaaRx-1),'paaRx', num2str(iteratePaaTx-1), '= reverseOutputTxRx(output);'] );
+                    % frame rotation after raytracing  
+                     outputPaa{iterateTx, iterateRx}.(sprintf('frmRotMpInfopaaTx%dpaaRx%d', iteratePaaTx-1, iteratePaaRx-1))= [frmRotMpInfo{:}];
+                     outputPaa{iterateRx, iterateTx}.(sprintf('frmRotMpInfopaaTx%dpaaRx%d', iteratePaaRx-1, iteratePaaTx-1))= reverseFrmRotMpInfo([frmRotMpInfo{:}]);
+                     
+%                     eval(['outputPAA{iterateTx, iterateRx}.frmRotMpInfopaaTx',num2str(iteratePaaTx-1),'paaRx', num2str(iteratePaaRx-1), '= [frmRotMpInfo{:}];'] );
+%                     eval(['outputPAA{iterateRx, iterateTx}.frmRotMpInfopaaTx',num2str(iteratePaaRx-1),'paaRx', num2str(iteratePaaTx-1), '= reverseFrmRotMpInfo([frmRotMpInfo{:}]);'] );
+                    frmRotMpInfo = {};     
+                    outputPaa{iterateTx, iterateRx}.(sprintf('paaTx%dpaaRx%d', iteratePaaTx-1, iteratePaaRx-1))= output;
+                    outputPaa{iterateRx, iterateTx}.(sprintf('paaTx%dpaaRx%d', iteratePaaRx-1, iteratePaaTx-1))= reverseOutputTxRx(output);
+
+%                     eval(['outputPAA{iterateTx, iterateRx}.paaTx',num2str(iteratePaaTx-1),'paaRx', num2str(iteratePaaRx-1), '= output;'] );
+%                     eval(['outputPAA{iterateRx, iterateTx}.paaTx',num2str(iteratePaaRx-1),'paaRx', num2str(iteratePaaTx-1), '= reverseOutputTxRx(output);'] );
                     
                 end
             end
@@ -260,16 +260,16 @@ for iterateTimeDivision = 1:paraCfgInput.numberOfTimeDivisions
     end
     
     %% Generate channel for each PAA given the channel of the centroids
-    outputPAATime(:,:,iterateTimeDivision) = generateChannelPaa(outputPAA, nodeCfgInput.paaInfo);  %#ok<AGROW>
+    outputPaaTime(:,:,iterateTimeDivision) = generateChannelPaa(outputPaa, nodeCfgInput.paaInfo);  %#ok<AGROW>
     
     %% Write QD output in CSV files
-    if ~paraCfgInput.jsonOutput || keepBothQDOutput
+    if ~isJsonOutput || keepBothQDOutput
         for iterateTx = 1:paraCfgInput.numberOfNodes
             for iterateRx = iterateTx+1:paraCfgInput.numberOfNodes
-                writeQdFileOutput(outputPAATime{iterateTx, iterateRx,iterateTimeDivision}, paraCfgInput.useOptimizedOutputToFile, fids, iterateTx, iterateRx,...
+                writeQdFileOutput(outputPaaTime{iterateTx, iterateRx,iterateTimeDivision}, paraCfgInput.useOptimizedOutputToFile, fids, iterateTx, iterateRx,...
                     qdFilesPath,...
                     paraCfgInput.qdFilesFloatPrecision);
-                writeQdFileOutput(outputPAATime{iterateRx,iterateTx,iterateTimeDivision}, paraCfgInput.useOptimizedOutputToFile, fids, iterateRx,iterateTx,...
+                writeQdFileOutput(outputPaaTime{iterateRx,iterateTx,iterateTimeDivision}, paraCfgInput.useOptimizedOutputToFile, fids, iterateRx,iterateTx,...
                     qdFilesPath,...
                     paraCfgInput.qdFilesFloatPrecision);
             end
@@ -280,110 +280,28 @@ end
 
 %% Write output in JSON files
 % QD output
-if paraCfgInput.jsonOutput
-    writeQdJsonOutput(outputPAATime,cellfun(@(x) x.nPaa,  nodeCfgInput.paaInfo),...
+if isJsonOutput
+    writeQdJsonOutput(outputPaaTime,cellfun(@(x) x.nPaa,  nodeCfgInput.paaInfo),...
         qdFilesPath);
     
     Mpc(:,:,:,:,:,1) = [];
 end
 
-if paraCfgInput.switchSaveVisualizerFiles && paraCfgInput.jsonOutput
-    % Write MPC.json
-    f = fopen(fullfile(visualizerPath, 'Mpc.json'), 'w');
-    for iterateTx = 1:paraCfgInput.numberOfNodes
-        for iterateRx = iterateTx+1:paraCfgInput.numberOfNodes
-            for iteratePaaTx = 1:nPAA_centroids(iterateTx)
-                nodeTxCluster  = nodeCfgInput.paaInfo{iterateTx}.paaInCluster{iteratePaaTx};
-                for txPaaCluster = 1:length(nodeTxCluster)
-                    for iteratePaaRx = 1:nPAA_centroids(iterateRx)
-                        nodeRxCluster  = nodeCfgInput.paaInfo{iterateRx}.paaInCluster{iteratePaaRx};
-                        for rxPaaCluster = 1:length(nodeRxCluster)
-                            for reflOrd = 1:paraCfgInput.totalNumberOfReflections+1                                
-                                s = struct('TX', iterateTx-1, 'PAA_TX', nodeTxCluster(txPaaCluster)-1,...
-                                    'RX', iterateRx-1, 'PAA_RX', nodeRxCluster(rxPaaCluster)-1, ...
-                                    'Rorder', reflOrd-1);
-                                Mpc_t = squeeze((Mpc(iterateTx,iteratePaaTx,...
-                                    iterateRx,iteratePaaRx,reflOrd,:)));
-                                maxSize = max(cell2mat(cellfun(@size ,Mpc_t ,'UniformOutput' ,false)));
-                                    Mpc_t= cellfun(@(x) padNan(x, maxSize),Mpc_t,'UniformOutput',false);                                     
-                                    s.MPC =  Mpc_t;
-                                    json = jsonencode(s);
-                                fprintf(f, '%s\n', json);
-                            end
-                        end
-                    end
-                end
-            end
-        end
-    end
-    fclose(f);
-    
-    % Write Node Position
-    filename = sprintf('NodePositions.json');
-    f = fopen(fullfile(visualizerPath, filename), 'w');
-    for i = 1:paraCfgInput.numberOfNodes
-        s = struct('Node' , i-1, ...
-            'Position', [nodePosition(:,:,i); [inf inf inf]], ...
-            'Rotation', [nodeCfgInput.nodeEquivalentRotationAngle(:,:,i); [inf inf inf]]);
-        json = jsonencode(s); % Add a temporary inf vector to make sure
-        % more than a single vector will be encoded. Matlab json
-        % encoder loses the square brackets when encoding vectors.
-        str2remove =',[null,null,null]'; %Temporary string to remove
-        rem_ind_start = num2cell(strfind(json, str2remove)); % Find start string to remove
-        index2rm = cell2mat(cellfun(@(x) x:x+length(str2remove)-1,rem_ind_start,'UniformOutput',false)); % Create index of char to remove
-        json(index2rm) = []; % Remove temporary vector.
-        fprintf(f, '%s\n', json);
-    end
-    fclose(f);
-    
-    % Write PAAPosition.json
-    f = fopen(strcat(visualizerPath, filesep,'PAAPosition.json'), 'w');
-    for i = 1:paraCfgInput.numberOfNodes
-        idOrientation = 0;
-        for paaId = 1:nPAA_centroids(i)
-            nodeTxCluster  = nodeCfgInput.paaInfo{i}.paaInCluster{paaId};
-            for paaCentroid = 1:length(nodeTxCluster)
-                idOrientation = idOrientation+1;
-                s = struct('Node', i-1, 'PAA',nodeTxCluster(paaCentroid)-1, ...
-                    'Centroid', nodeCfgInput.paaInfo{i}.centroids(paaId)-1, ...
-                    'Orientation', nodeCfgInput.nodeAntennaOrientation{i}(idOrientation,:) ,...
-                'Position', [reshape(squeeze(nodeCfgInput.paaInfo{i}.centroid_position_rot(:,paaId,:)), [],3); [inf inf inf]]);
-                json = jsonencode(s);% Add a temporary inf vector to make sure
-                % more than a single vector will be encoded. Matlab json
-                % encoder loses the square brackets when encoding vectors.
-                str2remove =',[null,null,null]'; %Temporary string to remove
-                rem_ind_start = num2cell(strfind(json, str2remove)); % Find start string to remove
-                index2rm = cell2mat(cellfun(@(x) x:x+length(str2remove)-1,rem_ind_start,'UniformOutput',false)); % Create index of char to remove
-                json(index2rm) = []; % Remove temporary vector.
-                fprintf(f, '%s\n', json);
-            end
-        end
-    end
-    fclose(f); 
+if paraCfgInput.switchSaveVisualizerFiles
+    writeVisualizerJsonOutput(visualizerPath, paraCfgInput, nodeCfgInput, nPAA_centroids, nodePosition, Mpc)
 end
 
-if ~paraCfgInput.jsonOutput || keepBothQDOutput
+if ~isJsonOutput || keepBothQDOutput
     closeQdFilesIds(fids, paraCfgInput.useOptimizedOutputToFile);
 end
 
 %% Write useful output information. 
 writeReportOutput = 0 ; %Set to 0 to allow succeful test.
 if writeReportOutput
-    f = fopen(strcat(outputPath, filesep,'report.dat'), 'w'); %#ok<UNRCH>
-%     elapsedTime = toc;
-%     fprintf(f, 'Elapsed Time:\t%f\n', elapsedTime);    
+    f = fopen(strcat(outputPath, filesep,'report.dat'), 'w'); %#ok<UNRCH> 
     fprintf(f, 'Device Rotation:\t%d\n', paraCfgInput.isDeviceRotationOn);
-%     isInitialOrientationOn = 'true';
     fprintf(f, 'Initial Orientation:\t%d\n', paraCfgInput.isInitialOrientationOn);
-%     isPaaCentered = 'true';
     fprintf(f, 'PAA centered:\t%d\n', paraCfgInput.isPaaCentered);
     fclose(f);
-end
-end
-
-function x = padNan(x, maxSize)
-if ~all(size(x) == maxSize)
-    sizeX = size(x);
-    x(sizeX(1)+1:maxSize(1),1:maxSize(2)) = nan;
 end
 end
