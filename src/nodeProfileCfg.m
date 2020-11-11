@@ -43,19 +43,10 @@ warning('off', 'MATLAB:MKDIR:DirectoryExists');
 scenarioNameStr = paraCfg.inputScenarioName;
 
 % Input Parameters to be Updated
-numberOfNodes = paraCfg.numberOfNodes;
 numberOfTimeDivisions = paraCfg.numberOfTimeDivisions;
 
 % List of paths
 inputPath = fullfile(scenarioNameStr, 'Input');
-
-% Init
-nodeRotationTime= zeros(paraCfg.numberOfTimeDivisions,3, paraCfg.numberOfNodes);
-nodeInitialPosition = zeros( paraCfg.numberOfNodes, 3);
-nodePositionTime = zeros(paraCfg.numberOfTimeDivisions,3, paraCfg.numberOfNodes);
-countListing = 0;
-nodePositionTimeRaw = cell(numberOfNodes,1);
-nodeRotationTimeRaw = cell(numberOfNodes,1);
 
 %% Back compatibility code. To be removed in future versions of the software
 % Try to open previous config: nodes.dat. If it exist convert it into new
@@ -72,10 +63,18 @@ try
 catch
 end
 
+%% Init
+listing = dir(fullfile(scenarioNameStr, 'Input'));
+paraCfg.numberOfNodes = sum(arrayfun(@(x) startsWith(x.name,'NodePosition'), listing));
+numberOfNodes = paraCfg.numberOfNodes;
+assert(numberOfNodes>=2, 'At least 2 nodes need to be defined');
+nodeRotationTime= zeros(paraCfg.numberOfTimeDivisions,3, paraCfg.numberOfNodes);
+nodeInitialPosition = zeros( paraCfg.numberOfNodes, 3);
+nodePositionTime = zeros(paraCfg.numberOfTimeDivisions,3, paraCfg.numberOfNodes);
+nodePositionTimeRaw = cell(numberOfNodes,1);
+nodeRotationTimeRaw = cell(numberOfNodes,1);
 
 %% Load NodePositionX.dat and NodeRotationX.dat
-listing = dir(fullfile(scenarioNameStr, 'Input'));
-
 for iterateNumberOfNodes = 1:numberOfNodes
     nodePositionFile = sprintf('NodePosition%d.dat',iterateNumberOfNodes-1);
     nodeRotationFile = sprintf('NodeRotation%d.dat',iterateNumberOfNodes-1);
@@ -106,6 +105,8 @@ for iterateNumberOfNodes = 1:numberOfNodes
     nodePositionTimeTmp = nodePositionTimeRaw{iterateNumberOfNodes};
     timeSamplesFile = size(nodePositionTimeTmp,1);
     
+    % Config file defines fewer positions in time than the numberOfTimeDivisions
+    % defined in paraCfg
     if  timeSamplesFile< paraCfg.numberOfTimeDivisions &&  ...
             timeSamplesFile > 1
         nodePositionTime = nodePositionTime(1:timeSamplesFile, :,:);
@@ -120,43 +121,33 @@ for iterateNumberOfNodes = 1:numberOfNodes
     nodePositionTime(numberTracePoints+1:end, :, iterateNumberOfNodes) = ...
         repmat(nodePositionTimeTmp, [paraCfg.numberOfTimeDivisions-numberTracePoints,1,1]);
     nodeInitialPosition(iterateNumberOfNodes,:) = squeeze(nodePositionTime(1,:,iterateNumberOfNodes));
-    countListing = countListing + 1;
     
     % NodeRotation processing
     nodeRotationTimeTemp = nodeRotationTimeRaw{iterateNumberOfNodes};
-    
-    if  size(nodeRotationTimeTemp,1)< size(nodeRotationTime,1) &&  ...
-            size(nodeRotationTimeTemp,1) > 1
+    timeSamplesFile = size(nodeRotationTimeTemp,1);
+
+    % Config file defines fewer rotations in time than the numberOfTimeDivisions
+    % defined in paraCfg
+    if  timeSamplesFile< paraCfg.numberOfTimeDivisions &&  ...
+            timeSamplesFile> 1
         nodeRotationTime = nodeRotationTime(1:size(nodeRotationTimeTemp,1), :,:);
         paraCfg.numberOfTimeDivisions = size(nodeRotationTimeTemp,1) ;
         numberOfTimeDivisions = paraCfg.numberOfTimeDivisions;
         warning('Time divisition too long.')
     end
-    
-    try
-        numberTracePoints =  min(size(nodeRotationTimeTemp,1),paraCfg.numberOfTimeDivisions);
-        nodeRotationTime(1:numberTracePoints, :, iterateNumberOfNodes) = ...
-            nodeRotationTimeTemp(1:numberTracePoints,:);
-        nodeRotationTime(numberTracePoints+1:end, :, iterateNumberOfNodes) = ...
-            repmat(nodeRotationTimeTemp, [paraCfg.numberOfTimeDivisions-numberTracePoints,1,1]);
-        countListing = countListing + 1;
-        
-    catch
-        error('Node Rotation config incorrect');
-    end
-end
-
-if  countListing < numberOfNodes
-    warning('Node Position input incorrect.');
-    
+    numberTracePoints =  min(size(nodeRotationTimeTemp,1),paraCfg.numberOfTimeDivisions);
+    nodeRotationTime(1:numberTracePoints, :, iterateNumberOfNodes) = ...
+        nodeRotationTimeTemp(1:numberTracePoints,:);
+    nodeRotationTime(numberTracePoints+1:end, :, iterateNumberOfNodes) = ...
+        repmat(nodeRotationTimeTemp, [paraCfg.numberOfTimeDivisions-numberTracePoints,1,1]);        
+   
 end
 
 %% PAA init
-iterateNumberOfNodes = 1;
 nodePaaInitialPosition = cell(numberOfNodes,1); %PAA vector position w.r.t node center
 nodePaaOrientation     = cell(numberOfNodes,1); 
 
-while iterateNumberOfNodes <= numberOfNodes
+for iterateNumberOfNodes = 1:numberOfNodes
     paaFile = fullfile(inputPath, sprintf('node%dpaa.dat', iterateNumberOfNodes-1));
     
     % If nodeXpaa.dat is defined
@@ -192,7 +183,7 @@ while iterateNumberOfNodes <= numberOfNodes
 end
 
 %% Process PAA position
-paaInfo  = cluster_paa(nodePositionTime, nodePaaInitialPosition, nodePaaOrientation);
+paaInfo  = clusterPaa(nodePositionTime, nodePaaInitialPosition, nodePaaOrientation);
 
 %% Output
 % Check Temp Output Folder

@@ -100,13 +100,13 @@ para = fieldToNum(para, 'switchQDGenerator', [0,1], 0);
 % = 2  (Default)
 % switch(para.switchRandomization)
 %     case 0
-        defaultNumberOfNodes = []; % specified by nodes.dat
+%         defaultNumberOfNodes = []; % specified by nodes.dat
 %     case 1
 %         defaultNumberOfNodes = 2;
 %     otherwise
 %         error('Cannot handle switchRandomization=%f',para.switchRandomization)
 % end
-para = fieldToNum(para, 'numberOfNodes', [], defaultNumberOfNodes);
+% para = fieldToNum(para, 'numberOfNodes', [], defaultNumberOfNodes);
 
 % Order of reflection.
 % 1 = multipath until first order, 2 = multipath until second order (Default)
@@ -140,7 +140,12 @@ para = fieldToNum(para, 'useOptimizedOutputToFile', [], 1);
 % On the contrary it might be heavy on RAM as it will retain data in memory
 % during raytracing.
 % Default: 0 
-para = fieldToNum(para, 'jsonOutput', [], 0);
+if isfield(para, 'outputFormat')
+    assert(ismember(para.outputFormat, {'json', 'txt', 'both'}), 'Output format not valid')
+else
+    para.outputFormat = 'txt';
+    warning('Output format set to .txt')
+end
 
 end
 
