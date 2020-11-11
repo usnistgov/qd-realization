@@ -86,10 +86,6 @@ if ~isJsonOutput || keepBothQDOutput
 end
 
 %% Init
-% Tx = reshape(squeeze(nodeLoc(1,1,:)), [],3);
-% Rx = reshape(squeeze(nodeLoc(1,2,:)), [],3);
-% vtx = [0,0,0]; %nodeVelocities(1,:);
-% vrx = [0,0,0]; %nodeVelocities(2,:);
 switchPolarization = 0;
 switchCp = 0;
 polarizationTx = [1, 0];
@@ -241,17 +237,12 @@ for iterateTimeDivision = 1:paraCfgInput.numberOfTimeDivisions
                     % YY.
                     % -frmRotMpInfopaaTxXXpaaRxXX. Information to perform
                     % frame rotation after raytracing  
-                     outputPaa{iterateTx, iterateRx}.(sprintf('frmRotMpInfopaaTx%dpaaRx%d', iteratePaaTx-1, iteratePaaRx-1))= [frmRotMpInfo{:}];
-                     outputPaa{iterateRx, iterateTx}.(sprintf('frmRotMpInfopaaTx%dpaaRx%d', iteratePaaRx-1, iteratePaaTx-1))= reverseFrmRotMpInfo([frmRotMpInfo{:}]);
+                    outputPaa{iterateTx, iterateRx}.(sprintf('frmRotMpInfopaaTx%dpaaRx%d', iteratePaaTx-1, iteratePaaRx-1))= [frmRotMpInfo{:}];
+                    outputPaa{iterateRx, iterateTx}.(sprintf('frmRotMpInfopaaTx%dpaaRx%d', iteratePaaRx-1, iteratePaaTx-1))= reverseFrmRotMpInfo([frmRotMpInfo{:}]);
                      
-%                     eval(['outputPAA{iterateTx, iterateRx}.frmRotMpInfopaaTx',num2str(iteratePaaTx-1),'paaRx', num2str(iteratePaaRx-1), '= [frmRotMpInfo{:}];'] );
-%                     eval(['outputPAA{iterateRx, iterateTx}.frmRotMpInfopaaTx',num2str(iteratePaaRx-1),'paaRx', num2str(iteratePaaTx-1), '= reverseFrmRotMpInfo([frmRotMpInfo{:}]);'] );
                     frmRotMpInfo = {};     
                     outputPaa{iterateTx, iterateRx}.(sprintf('paaTx%dpaaRx%d', iteratePaaTx-1, iteratePaaRx-1))= output;
                     outputPaa{iterateRx, iterateTx}.(sprintf('paaTx%dpaaRx%d', iteratePaaRx-1, iteratePaaTx-1))= reverseOutputTxRx(output);
-
-%                     eval(['outputPAA{iterateTx, iterateRx}.paaTx',num2str(iteratePaaTx-1),'paaRx', num2str(iteratePaaRx-1), '= output;'] );
-%                     eval(['outputPAA{iterateRx, iterateTx}.paaTx',num2str(iteratePaaRx-1),'paaRx', num2str(iteratePaaTx-1), '= reverseOutputTxRx(output);'] );
                     
                 end
             end
