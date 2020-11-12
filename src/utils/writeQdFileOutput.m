@@ -37,30 +37,15 @@ else
     fid = fids(iTx, iRx);
 end
 
-if isstruct(output)  
-    sz = structfun(@size, output, 'UniformOutput', false);
-    fn = fieldnames(sz);
-    id_st= 1;
-    for i = 1:numel(fn)
-        sz_paa = [size(output.(fn{i})),1];
-        id_end= id_st+sz_paa(3)-1;        
-        output_cell(:, :, id_st:id_end) = mat2cell(output.(fn{i}), sz_paa(1), sz_paa(2), ones(1,sz_paa(3)));
-        id_st=id_st+sz_paa(3);
-    end
-    output = squeeze(output_cell);
-    numChan = length(output);
-
-else
-    numRays = size(output,1);
-    numProp = size(output,2);
-    numChan = size(output,3);
-    output = mat2cell(output, numRays, numProp, ones(1, numChan));
-end
+numRays = size(output,1);
+numProperties = size(output,2);
+numChannels = size(output,3);
+output = mat2cell(output, numRays, numProperties, ones(1, numChannels));
 
 idEmpty = cellfun(@isempty, output);
 floatFormat = sprintf('%%.%dg',precision);
 formatSpec = [repmat([floatFormat,','],1,numRays-1), [floatFormat,'\n']];
-numChanV = 1:numChan;
+numChanV = 1:numChannels;
 for id = numChanV(~idEmpty)
     outputId = output{id};
     numRays = size(outputId,1);
