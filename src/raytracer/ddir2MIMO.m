@@ -1,4 +1,4 @@
-function [ch, varargout] = ddir2MIMO(ddir, info, frmRotMpInfo, ptr)
+function [ch, varargout] = ddir2MIMO(ddirIn, info, frmRotMpInfo, ptr)
 %%DDIR2MIMO Converts the double direction impulse response in the MIMO 
 % channel matrix assigning phase rotations according with PAA centroids 
 % positions and angles of departure/arrival
@@ -50,23 +50,22 @@ r= idx(ptr.iid_rx); %Pointer to centroid in cell array in info{ptr.nr}
 nAod = info{ptr.nt}.nodePAAInfo{ptr.paatx}.rotated_channel(ptr.iid_tx);
 nAoa = info{ptr.nr}.nodePAAInfo{ptr.paarx}.rotated_channel(ptr.iid_rx);
 
-ch = zeros([size(ddir), nAod*nAoa]);
+ch = zeros([size(ddirIn), nAod*nAoa]);
 
 for idAod = 1:nAod
     for idAoa = 1:nAoa
-        
+        ddir = ddirIn;
         orientation.tx = info{ptr.nt}.orientation{t}(idAod,:);
         orientation.rx = info{ptr.nr}.orientation{r}(idAoa,:);
-        
-        [dod, doa, aodAz,aodEl,aoaAz, aoaEl] = frameRotation(frmRotMpInfo, orientation);
-        % dod - direction of departsure
-        ddir(:, 2:4) = dod;
-        % doa - direction of arrival
-        ddir(:, 5:7) = doa;
-        ddir(:,10) = rad2deg(aodAz);
-        ddir(:,11) = rad2deg(aodEl);
-        ddir(:,12) = rad2deg(aoaAz);
-        ddir(:,13) = rad2deg(aoaEl);
+%         [dod, doa, aodAz,aodEl,aoaAz, aoaEl] = frameRotation(frmRotMpInfo, orientation);
+        ddir(:, 2:4) = coordinateRotation(ddir(:,2:4), [0, 0, 0], orientation.tx, 'frame');
+        ddir(:, 5:7) = coordinateRotation(ddir(:,5:7), [0, 0, 0], orientation.rx, 'frame');
+        [aodAz, aodEl] = vectorToAngle(ddir(:, 2:4));
+        [aoaAz, aoaEl] = vectorToAngle(ddir(:, 5:7));
+        ddir(:,10) = aodAz;
+        ddir(:,11) = aodEl;
+        ddir(:,12) = aoaAz;
+        ddir(:,13) = aoaEl;
         R_AOD = phaseRotation(aodAz,aodEl, info{ptr.nt}.centroidsShift{t}(idAod,:));
         R_AOA = phaseRotation(aoaAz,aoaEl, info{ptr.nr}.centroidsShift{r}(idAoa,:));
         

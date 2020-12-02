@@ -1,4 +1,4 @@
-function ch_out = generateChannelPaa(ch_in, infoPAA)
+function chOut = generateChannelPaa(ch_in, infoPAA)
 %GENERATECHANNEL_PAA returns the QD channel for each PAA_TX - PAA_RX
 %combination.
 %
@@ -52,7 +52,7 @@ function ch_out = generateChannelPaa(ch_in, infoPAA)
 %% Input processing 
 numNodes = length(infoPAA);
 nodesVector = 1:numNodes;
-ch_out = cell(size(ch_in));
+chOut = cell(size(ch_in));
 nvar = 21;
 paa_comb_struct = {};
 
@@ -64,23 +64,24 @@ for nt = nodesVector % Loop on tx nodes
         i = 0;
         for c_t = 1:infoPAA{nt}.nPAA_centroids % Loop on transmitter centroid
             for c_r = 1:infoPAA{nr}.nPAA_centroids % Loop on receiver centroid
-                chMIMOcentroid = []; % Channel between tx and rx centroid
+                chMimoCentroid = []; % Channel between tx and rx centroid
                 paaCombtmp = [];
-                frameRotMpInfo = eval(['ch_in{nt,nr}.frameRotMpInfopaaTx', num2str(c_t-1), 'paaRx', num2str(c_r-1),';']);
+                frameRotMpInfo = ch_in{nt,nr}.(sprintf('frameRotMpInfopaaTx%dpaaRx%d', c_t-1, c_r-1));
+                chSisoTmp = ch_in{nt,nr}.(sprintf('paaTx%dpaaRx%d', c_t-1, c_r-1));
                 nIidTx = infoPAA{nt}.nodePAAInfo{c_t}.indep_stoch_channel;
                 nIidRx = infoPAA{nr}.nodePAAInfo{c_r}.indep_stoch_channel;
                 for iid_tx = 1:nIidTx
                     % Loop on TX PAA genarated with the same centroid 
                     for iid_rx = 1:nIidRx
                         % Loop on RX PAA generated with the same centroid
-                        ch_siso_tmp = eval(['ch_in{nt,nr}.paaTx', num2str(c_t-1), 'paaRx', num2str(c_r-1),';']);
-                        if ~isempty(ch_siso_tmp)
-                            ch_siso =ch_siso_tmp(:,:,(iid_tx-1)*nIidRx+iid_rx);
+                        if ~isempty(chSisoTmp)
+                            chSiso = chSisoTmp(:,:,(iid_tx-1)*nIidRx+iid_rx);
                         else
-                            ch_siso = [];
+                            chSiso = [];
                         end
                         
-                        % Pointer struct. Indeces of PAAs 
+                        % Pointer struct. Indeces  to retreive PAA
+                        % information in infoPAA
                         ptr.nt = nt;    %TX NODE ID
                         ptr.nr = nr;    %RX NODE ID
                         ptr.paatx = c_t; %TX PAA centroid pointer
@@ -93,17 +94,18 @@ for nt = nodesVector % Loop on tx nodes
                         % Eg cluster 1: PAA generated with the same channel
                         % but different rotation. cluster 2: PAA channels
                         % generated with different stochastic component)
-                        if isempty(ch_siso)
-                            chMIMOcluster = [];
+                        if isempty(chSiso)
+                            chMimoCluster = [];
                         else
-                            [chMIMOcluster, paaCombtmp] = ddir2MIMO(ch_siso,infoPAA, frameRotMpInfo, ptr);
+                            [chMimoCluster, paaCombtmp] = ...
+                           ddir2MIMO(chSiso, infoPAA, frameRotMpInfo, ptr);
                         end
-                        chMIMOcentroid = cat(3, chMIMOcentroid, chMIMOcluster);
+                        chMimoCentroid = cat(3, chMimoCentroid, chMimoCluster);
                         paaComb = [paaComb; paaCombtmp];
                     end
                 end
                 i = i+1;
-                chMIMOtx_rx{i} =chMIMOcentroid; %cat(3, ch_t_r, ch_t);
+                chMIMOtx_rx{i} =chMimoCentroid; %cat(3, ch_t_r, ch_t);
                 paa_comb_struct{i} = paaComb;
             end
         end
@@ -116,9 +118,9 @@ for nt = nodesVector % Loop on tx nodes
         end
         if ~isempty(paaComb)
             [~, index_sorted] = sortrows(paaComb,1);
-            ch_out{nt, nr} = chMIMOtx_rx(:,:, index_sorted);
+            chOut{nt, nr} = chMIMOtx_rx(:,:, index_sorted);
         else
-            ch_out{nt, nr} = chMIMOtx_rx;
+            chOut{nt, nr} = chMIMOtx_rx;
         end
 
     end
