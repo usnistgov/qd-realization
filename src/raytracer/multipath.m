@@ -162,7 +162,7 @@ if numberOfRowsArraysOfPlanes>0
             % refer to "multipath - WCL17_revised.pdf" in this folder for QD model
             if  switchMaterial == 1 && QDGeneratorSwitch == 1
                 [output, outputPre, outputPost] =...
-                    qdGenerator2(outputQd(indexOutput-1).dRay, arrayOfMaterials, MaterialLibrary);
+                    qdGenerator(outputQd(indexOutput-1).dRay, arrayOfMaterials, MaterialLibrary);
                 outputQd(indexOutput-1).rPreCursor   = outputPre;
                 outputQd(indexOutput-1).rPostCursor = outputPost;
 

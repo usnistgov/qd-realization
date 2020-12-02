@@ -1,5 +1,5 @@
 function [output,  outputPre, outputPost] =...
-    qdGenerator2(dRayOutput, arrayOfMaterials, materialLibrary)
+    qdGenerator(dRayOutput, arrayOfMaterials, materialLibrary)
 %QDGENERATOR Generate diffused components starting from deterministic rays
 %following NIST's Quasi-Deterministic model.
 
