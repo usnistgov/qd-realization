@@ -13,3 +13,4 @@ carrierFrequency	60e9
 qdFilesFloatPrecision	6
 useOptimizedOutputToFile	1
 outputFormat	json
+materialLibraryPath	material_libraries/LectureRoomAllMaterialsMetalFloor.csv
