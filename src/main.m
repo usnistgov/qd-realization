@@ -35,7 +35,7 @@
 clear
 close all
 clc
-tic
+t0 = tic; % parallel processing-safe
 addpath('raytracer', 'utils', 'quaternions')
 
 %% Initialization
@@ -51,8 +51,7 @@ end
 
 %% Input
 % Leave empty for default 'ScenarioTest'
-scenarioNameStr = 'examples\TestScenario';
-% scenarioNameStr = 'examples\L-Room-rotation-multiPAA';
+scenarioNameStr = '';
 
 if ~isempty(scenarioNameStr)
     fprintf('Use customized scenario: %s.\n',scenarioNameStr);
@@ -87,4 +86,4 @@ outputPath = Raytracer(paraCfg, nodeCfg);
 
 fprintf('Save output data to:\n%s\n',outputPath);
 fprintf('--------- Simulation Complete ----------\n');
-toc
+toc(t0);
