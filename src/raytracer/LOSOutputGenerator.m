@@ -134,14 +134,6 @@ if isLOS==1 % if DoA exists
         output = output1;
     end
     
-    paramsRotation.dod = dod;
-    paramsRotation.doa = doa;
-    paramsRotation.TxVel = velocityTx;
-    paramsRotation.RxVel = velocityRx;
-    varargout{1} = paramsRotation;
-else
-    varargout{1} = [];
-    
 end
     
 end

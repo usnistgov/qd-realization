@@ -66,7 +66,6 @@ for nt = nodesVector % Loop on tx nodes
             for c_r = 1:infoPAA{nr}.nPAA_centroids % Loop on receiver centroid
                 chMimoCentroid = []; % Channel between tx and rx centroid
                 paaCombtmp = [];
-                frameRotMpInfo = ch_in{nt,nr}.(sprintf('frameRotMpInfopaaTx%dpaaRx%d', c_t-1, c_r-1));
                 chSisoTmp = ch_in{nt,nr}.(sprintf('paaTx%dpaaRx%d', c_t-1, c_r-1));
                 nIidTx = infoPAA{nt}.nodePAAInfo{c_t}.indep_stoch_channel;
                 nIidRx = infoPAA{nr}.nodePAAInfo{c_r}.indep_stoch_channel;
@@ -98,7 +97,7 @@ for nt = nodesVector % Loop on tx nodes
                             chMimoCluster = [];
                         else
                             [chMimoCluster, paaCombtmp] = ...
-                           ddir2MIMO(chSiso, infoPAA, frameRotMpInfo, ptr);
+                           ddir2MIMO(chSiso, infoPAA, ptr);
                         end
                         chMimoCentroid = cat(3, chMimoCentroid, chMimoCluster);
                         paaComb = [paaComb; paaCombtmp];

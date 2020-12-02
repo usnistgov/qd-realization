@@ -41,7 +41,6 @@ function outputPath = Raytracer(paraCfgInput, nodeCfgInput)
 %              Steve Blandino <steve.blandino@nist.gov>
 
 %% Input Parameters Management and preallocation
-% nodeLoc(1,:,:) = nodeCfgInput.nodeLoc;
 nodePosition = nodeCfgInput.nodePosition;
 nPAA_centroids = cellfun(@(x) x.nPAA_centroids, nodeCfgInput.paaInfo );
 Mpc = cell(paraCfgInput.numberOfNodes,...
@@ -50,7 +49,6 @@ Mpc = cell(paraCfgInput.numberOfNodes,...
     max(nPAA_centroids),...
     paraCfgInput.totalNumberOfReflections+1,...
     paraCfgInput.numberOfTimeDivisions+1 );
-frameRotMpInfo = cell(1, paraCfgInput.totalNumberOfReflections+1);
 keepBothQDOutput = strcmp(paraCfgInput.outputFormat, 'both'); 
 isJsonOutput = strcmp(paraCfgInput.outputFormat, 'json');
 displayProgress = 1;
@@ -89,7 +87,6 @@ end
 switchPolarization = 0;
 switchCp = 0;
 polarizationTx = [1, 0];
-polarizationRx = [1, 0];
 
 MaterialLibrary = importMaterialLibrary(paraCfgInput.materialLibraryPath);
 
@@ -160,7 +157,7 @@ for iterateTimeDivision = 1:paraCfgInput.numberOfTimeDivisions
                     vrx = (Rx-previousRxPosition)./ts;
   
                     % LOS Path generation
-                    [isLos, output, frameRotMpInfo{1}] = LOSOutputGenerator(CADop, Rx, Tx,...
+                    [isLos, output] = LOSOutputGenerator(CADop, Rx, Tx,...
                         output, vtx, vrx, switchPolarization, switchCp,...
                         polarizationTx, paraCfgInput.carrierFrequency, 'qTx', QTx, 'qRx', QRx);
                     
@@ -185,8 +182,8 @@ for iterateTimeDivision = 1:paraCfgInput.numberOfTimeDivisions
                         nRealizations = nodeCfgInput.paaInfo{iterateTx}.nodePAAInfo{iteratePaaTx}.indep_stoch_channel*...
                             nodeCfgInput.paaInfo{iterateRx}.nodePAAInfo{iteratePaaRx}.indep_stoch_channel;
                         
-                        [outputTemporary, multipathTemporary,...
-                             frameRotMpInfo{iterateOrderOfReflection+1}] = multipath(...
+                        [outputTemporary, multipathTemporary] = ...
+                            multipath(...
                             ArrayOfPlanes, ArrayOfPoints, Rx, Tx, ...
                             CADop, numberOfPlanes, ...
                             MaterialLibrary, arrayOfMaterials, ...
@@ -223,13 +220,7 @@ for iterateTimeDivision = 1:paraCfgInput.numberOfTimeDivisions
                     % array is a struct relative to a NodeTx-NodeRx 
                     % combination. Each struct has the entries 
                     % - paaTxXXpaaRxYY: channel between paaTx XX and paaRx
-                    % YY.
-                    % -frmRotMpInfopaaTxXXpaaRxXX. Information to perform
-                    % frame rotation after raytracing  
-                    outputPaa{iterateTx, iterateRx}.(sprintf('frameRotMpInfopaaTx%dpaaRx%d', iteratePaaTx-1, iteratePaaRx-1))= [frameRotMpInfo{:}];
-                    outputPaa{iterateRx, iterateTx}.(sprintf('frameRotMpInfopaaTx%dpaaRx%d', iteratePaaRx-1, iteratePaaTx-1))= reverseFrmRotMpInfo([frameRotMpInfo{:}]);
-                     
-                    frameRotMpInfo = {};     
+                    % YY.  
                     outputPaa{iterateTx, iterateRx}.(sprintf('paaTx%dpaaRx%d', iteratePaaTx-1, iteratePaaRx-1))= output;
                     outputPaa{iterateRx, iterateTx}.(sprintf('paaTx%dpaaRx%d', iteratePaaRx-1, iteratePaaTx-1))= reverseOutputTxRx(output);
                     

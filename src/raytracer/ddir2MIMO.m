@@ -1,4 +1,4 @@
-function [ch, varargout] = ddir2MIMO(ddirIn, info, frmRotMpInfo, ptr)
+function [ch, varargout] = ddir2MIMO(ddirIn, info, ptr)
 %%DDIR2MIMO Converts the double direction impulse response in the MIMO 
 % channel matrix assigning phase rotations according with PAA centroids 
 % positions and angles of departure/arrival
@@ -57,7 +57,6 @@ for idAod = 1:nAod
         ddir = ddirIn;
         orientation.tx = info{ptr.nt}.orientation{t}(idAod,:);
         orientation.rx = info{ptr.nr}.orientation{r}(idAoa,:);
-%         [dod, doa, aodAz,aodEl,aoaAz, aoaEl] = frameRotation(frmRotMpInfo, orientation);
         ddir(:, 2:4) = coordinateRotation(ddir(:,2:4), [0, 0, 0], orientation.tx, 'frame');
         ddir(:, 5:7) = coordinateRotation(ddir(:,5:7), [0, 0, 0], orientation.rx, 'frame');
         [aodAz, aodEl] = vectorToAngle(ddir(:, 2:4));

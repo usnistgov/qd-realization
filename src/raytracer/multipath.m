@@ -89,10 +89,6 @@ wavelength = c / frequency;
 outputQd = struct('dRay', cell(sizeArrayOfPlanes(1),1), ...
     'rPreCursor', cell(sizeArrayOfPlanes(1),1), ...
     'rPostCursor', cell(sizeArrayOfPlanes(1),1));
-paramsRotation = struct('dod', cell(1, sizeArrayOfPlanes(1)), ...
-    'doa', cell(1, sizeArrayOfPlanes(1)), ...
-    'TxVel', cell(1, sizeArrayOfPlanes(1)), ...
-    'RxVel', cell(1, sizeArrayOfPlanes(1)));
 %%
 if numberOfRowsArraysOfPlanes>0
     orderOfReflection = ArrayOfPlanes(1,1);
@@ -122,9 +118,10 @@ if numberOfRowsArraysOfPlanes>0
             multipath,indexMultipath,velocityTx,velocityRx);
         dod = coordinateRotation(dod,[0 0 0], qTx.angle, 'frame');
         doa = coordinateRotation(doa,[0 0 0], qRx.angle, 'frame');
-        %         PathLoss = PathlossQD(MaterialLibrary,...
-        %             arrayOfMaterials(indexMultipath,:),1, 'randOn', QDGeneratorSwitch);
-        PathLoss =10;
+        PathLoss = PathlossQD(MaterialLibrary,...
+            arrayOfMaterials(indexMultipath,:),1, 'randOn', QDGeneratorSwitch);
+        %         PathLoss =10; keep commented for now for testing previous
+        %         scenario. To be del
         
         if isMpc == 1
             for i = 1:indexMultipath - 1
@@ -158,10 +155,6 @@ if numberOfRowsArraysOfPlanes>0
             output(indexOutput,13,1:indStoc) = acosd(doa(3) / norm(doa));
             output(indexOutput,18,1:indStoc) = orderOfReflection*pi;% + dopplerFactor*delay;
             output(indexOutput,20,1:indStoc) = dopplerFactor * frequency;
-            paramsRotation(indexOutput).dod = dod;
-            paramsRotation(indexOutput).doa = doa;
-            paramsRotation(indexOutput).TxVel = velocityTx;
-            paramsRotation(indexOutput).RxVel = velocityRx;
             indexMultipath = indexMultipath + 1;
             outputQd(indexOutput).dRay = output(indexOutput,:,:);
             indexOutput = indexOutput + 1;
@@ -184,10 +177,9 @@ if numberOfRowsArraysOfPlanes>0
    
     if indexMultipath>=1
         multipath(indexMultipath:end,:) = [];
-        paramsRotation(indexMultipath:end) = [];
     end
     
-    varargout{1} = paramsRotation;
+    varargout{1} = [];
 
 end
 
