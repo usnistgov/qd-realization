@@ -33,24 +33,15 @@ function checkOutputFile(testCase,scenarioFolder,scenarioFileName,...
 % limitations under the License.
 
 % Check if the same file was passed
-% assertEqual(testCase,scenarioFileName,exampleFileName)
+assertEqual(testCase,scenarioFileName,exampleFileName)
 
 scenarioFilePath = fullfile(scenarioFolder, scenarioFileName);
 exampleFilePath = fullfile(exampleFolder, exampleFileName);
 
-if isNodesPosition(scenarioFilePath)
-    scenarioOut = readNodesPosition(scenarioFilePath);
-    exampleOut = readNodesPosition(exampleFilePath);
-elseif isQdFile(scenarioFilePath)
+if isQdFile(scenarioFilePath)
     sortBy = {'delay','pathGain','phaseOffset','aodEl','aodAz','aoaEl','aoaAz'};
     scenarioOut = readQdFile(scenarioFilePath, sortBy);
     exampleOut = readQdFile(exampleFilePath, sortBy);
-elseif isMpcCoordinates(scenarioFilePath)
-    scenarioOut = readMpcCoordinates(scenarioFilePath);
-    exampleOut = readMpcCoordinates(exampleFilePath);
-elseif isNodePositions(scenarioFilePath)
-    scenarioOut = readNodePositions(scenarioFilePath);
-    exampleOut = readNodePositions(exampleFilePath);
 elseif isRoomCoordinates(scenarioFilePath)
     scenarioOut = readRoomCoordinates(scenarioFilePath);
     exampleOut = readRoomCoordinates(exampleFilePath);
@@ -72,9 +63,7 @@ else
 end
 
 % check equivalence of output file
-% if ~isempty(scenarioOut)
-    verifyInstanceOf(testCase, scenarioOut, class(exampleOut))
-    verifyEqual(testCase, scenarioOut, exampleOut, 'RelTol', 1e-4)
-% end
+verifyInstanceOf(testCase, scenarioOut, class(exampleOut))
+verifyEqual(testCase, scenarioOut, exampleOut, 'RelTol', 1e-4)
 
 end

@@ -200,14 +200,6 @@ for i = 1:length(scenarioFiles)
     
     % extract same file from examples
     exampleFileIdx = find(strcmp({exampleFiles.name},scenarioFileName));
-    % Check backward compatibility for MPC
-    if isempty(exampleFileIdx)
-        paaStringIndStart = num2cell(strfind(scenarioFileName,'PAA'));
-        index2rm = cell2mat(cellfun(@(x) x:x+3,paaStringIndStart,'UniformOutput',false));
-        scenarioFileName(index2rm) = [];
-        exampleFileIdx = find(strcmp({exampleFiles.name},scenarioFileName));
-        scenarioFileName = scenarioFiles(i).name;
-    end
     if length(exampleFileIdx) ~= 1
         verifyLength(testCase, exampleFileIdx, 1,...
             'There should only be one corresponding file in examples')
