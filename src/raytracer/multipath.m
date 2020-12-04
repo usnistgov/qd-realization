@@ -99,7 +99,6 @@ if numberOfRowsArraysOfPlanes>0
     multipath = zeros(numberOfRowsArraysOfPlanes,orderOfReflection * 3 + 1);
     for iterateNumberOfRowsArraysOfPlanes = 1:numberOfRowsArraysOfPlanes
         
-        
         indexOrderOfReflection = 1;
         multipath(indexMultipath, (indexOrderOfReflection-1)*3 + 1) = orderOfReflection;
         multipath(indexMultipath, (indexOrderOfReflection-1)*3 + 1 + (1:3)) = Rx;
@@ -121,7 +120,7 @@ if numberOfRowsArraysOfPlanes>0
         
         % Compute reflection loss
         if  switchMaterial == 1
-            reflectionLoss = PathlossQD(MaterialLibrary,...
+            reflectionLoss = getReflectionLoss(MaterialLibrary,...
                 arrayOfMaterials(indexMultipath,:), 'randOn', qdGeneratorSwitch);
         else
             % Assumption: 10dB loss at each reflection
