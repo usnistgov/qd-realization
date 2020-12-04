@@ -1,8 +1,8 @@
-function [output2, multipath, varargout] =...
+function [qdRay, multipath] =...
     multipath(ArrayOfPlanes, ArrayOfPoints, Rx, Tx, CADOutput,...
     numberOfRowsArraysOfPlanes, MaterialLibrary, arrayOfMaterials,...
     switchMaterial, velocityTx, velocityRx, ...
-   QDGeneratorSwitch, frequency, varargin)
+   qdGeneratorSwitch, frequency, varargin)
 %INPUT -
 %ArrayOfPoints - combinations of multiple triangles, every row is a unique
 %combination. every triangle occupies 9 columns (3 vertices). (o/p of
@@ -73,7 +73,6 @@ addParameter(p,'indStoc',1)
 addParameter(p,'qTx',struct('center', Tx, 'angle', [0 0 0]))
 addParameter(p,'qRx',struct('center', Rx, 'angle', [0 0 0]))
 parse(p, varargin{:});
-indStoc = p.Results.indStoc;
 qTx = p.Results.qTx;
 qRx = p.Results.qRx;
 
@@ -82,7 +81,7 @@ indexMultipath = 1;
 indexOutput = 1;
 nVarOut = 21;
 sizeArrayOfPlanes = size(ArrayOfPlanes);
-output = zeros(sizeArrayOfPlanes(1), nVarOut, indStoc);
+dRay = zeros(1, nVarOut);
 multipath = [];
 c = getLightSpeed;
 wavelength = c / frequency;
@@ -109,19 +108,25 @@ if numberOfRowsArraysOfPlanes>0
         % a single row of ArrayOfPlanes,ArrayOfPoints is fed to
         % singleMultipathGenerator function to know whether a path exists. If a
         % path exists then what are vectors that form the path (stored in
-        % multipath parameter)
-                
+        % multipath parameter)                
         [isMpc,~,dod,doa,multipath,distance,dopplerFactor,...
            velocityTemp] = singleMultipathGenerator...
             (iterateNumberOfRowsArraysOfPlanes,orderOfReflection,indexOrderOfReflection,ArrayOfPlanes,...
             ArrayOfPoints,Reflected,Rx,Tx,CADOutput,...
             multipath,indexMultipath,velocityTx,velocityRx);
+        
+        % Apply node rotation
         dod = coordinateRotation(dod,[0 0 0], qTx.angle, 'frame');
         doa = coordinateRotation(doa,[0 0 0], qRx.angle, 'frame');
-        PathLoss = PathlossQD(MaterialLibrary,...
-            arrayOfMaterials(indexMultipath,:),1, 'randOn', QDGeneratorSwitch);
-        %         PathLoss =10; keep commented for now for testing previous
-        %         scenario. To be del
+        
+        % Compute reflection loss
+        if  switchMaterial == 1
+            reflectionLoss = PathlossQD(MaterialLibrary,...
+                arrayOfMaterials(indexMultipath,:), 'randOn', qdGeneratorSwitch);
+        else
+            % Assumption: 10dB loss at each reflection
+            reflectionLoss = 10*orderOfReflection; 
+        end
         
         if isMpc == 1
             for i = 1:indexMultipath - 1
@@ -136,41 +141,44 @@ if numberOfRowsArraysOfPlanes>0
         % the delay, AoA, AoD, path loss of the path are stored in output parameter
         if  isMpc == 1
             
-            output(indexOutput,1,1:indStoc) = indexMultipath;
+            dRay(1) = indexMultipath;
             % dod - direction of departure
-            output(indexOutput,2:4,1:indStoc) = repmat(dod,1,1,indStoc);
+            dRay(2:4) = dod;
             % doa - direction of arrival
-            output(indexOutput,5:7,1:indStoc) = repmat(doa,1,1,indStoc);
+            dRay(5:7) = doa;
             % Time delay
-            output(indexOutput,8,1:indStoc) = distance / c;
+            dRay(8) = distance/c;
             % Friis transmission loss
-            output(indexOutput,9,1:indStoc) = 20*log10(wavelength / (4*pi*distance)) - PathLoss;            
+            dRay(9) = 20*log10(wavelength / (4*pi*distance)) - reflectionLoss;            
             % Aod azimuth
-            output(indexOutput,10,1:indStoc) = mod(atan2d(dod(2),dod(1)), 360);
+            dRay(10) = mod(atan2d(dod(2),dod(1)), 360);
             % Aod elevation
-            output(indexOutput,11,1:indStoc) = acosd(dod(3) / norm(dod));
+            dRay(11) = acosd(dod(3) / norm(dod));
             % Aoa azimuth
-            output(indexOutput,12,1:indStoc) = mod(atan2d(doa(2),doa(1)), 360);
+            dRay(12) = mod(atan2d(doa(2),doa(1)), 360);
             % Aoa elevation
-            output(indexOutput,13,1:indStoc) = acosd(doa(3) / norm(doa));
-            output(indexOutput,18,1:indStoc) = orderOfReflection*pi;% + dopplerFactor*delay;
-            output(indexOutput,20,1:indStoc) = dopplerFactor * frequency;
-            indexMultipath = indexMultipath + 1;
-            outputQd(indexOutput).dRay = output(indexOutput,:,:);
-            indexOutput = indexOutput + 1;
-            output(indexOutput - 1,nVarOut,1:indStoc) = 0;
+            dRay(13) = acosd(doa(3) / norm(doa));
+            dRay(18) = orderOfReflection*pi;
+            dRay(20) = dopplerFactor * frequency;
+            dRay(21) = 0;
+            outputQd(indexOutput).dRay = dRay;
+            
             % refer to "multipath - WCL17_revised.pdf" in this folder for QD model
-            if  switchMaterial == 1 && QDGeneratorSwitch == 1
-                [output, outputPre, outputPost] =...
-                    qdGenerator(outputQd(indexOutput-1).dRay, arrayOfMaterials, MaterialLibrary);
-                outputQd(indexOutput-1).rPreCursor   = outputPre;
-                outputQd(indexOutput-1).rPostCursor = outputPost;
+            if  switchMaterial == 1 && qdGeneratorSwitch == 1
+                [dRay, rPreCursor, rPostCursor] =...
+                    qdGenerator(outputQd(indexOutput).dRay, arrayOfMaterials, MaterialLibrary);
+                outputQd(indexOutput).rPreCursor   = rPreCursor;
+                outputQd(indexOutput).rPostCursor = rPostCursor;
 
             end
+            
+            indexOutput = indexOutput + 1;
+            indexMultipath = indexMultipath + 1;
+
         end
     end
     
-    output2 =     [ ...
+    qdRay =     [ ...
     reshape([outputQd.dRay],nVarOut, []).';...
     reshape([outputQd.rPreCursor].', nVarOut, []).';...
     reshape([outputQd.rPostCursor].', nVarOut, []).'];
@@ -179,8 +187,6 @@ if numberOfRowsArraysOfPlanes>0
         multipath(indexMultipath:end,:) = [];
     end
     
-    varargout{1} = [];
-
 end
 
 end

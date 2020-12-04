@@ -1,14 +1,13 @@
-function pathLossFinal = PathlossQD(materialLibrary, arrayOfMaterials, ...
-    order, varargin)
-%PATHLOSSQD returns the ray reflection loss based on NIST measurements
+function reflectionLoss = getReflectionLoss(materialLibrary, arrayOfMaterials, varargin)
+%GETREFLECTIONLOSS returns the ray reflection loss based on NIST measurements
 %
-%pathLossFinal = PATHLOSSQD(materialLibrary, arrayOfMaterials, order)
+%pathLossFinal = GETREFLECTIONLOSS(materialLibrary, arrayOfMaterials)
 %
-%pathLossFinal = PATHLOSSQD(___, 'randOn', value) can be used to specify if
-%the reflection loss returned is deterministic (value = 0) and 
-%correspondent to mean value u measured. Otherwise (value = 1) the 
+%pathLossFinal = GETREFLECTIONLOSS(___, 'randOn', value) can be used to specify if
+%the reflection loss returned is deterministic (value = 0) and
+%correspondent to mean value u measured. Otherwise (value = 1) the
 %reflection loss is extracted from a folded gaussian distribution with mean
-%value u and variance s^2, which have been also measured 
+%value u and variance s^2, which have been also measured
 
 % NIST-developed software is provided by NIST as a public service. You may
 % use, copy and distribute copies of the software in any medium, provided
@@ -47,22 +46,16 @@ addParameter(p,'randOn',0)
 parse(p, varargin{:});
 randOn = p.Results.randOn;
 
-%% Params Init
-reflectionOrder=size(arrayOfMaterials,2);
-material=arrayOfMaterials(1,order);
-mu = materialLibrary.mu_RL(material);
-sigma = materialLibrary.sigma_RL(material);
+%% Init
+reflectionLoss = 0;
 
-%% Get Path Loss
-pathLossFinal = abs(randOn*randn(1)*sigma + mu);
-if pathLossFinal<mu-(mu/2)
-    pathLossFinal=pathLossFinal+(mu/2);
+%% Loop over reflection order
+for i = 1:length(arrayOfMaterials)
+    matIdx = arrayOfMaterials(i);
+    s_material = randOn*materialLibrary.s_RL(matIdx);
+    sigma_material = randOn*materialLibrary.sigma_RL(matIdx);
+    rl = rndRician(s_material, sigma_material, 1, 1);
+    muRl = materialLibrary.mu_RL(matIdx);
+    reflectionLoss = reflectionLoss - (rl - (1-randOn)*muRl);
 end
-
-%% Iterate over reflection orders
-if reflectionOrder~=order
-    pathlossTemporary = PathlossQD(materialLibrary,arrayOfMaterials,order+1);
-    pathLossFinal=pathLossFinal+pathlossTemporary;
-end
-
 end
