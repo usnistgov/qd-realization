@@ -177,10 +177,7 @@ for iterateTimeDivision = 1:paraCfgInput.numberOfTimeDivisions
                             0, 1, 1, 1, Rx, Tx, [], [],...
                             switchMaterial, [], 1, paraCfgInput.generalizedScenario);
                         
-                        numberOfPlanes = numberOfPlanes - 1;
-                        
-                        nRealizations = nodeCfgInput.paaInfo{iterateTx}.nodePAAInfo{iteratePaaTx}.indep_stoch_channel*...
-                            nodeCfgInput.paaInfo{iterateRx}.nodePAAInfo{iteratePaaRx}.indep_stoch_channel;
+                        numberOfPlanes = numberOfPlanes - 1;               
                         
                         [outputTemporary, multipathTemporary] = ...
                             multipath(...
@@ -189,23 +186,21 @@ for iterateTimeDivision = 1:paraCfgInput.numberOfTimeDivisions
                             MaterialLibrary, arrayOfMaterials, ...
                             switchMaterial, vtx, vrx, ...
                             paraCfgInput.switchQDGenerator,...
-                            paraCfgInput.carrierFrequency,'indStoc', nRealizations,...
+                            paraCfgInput.carrierFrequency,...
                             'qTx', QTx, 'qRx', QRx);
+                        
                         nMpc = size(multipathTemporary,1);
                         %Store MPC
                         if paraCfgInput.switchSaveVisualizerFiles &&...
                                 nMpc > 0                            
                             multipath1 = multipathTemporary(1:nMpc,...
                                 2:size(multipathTemporary,2));
-                                Mpc{iterateTx,iteratePaaTx,iterateRx,iteratePaaRx, iterateOrderOfReflection+1, iterateTimeDivision+1} =multipath1;
-                            
+                                Mpc{iterateTx,iteratePaaTx,...
+                                    iterateRx,iteratePaaRx, ...
+                                    iterateOrderOfReflection+1, iterateTimeDivision+1} =multipath1;                            
                         end
                         
-                        %Store QD output
-                        if size(output,1)==1
-                            output = repmat(output, 1,1,nRealizations);
-                        end
-                        
+                        %Store QD output                        
                         if size(output) > 0
                             output = [output;outputTemporary]; %#ok<AGROW>
                             
@@ -237,15 +232,17 @@ for iterateTimeDivision = 1:paraCfgInput.numberOfTimeDivisions
     if ~isJsonOutput || keepBothQDOutput
         for iterateTx = 1:paraCfgInput.numberOfNodes
             for iterateRx = iterateTx+1:paraCfgInput.numberOfNodes
-                writeQdFileOutput(outputPaaTime{iterateTx, iterateRx,iterateTimeDivision}, paraCfgInput.useOptimizedOutputToFile, fids, iterateTx, iterateRx,...
-                    qdFilesPath,...
-                    paraCfgInput.qdFilesFloatPrecision);
-                writeQdFileOutput(outputPaaTime{iterateRx,iterateTx,iterateTimeDivision}, paraCfgInput.useOptimizedOutputToFile, fids, iterateRx,iterateTx,...
-                    qdFilesPath,...
-                    paraCfgInput.qdFilesFloatPrecision);
+                writeQdFileOutput(outputPaaTime{iterateTx, iterateRx,iterateTimeDivision},...
+                    paraCfgInput.useOptimizedOutputToFile, fids, iterateTx, iterateRx,...
+                    qdFilesPath, paraCfgInput.qdFilesFloatPrecision);
+                
+                writeQdFileOutput(outputPaaTime{iterateRx,iterateTx,iterateTimeDivision},...
+                paraCfgInput.useOptimizedOutputToFile, fids, iterateRx,iterateTx,...
+                    qdFilesPath, paraCfgInput.qdFilesFloatPrecision);
             end
         end
     end
+    
     clear outputPAA
 end
 
@@ -254,11 +251,10 @@ end
 if isJsonOutput
     writeQdJsonOutput(outputPaaTime,cellfun(@(x) x.nPaa,  nodeCfgInput.paaInfo),...
         qdFilesPath);
-    
-    Mpc(:,:,:,:,:,1) = [];
 end
 
 if paraCfgInput.switchSaveVisualizerFiles
+    Mpc(:,:,:,:,:,1) = [];
     writeVisualizerJsonOutput(visualizerPath, paraCfgInput, nodeCfgInput, nPAA_centroids, nodePosition, Mpc)
 end
 

@@ -83,7 +83,7 @@ doa = coordinateRotation(doaNoRot, [0 0 0], qRx.angle,'frame');
 velocityTxAlongDirectionOfDeparture=dot(velocityTx,-1.*dod);
 velocityRxAlongDirectionOfDeparture=dot(velocityRx,-1.*dod);
 c=getLightSpeed;
-dopplerFactor=(velocityRxAlongDirectionOfDeparture-velocityTxAlongDirectionOfDeparture)/(c);
+dopplerFactor=(velocityRxAlongDirectionOfDeparture-velocityTxAlongDirectionOfDeparture)/c;
 % To verify whether DoA vector exists
 isLOS = verifyPath(Tx, Rx, doaNoRot, [0,0,0],...
     [0,0,0], CADoutput, 2, false);
