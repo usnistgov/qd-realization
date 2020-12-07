@@ -109,7 +109,7 @@ para = fieldToNum(para, 'useOptimizedOutputToFile', [], 1);
 % Path to material library
 if ~isfield(para, 'materialLibraryPath')
     warning('Environment file path not defined. Using default material library.')
-    para.materialLibraryPath = 'material_libraries/Material_library.txt';
+    para.materialLibraryPath = 'material_libraries/materialLibraryEmpty.csv';
 end
     
 
