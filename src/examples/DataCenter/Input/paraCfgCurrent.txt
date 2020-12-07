@@ -5,7 +5,7 @@ indoorSwitch	1
 numberOfTimeDivisions	1
 referencePoint	[0,0,0]
 selectPlanesByDist	0
-switchQDGenerator	1
+switchQDGenerator	0
 totalNumberOfReflections	2
 totalTimeDuration	0
 switchSaveVisualizerFiles	1
