@@ -45,7 +45,7 @@ else
             filename = sprintf('Tx%dRx%d.txt', iTx-1, iRx-1);
             filepath = fullfile(qdFilesPath, filename);
             
-            fids(iTx,iRx) = fopen(filepath,'At');
+            fids(iTx,iRx) = fopen(filepath,'w+t');
         end
         
     end
