@@ -1,4 +1,4 @@
-function [outputPath, varargout] = Raytracer(paraCfgInput, nodeCfgInput)
+function outputPath = Raytracer(paraCfgInput, nodeCfgInput)
 % Inputs:
 % RootFolderPath - it is the current location of the folder where the function is called from
 % environmentFileName - it is the CAD file name
@@ -65,17 +65,8 @@ function [outputPath, varargout] = Raytracer(paraCfgInput, nodeCfgInput)
 
 
 %% Input Parameters Management
-numberOfNodes = paraCfgInput.numberOfNodes;
-
-% nodeLoc = nodeCfgInput.nodeLoc;
-nodeLoc = reshape(...
-    cell2mat(cellfun(@(x) x.PAA_loc(1,1:3), nodeCfgInput.PAA_info, 'UniformOutput', 0)),...
-    3, []).';
-nodeAntennaOrientation = nodeCfgInput.nodeAntennaOrientation;
-nodePolarization = nodeCfgInput.nodePolarization;
-nodePosition = nodeCfgInput.nodePosition;
+nodeLoc = nodeCfgInput.nodeLoc;
 nodeVelocities = nodeCfgInput.nodeVelocities;
-nPAA_centroids = cellfun(@(x) x.nPAA_centroids ,nodeCfgInput.PAA_info );
 
 % Input checking
 if paraCfgInput.switchQDGenerator == 1 &&...
@@ -134,7 +125,15 @@ switchCp = 0;
 polarizationTx = [1, 0];
 polarizationRx = [1, 0];
 
-MaterialLibrary = importMaterialLibrary('raytracer/Material_library.txt');
+% Define Material library for various environments
+switch(paraCfgInput.environmentFileName)
+    case 'DataCenter.xml'
+        MaterialLibrary = importMaterialLibrary('raytracer/Material_library_DataCenter.txt');
+    otherwise
+        MaterialLibrary = importMaterialLibrary('raytracer/Material_library_Default.txt');
+        warning('Environment file ''%s'' not recognized. Using default material library.',...
+            paraCfgInput.environmentFileName)
+end
 
 % Extracting CAD file and storing in an XMl file, CADFile.xml
 [CADop, switchMaterial] = getCadOutput(paraCfgInput.environmentFileName,...
@@ -199,100 +198,93 @@ for iterateTimeDivision = 1:paraCfgInput.numberOfTimeDivisions
     % Iterates through all the nodes
     for iterateTx = 1:paraCfgInput.numberOfNodes
         for iterateRx = iterateTx+1:paraCfgInput.numberOfNodes
-            for iteratePaaTx = 1:nPAA_centroids(iterateTx)
-                for iteratePaaRx = 1:nPAA_centroids(iterateRx)
-                    output = [];
-                    if (paraCfgInput.numberOfNodes >= 2 || paraCfgInput.switchRandomization == 1)
-                        Tx = nodeCfgInput.PAA_info{iterateTx}.centroid_position(iteratePaaTx,:);%nodeLoc(iterateTx, :);
-                        Rx = nodeCfgInput.PAA_info{iterateRx}.centroid_position(iteratePaaRx,:);%nodeLoc(iterateRx, :);
-                        
-                        vtx = nodeVelocities(iterateTx, :);
-                        vrx = nodeVelocities(iterateRx, :);
-                    end
-                    
-                    % LOS Path generation
-                    [switchLOS, output] = LOSOutputGenerator(CADop, Rx, Tx,...
-                        output, vtx, vrx, switchPolarization, switchCp,...
-                        polarizationTx, paraCfgInput.carrierFrequency);
-                    
-                    if paraCfgInput.switchSaveVisualizerFiles && switchLOS
-                        multipath1 = [Tx, Rx];
-                        filename = sprintf('MpcTx%dRx%dRefl%dTrc%d.csv',...
-                            iterateTx-1, iterateRx-1, 0, iterateTimeDivision-1);
-                        csvwrite(fullfile(mpcCoordinatesPath, filename),...
-                            multipath1);
-                        
-                    end
-                    
-                    % Higher order reflections (Non LOS)
-                    for iterateOrderOfReflection = 1:paraCfgInput.totalNumberOfReflections
-                        numberOfReflections = iterateOrderOfReflection;
-                        
-                        [ArrayOfPoints, ArrayOfPlanes, numberOfPlanes,...
-                            ~, ~, arrayOfMaterials, ~] = treetraversal(CADop,...
-                            numberOfReflections, numberOfReflections,...
-                            0, 1, 1, 1, Rx, Tx, [], [],...
-                            switchMaterial, [], 1, paraCfgInput.generalizedScenario);
-                        
-                        numberOfPlanes = numberOfPlanes - 1;
-                        
-                        Nrealizations = nodeCfgInput.PAA_info{iterateTx}.nodePAAInfo{iteratePaaTx}.indep_stoch_channel*...
-                            nodeCfgInput.PAA_info{iterateRx}.nodePAAInfo{iteratePaaRx}.indep_stoch_channel;
-                        [~, ~, outputTemporary, multipathTemporary,...
-                            count, ~] = multipath(...
-                            ArrayOfPlanes, ArrayOfPoints, Rx, Tx, ...
-                            CADop, numberOfPlanes, ...
-                            MaterialLibrary, arrayOfMaterials, ...
-                            switchMaterial, vtx, vrx, ...
-                            switchPolarization, polarizationTx, [],...
-                            polarizationRx, [], switchCp,...
-                            paraCfgInput.switchQDGenerator,...
-                            paraCfgInput.carrierFrequency,'indStoc', Nrealizations);
-                        
-                        if paraCfgInput.switchSaveVisualizerFiles &&...
-                                size(multipathTemporary,1) > 0
-                            
-                            multipath1 = multipathTemporary(1:count,...
-                                2:size(multipathTemporary,2));
-                            filename = sprintf('MpcTx%dRx%dRefl%dTrc%d.csv',...
-                                iterateTx-1, iteratePaaTx-1,...
-                                iterateRx-1, iteratePaaRx-1,...
-                                iterateOrderOfReflection, iterateTimeDivision-1);
-                            csvwrite(fullfile(mpcCoordinatesPath, filename),...
-                                multipath1);
-                        end
-                        if size(output,1)==1
-                            output = repmat(output, 1,1,Nrealizations);
-                        end
-                        if size(output) > 0
-                            output = [output;outputTemporary];
-                            multipath1 = multipathTemporary;
-                        elseif size(outputTemporary) > 0
-                            output = outputTemporary;
-                            multipath1 = multipathTemporary;
-                        end
-                        
-                    end
-                    eval(['outputPAA{iterateTx, iterateRx}.paaTx',num2str(iteratePaaTx),'paaRx', num2str(iteratePaaRx), '= output'] );
-                    eval(['outputPAA{iterateRx, iterateTx}.paaTx',num2str(iteratePaaRx),'paaRx', num2str(iteratePaaTx), '= reverseOutputTxRx(output)'] );
-                end
+            % reset output
+            output = [];
+            
+            % update positions and velocities
+            Tx = nodeLoc(iterateTx, :);
+            Rx = nodeLoc(iterateRx, :);
+            
+            vtx = nodeVelocities(iterateTx, :);
+            vrx = nodeVelocities(iterateRx, :);
+            
+            % LOS Path generation
+            [switchLOS, output] = LOSOutputGenerator(CADop, Rx, Tx,...
+                output, vtx, vrx, switchPolarization, switchCp,...
+                polarizationTx, paraCfgInput.carrierFrequency);
+            
+            if paraCfgInput.switchSaveVisualizerFiles && switchLOS
+                multipath1 = [Tx, Rx];
+                filename = sprintf('MpcTx%dRx%dRefl%dTrc%d.csv',...
+                    iterateTx-1, iterateRx-1, 0, iterateTimeDivision-1);
+                csvwrite(fullfile(mpcCoordinatesPath, filename),...
+                    multipath1);
+                
             end
+            
+            % Higher order reflections (Non LOS)
+            for iterateOrderOfReflection = 1:paraCfgInput.totalNumberOfReflections
+                numberOfReflections = iterateOrderOfReflection;
+                
+                [ArrayOfPoints, ArrayOfPlanes, numberOfPlanes,...
+                    ~, ~, arrayOfMaterials, ~] = treetraversal(CADop,...
+                    numberOfReflections, numberOfReflections,...
+                    0, 1, 1, 1, Rx, Tx, [], [],...
+                    switchMaterial, [], 1, paraCfgInput.generalizedScenario);
+                
+                numberOfPlanes = numberOfPlanes - 1;
+                
+                [~, ~, outputTemporary, multipathTemporary,...
+                    count, ~] = multipath(...
+                    ArrayOfPlanes, ArrayOfPoints, Rx, Tx, ...
+                    CADop, numberOfPlanes, ...
+                    MaterialLibrary, arrayOfMaterials, ...
+                    switchMaterial, vtx, vrx, ...
+                    switchPolarization, polarizationTx, [],...
+                    polarizationRx, [], switchCp,...
+                    paraCfgInput.switchQDGenerator,...
+                    paraCfgInput.carrierFrequency);
+                
+                if paraCfgInput.switchSaveVisualizerFiles &&...
+                        size(multipathTemporary,1) > 0
+                    
+                    multipath1 = multipathTemporary(1:count,...
+                        2:size(multipathTemporary,2));
+                    filename = sprintf('MpcTx%dRx%dRefl%dTrc%d.csv',...
+                        iterateTx-1, iterateRx-1,...
+                        iterateOrderOfReflection, iterateTimeDivision-1);
+                    
+                    csvwrite(fullfile(mpcCoordinatesPath, filename),...
+                        multipath1);
+                end
+                
+                if size(output) > 0
+                    output = [output; outputTemporary];
+                    
+                else
+                    output = outputTemporary;
+                    
+                end
+                
+            end
+            
+            % The ouput from previous iterations is stored in files
+            % whose names are TxiRxj.txt. i,j is the link
+            % between ith node as Tx and jth as Rx.
+            writeQdFileOutput(output,...
+                paraCfgInput.useOptimizedOutputToFile,...
+                fids, iterateTx, iterateRx, qdFilesPath,...
+                paraCfgInput.qdFilesFloatPrecision);
+            writeQdFileOutput(reverseOutputTxRx(output),...
+                paraCfgInput.useOptimizedOutputToFile,...
+                fids, iterateRx, iterateTx, qdFilesPath,...
+                paraCfgInput.qdFilesFloatPrecision);
             
         end
     end
+    
 end
-outputPAA = generateChannelPaa(outputPAA, nodeCfgInput.PAA_info); %#ok<NODEF>
 
-for iterateTx = 1:paraCfgInput.numberOfNodes
-    for iterateRx = iterateTx+1:paraCfgInput.numberOfNodes
-        writeQdFileOutput(outputPAA{iterateTx, iterateRx}, paraCfgInput.useOptimizedOutputToFile, fids, iterateTx, iterateRx,...
-            qdFilesPath,...
-            paraCfgInput.qdFilesFloatPrecision);
-        writeQdFileOutput(outputPAA{iterateRx,iterateTx}, paraCfgInput.useOptimizedOutputToFile, fids, iterateRx,iterateTx,...
-            qdFilesPath,...
-            paraCfgInput.qdFilesFloatPrecision);
-    end
-end
 closeQdFilesIds(fids, paraCfgInput.useOptimizedOutputToFile);
-varargout{1} = outputPAA;
+
 end
