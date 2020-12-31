@@ -2,7 +2,7 @@ function [qdRay, multipath] =...
     multipath(ArrayOfPlanes, ArrayOfPoints, Rx, Tx, CADOutput,...
     numberOfRowsArraysOfPlanes, MaterialLibrary, arrayOfMaterials,...
     switchMaterial, velocityTx, velocityRx, ...
-   qdGeneratorSwitch, frequency, varargin)
+    qdGeneratorSwitch, qdApproachSwitch, scenarioName, frequency, varargin)
 %INPUT -
 %ArrayOfPoints - combinations of multiple triangles, every row is a unique
 %combination. every triangle occupies 9 columns (3 vertices). (o/p of
@@ -18,10 +18,13 @@ function [qdRay, multipath] =...
 %arrayOfMaterials - Similar to Array of points. Each triangle occupies 1
 %triangle. The data is the row number of material from Material library
 %switchMaterial - whether triangle materials properties are present
-% vtx, vrx are velocities of tx and rx respectively
-% QDGeneratorSwitch - Switch to turn ON or OFF the Qausi dterministic module
-% 1 = ON, 0 = OFF
-% frequency: the carrier frequency at which the system operates
+%vtx, vrx are velocities of tx and rx respectively
+%QDGeneratorSwitch - Switch to turn ON or OFF the Qausi dterministic module
+%1 = ON, 0 = OFF
+%qdApproachSwitch - Switch to select the approach to generate diffuse components 
+%1 = approach based on NIST measured QD parameters, 
+%0 = approach based on channel document QD parameters
+%frequency: the carrier frequency at which the system operates
 %
 %OUTPUT -
 %output - multipath parameters
@@ -34,38 +37,40 @@ function [qdRay, multipath] =...
 
 % -------------Software Disclaimer---------------
 %
-% NIST-developed software is provided by NIST as a public service. You may use, copy
-% and distribute copies of the software in any medium, provided that you keep intact this
-% entire notice. You may improve, modify and create derivative works of the software or
-% any portion of the software, and you may copy and distribute such modifications or
-% works. Modified works should carry a notice stating that you changed the software
-% and should note the date and nature of any such change. Please explicitly
-% acknowledge the National Institute of Standards and Technology as the source of the
+% NIST-developed software is provided by NIST as a public service. You may 
+% use, copy and distribute copies of the software in any medium, provided 
+% that you keep intact this entire notice. You may improve, modify and create 
+% derivative works of the software or any portion of the software, and you 
+% may copy and distribute such modifications or works. Modified works should 
+% carry a notice stating that you changed the software and should note the 
+% date and nature of any such change. Please explicitly acknowledge the 
+% National Institute of Standards and Technology as the source of the
 % software.
-%
+% 
 % NIST-developed software is expressly provided "AS IS." NIST MAKES NO
-% WARRANTY OF ANY KIND, EXPRESS, IMPLIED, IN FACT OR ARISING BY
-% OPERATION OF LAW, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
-% WARRANTY OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
-% NON-INFRINGEMENT AND DATA ACCURACY. NIST NEITHER REPRESENTS
-% NOR WARRANTS THAT THE OPERATION OF THE SOFTWARE WILL BE
-% UNINTERRUPTED OR ERROR-FREE, OR THAT ANY DEFECTS WILL BE
-% CORRECTED. NIST DOES NOT WARRANT OR MAKE ANY REPRESENTATIONS
-% REGARDING THE USE OF THE SOFTWARE OR THE RESULTS THEREOF,
-% INCLUDING BUT NOT LIMITED TO THE CORRECTNESS, ACCURACY,
-% RELIABILITY, OR USEFULNESS OF THE SOFTWARE.
-%
+% WARRANTY OF ANY KIND, EXPRESS, IMPLIED, IN FACT OR ARISING BY OPERATION OF 
+% LAW, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTY OF MERCHANTABILITY,
+% FITNESS FOR A PARTICULAR PURPOSE, NON-INFRINGEMENT AND DATA ACCURACY. NIST 
+% NEITHER REPRESENTS NOR WARRANTS THAT THE OPERATION OF THE SOFTWARE WILL BE
+% UNINTERRUPTED OR ERROR-FREE, OR THAT ANY DEFECTS WILL BE CORRECTED. NIST 
+% DOES NOT WARRANT OR MAKE ANY REPRESENTATIONS REGARDING THE USE OF THE 
+% SOFTWARE OR THE RESULTS THEREOF, INCLUDING BUT NOT LIMITED TO THE 
+% CORRECTNESS, ACCURACY, RELIABILITY, OR USEFULNESS OF THE SOFTWARE.
+% 
 % You are solely responsible for determining the appropriateness of using
-% and distributing the software and you assume all risks associated with its use, including
-% but not limited to the risks and costs of program errors, compliance with applicable
-% laws, damage to or loss of data, programs or equipment, and the unavailability or
-% interruption of operation. This software is not intended to be used in any situation
-% where a failure could cause risk of injury or damage to property. The software
-% developed by NIST employees is not subject to copyright protection within the United
-% States.
-%
-% Modified by: Mattia Lecci <leccimat@dei.unipd.it>, Used MATLAB functions instead of custom ones,
-%    vectorized code, improved access to MaterialLibrary
+% and distributing the software and you assume all risks associated with its 
+% use, including but not limited to the risks and costs of program errors, 
+% compliance with applicable laws, damage to or loss of data, programs or 
+% equipment, and the unavailability or interruption of operation. This 
+% software is not intended to be used in any situation where a failure could 
+% cause risk of injury or damage to property. The software developed by NIST 
+% employees is not subject to copyright protection within the United States.
+
+% Modified by: Mattia Lecci <leccimat@dei.unipd.it>, Used MATLAB functions 
+% instead of custom ones, vectorized code, improved access to MaterialLibrary
+% Modified by: Neeraj Varshney <neeraj.varshney@nist.gov>, to calculate RL
+% based on new material libraries given in 802.11ay channel document
+
 
 %% Varargin processing 
 p = inputParser;
@@ -81,7 +86,6 @@ indexMultipath = 1;
 indexOutput = 1;
 nVarOut = 21;
 sizeArrayOfPlanes = size(ArrayOfPlanes);
-dRay = zeros(1, nVarOut);
 multipath = [];
 c = getLightSpeed;
 wavelength = c / frequency;
@@ -119,9 +123,12 @@ if numberOfRowsArraysOfPlanes>0
         doa = coordinateRotation(doa,[0 0 0], qRx.angle, 'frame');
         
         % Compute reflection loss
-        if  switchMaterial == 1
-            reflectionLoss = getReflectionLoss(MaterialLibrary,...
+        if  switchMaterial == 1 && qdApproachSwitch == 1
+            reflectionLoss = getReflectionLossApproach1(MaterialLibrary,...
                 arrayOfMaterials(indexMultipath,:), 'randOn', qdGeneratorSwitch);
+        elseif  switchMaterial == 1 && qdApproachSwitch == 2
+            reflectionLoss = getReflectionLossApproach2(MaterialLibrary,...
+                arrayOfMaterials(indexMultipath,:), multipath(indexMultipath,:));
         else
             % Assumption: 10dB loss at each reflection
             reflectionLoss = 10*orderOfReflection; 
@@ -138,6 +145,7 @@ if numberOfRowsArraysOfPlanes>0
         end
         
         % the delay, AoA, AoD, path loss of the path are stored in output parameter
+        dRay = zeros(1, nVarOut);
         if  isMpc == 1
             
             dRay(1) = indexMultipath;
@@ -164,8 +172,10 @@ if numberOfRowsArraysOfPlanes>0
             
             % refer to "multipath - WCL17_revised.pdf" in this folder for QD model
             if  switchMaterial == 1 && qdGeneratorSwitch == 1
-                [dRay, rPreCursor, rPostCursor] =...
-                    qdGenerator(outputQd(indexOutput).dRay, arrayOfMaterials, MaterialLibrary);
+                [~, rPreCursor, rPostCursor] =...
+                    qdGenerator(outputQd(indexOutput).dRay,...
+                    arrayOfMaterials, MaterialLibrary,...
+                    qdApproachSwitch,scenarioName);
                 outputQd(indexOutput).rPreCursor  = rPreCursor;
                 outputQd(indexOutput).rPostCursor = rPostCursor;
 

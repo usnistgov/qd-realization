@@ -35,6 +35,7 @@
 clear
 close all
 clc
+warning('on') % to enable all warnings
 t0 = tic; % parallel processing-safe
 addpath('raytracer', 'utils', 'quaternions')
 
@@ -51,7 +52,7 @@ end
 
 %% Input
 % Leave empty for default 'ScenarioTest'
-scenarioNameStr = '';
+scenarioNameStr = 'examples/StreetCanyon';
 
 if ~isempty(scenarioNameStr)
     fprintf('Use customized scenario: %s.\n',scenarioNameStr);

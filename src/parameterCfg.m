@@ -80,6 +80,24 @@ para = fieldToNum(para, 'selectPlanesByDist', [], 0);
 % 1 = ON, 0 = OFF (Default)
 para = fieldToNum(para, 'switchQDGenerator', [0,1], 0);
 
+% Switch to select two different Qausi dterministic approaches
+% first approach considers NIST measured QD parameters using Rician model 
+% and the second one uses QD parameters given in the 11ay channel document
+% 1 = approach based on NIST measured QD parameters, 
+% 2 = approach based on channel document QD parameters
+if ~isfield(para, 'switchQDApproach')
+    warning(strcat('Approach to generate diffuse components is not ',....
+    'defined. Turning OFF Qausi dterministic module.'));
+    para.switchQDGenerator = 0;
+elseif str2num(para.switchQDApproach) == 1....
+        ||  str2num(para.switchQDApproach) == 2
+    para.switchQDApproach = str2num(para.switchQDApproach);
+else 
+    warning(strcat('Approach to generate diffuse components can be ',....
+    'either 1 or 2. Turning OFF Qausi dterministic module.'));
+    para.switchQDGenerator = 0;
+end
+
 % Order of reflection.
 % 1 = multipath until first order, 2 = multipath until second order (Default)
 para = fieldToNum(para, 'totalNumberOfReflections', [], 2);
@@ -109,7 +127,7 @@ para = fieldToNum(para, 'useOptimizedOutputToFile', [], 1);
 % Path to material library
 if ~isfield(para, 'materialLibraryPath')
     warning('Environment file path not defined. Using default material library.')
-    para.materialLibraryPath = 'material_libraries/materialLibraryEmpty.csv';
+    para.switchQDGenerator = 0;
 end
     
 

@@ -1,4 +1,4 @@
-function reflectionLoss = getReflectionLoss(materialLibrary, arrayOfMaterials, varargin)
+function reflectionLoss = getReflectionLossApproach1(materialLibrary, arrayOfMaterials, varargin)
 %GETREFLECTIONLOSS returns the ray reflection loss based on NIST measurements
 %
 %pathLossFinal = GETREFLECTIONLOSS(materialLibrary, arrayOfMaterials)
