@@ -1,7 +1,7 @@
 function [output,  outputPre, outputPost] =...
     qdGenerator(dRayOutput, arrayOfMaterials, materialLibrary,...
     qdApproachSwitch,scenarioName)
-% QDGENERATOR Generates diffused components starting from deterministic rays
+% QDGENERATOR generates diffused components starting from deterministic rays
 % following NIST's Quasi-Deterministic model if qdApproachSwitch = 1
 % and Quasi-Deterministic model given in 802.11ay channel document
 % if qdApproachSwitch = 2.
@@ -22,36 +22,38 @@ function [output,  outputPre, outputPost] =...
 % See the License for the specific language governing permissions and
 % limitations under the License.
 
-%% -------------Software Disclaimer---------------
+%--------------------------Software Disclaimer-----------------------------
 %
 % NIST-developed software is provided by NIST as a public service. You may 
 % use, copy and distribute copies of the software in any medium, provided 
-% that you keep intact this entire notice. You may improve, modify and create 
-% derivative works of the software or any portion of the software, and you 
-% may copy and distribute such modifications or works. Modified works should 
-% carry a notice stating that you changed the software and should note the 
-% date and nature of any such change. Please explicitly acknowledge the 
-% National Institute of Standards and Technology as the source of the
-% software.
+% that you keep intact this entire notice. You may improve, modify and  
+% create derivative works of the software or any portion of the software, 
+% and you  may copy and distribute such modifications or works. Modified 
+% works should carry a notice stating that you changed the software and  
+% should note the date and nature of any such change. Please explicitly  
+% acknowledge the National Institute of Standards and Technology as the 
+% source of the software.
 % 
 % NIST-developed software is expressly provided "AS IS." NIST MAKES NO
-% WARRANTY OF ANY KIND, EXPRESS, IMPLIED, IN FACT OR ARISING BY OPERATION OF 
-% LAW, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTY OF MERCHANTABILITY,
-% FITNESS FOR A PARTICULAR PURPOSE, NON-INFRINGEMENT AND DATA ACCURACY. NIST 
-% NEITHER REPRESENTS NOR WARRANTS THAT THE OPERATION OF THE SOFTWARE WILL BE
-% UNINTERRUPTED OR ERROR-FREE, OR THAT ANY DEFECTS WILL BE CORRECTED. NIST 
-% DOES NOT WARRANT OR MAKE ANY REPRESENTATIONS REGARDING THE USE OF THE 
-% SOFTWARE OR THE RESULTS THEREOF, INCLUDING BUT NOT LIMITED TO THE 
-% CORRECTNESS, ACCURACY, RELIABILITY, OR USEFULNESS OF THE SOFTWARE.
-% 
+% WARRANTY OF ANY KIND, EXPRESS, IMPLIED, IN FACT OR ARISING BY OPERATION  
+% OF LAW, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTY OF 
+% MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, NON-INFRINGEMENT AND 
+% DATA ACCURACY. NIST NEITHER REPRESENTS NOR WARRANTS THAT THE OPERATION OF 
+% THE SOFTWARE WILL BE UNINTERRUPTED OR ERROR-FREE, OR THAT ANY DEFECTS 
+% WILL BE CORRECTED. NIST DOES NOT WARRANT OR MAKE ANY REPRESENTATIONS  
+% REGARDING THE USE OF THE SOFTWARE OR THE RESULTS THEREOF, INCLUDING BUT 
+% NOT LIMITED TO THE CORRECTNESS, ACCURACY, RELIABILITY, OR USEFULNESS OF 
+% THE SOFTWARE.
+%
 % You are solely responsible for determining the appropriateness of using
-% and distributing the software and you assume all risks associated with its 
-% use, including but not limited to the risks and costs of program errors, 
-% compliance with applicable laws, damage to or loss of data, programs or 
-% equipment, and the unavailability or interruption of operation. This 
-% software is not intended to be used in any situation where a failure could 
-% cause risk of injury or damage to property. The software developed by NIST 
-% employees is not subject to copyright protection within the United States.
+% and distributing the software and you assume all risks associated with  
+% its use, including but not limited to the risks and costs of program 
+% errors, compliance with applicable laws, damage to or loss of data, 
+% programs or equipment, and the unavailability or interruption of 
+% operation. This software is not intended to be used in any situation  
+% where a failure could cause risk of injury or damage to property. The 
+% software developed by NIST employees is not subject to copyright 
+% protection within the United States.
 
 % Modified by: Neeraj Varshney <neeraj.varshney@nist.gov>, to generate
 % diffuse components based on 802.11ay channel document

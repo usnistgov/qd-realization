@@ -3,68 +3,70 @@ function [qdRay, multipath] =...
     numberOfRowsArraysOfPlanes, MaterialLibrary, arrayOfMaterials,...
     switchMaterial, velocityTx, velocityRx, ...
     qdGeneratorSwitch, qdApproachSwitch, scenarioName, frequency, varargin)
-%INPUT -
-%ArrayOfPoints - combinations of multiple triangles, every row is a unique
-%combination. every triangle occupies 9 columns (3 vertices). (o/p of
-%treetraversal)
-%ArrayOfPlanes - Similar to Array of points. Each triangle occupies 4
-%columns (plane equation). The first column has the order of reflection
-%(o/p of treetraversal)
-%Rx - Rx position
-%Tx - Tx position
-%CADop - CAD output
-%MaterialLibrary - Similar to Array of points. Each triangle occupies 1
-%triangle. The data is the row number of material from Material library
-%arrayOfMaterials - Similar to Array of points. Each triangle occupies 1
-%triangle. The data is the row number of material from Material library
-%switchMaterial - whether triangle materials properties are present
-%vtx, vrx are velocities of tx and rx respectively
-%QDGeneratorSwitch - Switch to turn ON or OFF the Qausi dterministic module
-%1 = ON, 0 = OFF
-%qdApproachSwitch - Switch to select the approach to generate diffuse components 
-%1 = approach based on NIST measured QD parameters, 
-%0 = approach based on channel document QD parameters
-%frequency: the carrier frequency at which the system operates
+% INPUTS -
+% ArrayOfPoints - combinations of multiple triangles, every row is a unique
+% combination. every triangle occupies 9 columns (3 vertices). (o/p of
+% treetraversal)
+% ArrayOfPlanes - Similar to Array of points. Each triangle occupies 4
+% columns (plane equation). The first column has the order of reflection
+% (o/p of treetraversal)
+% Rx - Rx position
+% Tx - Tx position
+% CADop - CAD output
+% MaterialLibrary - Similar to Array of points. Each triangle occupies 1
+% triangle. The data is the row number of material from Material library
+% arrayOfMaterials - Similar to Array of points. Each triangle occupies 1
+% triangle. The data is the row number of material from Material library
+% switchMaterial - whether triangle materials properties are present
+% vtx, vrx are velocities of tx and rx respectively
+% QDGeneratorSwitch - Switch to turn ON or OFF the Qausi dterministic module
+% 1 = ON, 0 = OFF
+% qdApproachSwitch - Switch to select the approach to generate diffuse components 
+% 1 = approach based on NIST measured QD parameters, 
+% 0 = approach based on channel document QD parameters
+% frequency: the carrier frequency at which the system operates
 %
-%OUTPUT -
-%output - multipath parameters
-%multipath - output to be plottd on f1 multipath plot
+% OUTPUTS -
+% output - multipath parameters
+% multipath - output to be plottd on f1 multipath plot
 %
 % The phase information in case of presence of polarization information and is
 % encoded in the Jones vector. In case of absence of polarization, order of
 % reflection is multiplied by pi to give phase shift
 
 
-% -------------Software Disclaimer---------------
+%--------------------------Software Disclaimer-----------------------------
 %
 % NIST-developed software is provided by NIST as a public service. You may 
 % use, copy and distribute copies of the software in any medium, provided 
-% that you keep intact this entire notice. You may improve, modify and create 
-% derivative works of the software or any portion of the software, and you 
-% may copy and distribute such modifications or works. Modified works should 
-% carry a notice stating that you changed the software and should note the 
-% date and nature of any such change. Please explicitly acknowledge the 
-% National Institute of Standards and Technology as the source of the
-% software.
+% that you keep intact this entire notice. You may improve, modify and  
+% create derivative works of the software or any portion of the software, 
+% and you  may copy and distribute such modifications or works. Modified 
+% works should carry a notice stating that you changed the software and  
+% should note the date and nature of any such change. Please explicitly  
+% acknowledge the National Institute of Standards and Technology as the 
+% source of the software.
 % 
 % NIST-developed software is expressly provided "AS IS." NIST MAKES NO
-% WARRANTY OF ANY KIND, EXPRESS, IMPLIED, IN FACT OR ARISING BY OPERATION OF 
-% LAW, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTY OF MERCHANTABILITY,
-% FITNESS FOR A PARTICULAR PURPOSE, NON-INFRINGEMENT AND DATA ACCURACY. NIST 
-% NEITHER REPRESENTS NOR WARRANTS THAT THE OPERATION OF THE SOFTWARE WILL BE
-% UNINTERRUPTED OR ERROR-FREE, OR THAT ANY DEFECTS WILL BE CORRECTED. NIST 
-% DOES NOT WARRANT OR MAKE ANY REPRESENTATIONS REGARDING THE USE OF THE 
-% SOFTWARE OR THE RESULTS THEREOF, INCLUDING BUT NOT LIMITED TO THE 
-% CORRECTNESS, ACCURACY, RELIABILITY, OR USEFULNESS OF THE SOFTWARE.
-% 
+% WARRANTY OF ANY KIND, EXPRESS, IMPLIED, IN FACT OR ARISING BY OPERATION  
+% OF LAW, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTY OF 
+% MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, NON-INFRINGEMENT AND 
+% DATA ACCURACY. NIST NEITHER REPRESENTS NOR WARRANTS THAT THE OPERATION OF 
+% THE SOFTWARE WILL BE UNINTERRUPTED OR ERROR-FREE, OR THAT ANY DEFECTS 
+% WILL BE CORRECTED. NIST DOES NOT WARRANT OR MAKE ANY REPRESENTATIONS  
+% REGARDING THE USE OF THE SOFTWARE OR THE RESULTS THEREOF, INCLUDING BUT 
+% NOT LIMITED TO THE CORRECTNESS, ACCURACY, RELIABILITY, OR USEFULNESS OF 
+% THE SOFTWARE.
+%
 % You are solely responsible for determining the appropriateness of using
-% and distributing the software and you assume all risks associated with its 
-% use, including but not limited to the risks and costs of program errors, 
-% compliance with applicable laws, damage to or loss of data, programs or 
-% equipment, and the unavailability or interruption of operation. This 
-% software is not intended to be used in any situation where a failure could 
-% cause risk of injury or damage to property. The software developed by NIST 
-% employees is not subject to copyright protection within the United States.
+% and distributing the software and you assume all risks associated with  
+% its use, including but not limited to the risks and costs of program 
+% errors, compliance with applicable laws, damage to or loss of data, 
+% programs or equipment, and the unavailability or interruption of 
+% operation. This software is not intended to be used in any situation  
+% where a failure could cause risk of injury or damage to property. The 
+% software developed by NIST employees is not subject to copyright 
+% protection within the United States.
 
 % Modified by: Mattia Lecci <leccimat@dei.unipd.it>, Used MATLAB functions 
 % instead of custom ones, vectorized code, improved access to MaterialLibrary
