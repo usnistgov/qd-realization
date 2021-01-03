@@ -31,7 +31,8 @@
 % software developed by NIST employees is not subject to copyright 
 % protection within the United States.
 %
-% Modified by: Mattia Lecci <leccimat@dei.unipd.it>, Automatic path check
+% Modified by: 
+% Mattia Lecci <leccimat@dei.unipd.it>, Automatic path check
 % Neeraj Varshney <neeraj.varshney@nist.gov>, to enable warnings 
 
 clear
@@ -57,7 +58,7 @@ end
 % To Run Existing Scenario Given in 'src/examples/' Folder, 
 % Set scenarioNameStr = 'examples/FolderName' 
 % e.g., scenarioNameStr = 'examples/Indoor1';
-scenarioNameStr = 'examples/Indoor1';
+scenarioNameStr = 'examples/LivingRoom';
 
 if ~isempty(scenarioNameStr)
     fprintf('Use customized scenario: %s.\n',scenarioNameStr);
