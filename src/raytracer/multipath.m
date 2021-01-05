@@ -125,26 +125,27 @@ if numberOfRowsArraysOfPlanes>0
         doa = coordinateRotation(doa,[0 0 0], qRx.angle, 'frame');
         
         % Compute reflection loss
-        if  switchMaterial == 1 && qdApproachSwitch == 1
-            reflectionLoss = getReflectionLossApproach1(MaterialLibrary,...
-                arrayOfMaterials(indexMultipath,:), 'randOn', qdGeneratorSwitch);
-        elseif  switchMaterial == 1 && qdApproachSwitch == 2
-            reflectionLoss = getReflectionLossApproach2(MaterialLibrary,...
-                arrayOfMaterials(indexMultipath,:), multipath(indexMultipath,:));
-        else
-            % Assumption: 10dB loss at each reflection
-            reflectionLoss = 10*orderOfReflection; 
-        end
-        
         if isMpc == 1
-            for i = 1:indexMultipath - 1
-                switch3 = 1;
-                for j = 1:(orderOfReflection * 3) + 6
-                    switch3 = switch3 && (multipath(i,j) == multipath(indexMultipath,j));
-                end
-                isMpc = isMpc && ~switch3;
+            if  switchMaterial == 1 && qdApproachSwitch == 1
+                reflectionLoss = getReflectionLossApproach1(MaterialLibrary,...
+                    arrayOfMaterials(iterateNumberOfRowsArraysOfPlanes,:), 'randOn', qdGeneratorSwitch); % Issue: check indexMultipath is correct or not. should it be iterateNumberOfRowsArraysOfPlanes
+            elseif  switchMaterial == 1 && qdApproachSwitch == 2
+                reflectionLoss = getReflectionLossApproach2(MaterialLibrary,... be 
+                    arrayOfMaterials(iterateNumberOfRowsArraysOfPlanes,:), multipath(indexMultipath,:));
+            else
+                % Assumption: 10dB loss at each reflection
+                reflectionLoss = 10*orderOfReflection; 
             end
         end
+%         if isMpc == 1 % This seems redundant 
+%             for i = 1:indexMultipath - 1
+%                 switch3 = 1;
+%                 for j = 1:(orderOfReflection * 3) + 6
+%                     switch3 = switch3 && (multipath(i,j) == multipath(indexMultipath,j));
+%                 end
+%                 isMpc = isMpc && ~switch3;
+%             end
+%         end
         
         % the delay, AoA, AoD, path loss of the path are stored in output parameter
         dRay = zeros(1, nVarOut);
@@ -176,8 +177,8 @@ if numberOfRowsArraysOfPlanes>0
             if  switchMaterial == 1 && qdGeneratorSwitch == 1
                 [~, rPreCursor, rPostCursor] =...
                     qdGenerator(outputQd(indexOutput).dRay,...
-                    arrayOfMaterials(indexMultipath,:), MaterialLibrary,...
-                    qdApproachSwitch,scenarioName);                         % issue: arrayOfMaterials repleced by arrayOfMaterials(indexMultipath,:)
+                    arrayOfMaterials(iterateNumberOfRowsArraysOfPlanes,:), MaterialLibrary,...
+                    qdApproachSwitch,scenarioName);                         % issue: arrayOfMaterials repleced by arrayOfMaterials(iterateNumberOfRowsArraysOfPlanes,:)
                 outputQd(indexOutput).rPreCursor  = rPreCursor;
                 outputQd(indexOutput).rPostCursor = rPostCursor;
 
