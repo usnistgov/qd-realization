@@ -1,6 +1,6 @@
 function [output,  outputPre, outputPost] =...
     qdGenerator(dRayOutput, arrayOfMaterials, materialLibrary,...
-    qdApproachSwitch,scenarioName)
+    qdApproachSwitch, scenarioName)
 % QDGENERATOR generates diffused components starting from deterministic rays
 % following NIST's Quasi-Deterministic model if qdApproachSwitch = 1
 % and Quasi-Deterministic model given in 802.11ay channel document
@@ -171,6 +171,9 @@ materialIdx = arrayOfMaterials(end); % QD based on last reflector
 
 switch(prePostParam)
     case 'pre'
+        if materialIdx == 0 
+            ioi= 1
+        end
         params.s_K = materialLibrary.s_K_Precursor(materialIdx);
         params.sigma_K = materialLibrary.sigma_K_Precursor(materialIdx);
         params.s_gamma = materialLibrary.s_gamma_Precursor(materialIdx);
