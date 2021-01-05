@@ -246,22 +246,20 @@ if intraClusterParams.n ~= 0
     taus = nan(intraClusterParams.n+1, 1);
     taus(1) = dRayOutput(8); 
     i = 1;
-    while i<=intraClusterParams.n
+    while i <= intraClusterParams.n
         diff = randomExponetialGenerator(intraClusterParams.lambda);
         taus(i+1) = taus(i)+intraClusterParams.delayMultiplier*diff;
         output(i,8) = taus(i+1);
-        i=i+1;
+        i = i+1;
     end
-    % generate path gains
-    for i=1:intraClusterParams.n
-        output(i,9) =  pow2db((db2pow(dRayOutput(9))...
-                       /db2pow(intraClusterParams.Kfactor)).*...
-                       exp(-intraClusterParams.delayMultiplier...
-                       *((taus(i+1)-taus(1))/intraClusterParams.gamma)));
-    end
-    % generate doa/dod, AOA/AOD (AZ & EL) and phase offset 
-    for i=1:intraClusterParams.n
+    
+    % generate path gain, doa/dod, AOA/AOD (AZ & EL) and phase offset 
+    for i = 1:intraClusterParams.n
         output(i, 1) = (dRayOutput(1)+(i)./10^ceil(log10(intraClusterParams.n))); 
+        output(i, 9) =  pow2db((db2pow(dRayOutput(9))...
+                        /db2pow(intraClusterParams.Kfactor)).*...
+                        exp(-intraClusterParams.delayMultiplier...
+                        *((taus(i+1)-taus(1))/intraClusterParams.gamma)));
         angleSpread = intraClusterParams.sigma*randn(1,4);            
         output(i, 10:11) = wrapAngles(aodAzCursor + angleSpread(1),...
                             aodElCursor + angleSpread(2)); % aod az/el
