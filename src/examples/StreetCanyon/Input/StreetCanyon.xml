@@ -1837,6 +1837,9 @@
 	<material id="3">
     <metadata type="name">BuildingB</metadata>
     </material>
+	<material id="4">
+    <metadata type="name">Lamppost</metadata>
+    </material>
 	<constellation id="0">
 		<instance objectid="0">
 			<deltax>0</deltax>
