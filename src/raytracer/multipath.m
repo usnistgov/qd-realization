@@ -126,12 +126,18 @@ if numberOfRowsArraysOfPlanes>0
         
         % Compute reflection loss
         if isMpc == 1
-            if  switchMaterial == 1 && qdApproachSwitch == 1
+            if  switchMaterial == 1 
+                switch qdApproachSwitch 
+                    case 1
                 reflectionLoss = getReflectionLossApproach1(MaterialLibrary,...
                     arrayOfMaterials(iterateNumberOfRowsArraysOfPlanes,:), 'randOn', qdGeneratorSwitch); % Issue: check indexMultipath is correct or not. should it be iterateNumberOfRowsArraysOfPlanes
-            elseif  switchMaterial == 1 && qdApproachSwitch == 2
+                    case 2
                 reflectionLoss = getReflectionLossApproach2(MaterialLibrary,... be 
                     arrayOfMaterials(iterateNumberOfRowsArraysOfPlanes,:), multipath(indexMultipath,:));
+                    case 'NA'
+                        % Assumption: 10dB loss at each reflection
+                reflectionLoss = 10*orderOfReflection; 
+                end
             else
                 % Assumption: 10dB loss at each reflection
                 reflectionLoss = 10*orderOfReflection; 

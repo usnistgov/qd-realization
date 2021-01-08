@@ -82,8 +82,8 @@ for iterateTx = 1:paraCfgInput.numberOfNodes
 end
 fclose(f);
 
-%% Write NodePosition.json
-filename = sprintf('NodePosition.json');
+%% Write NodePositions.json
+filename = sprintf('NodePositions.json');
 f = fopen(fullfile(visualizerPath, filename), 'w');
 
 for i = 1:paraCfgInput.numberOfNodes
