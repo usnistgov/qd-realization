@@ -143,15 +143,15 @@ if numberOfRowsArraysOfPlanes>0
                 reflectionLoss = 10*orderOfReflection; 
             end
         end
-%         if isMpc == 1 % This seems redundant 
-%             for i = 1:indexMultipath - 1
-%                 switch3 = 1;
-%                 for j = 1:(orderOfReflection * 3) + 6
-%                     switch3 = switch3 && (multipath(i,j) == multipath(indexMultipath,j));
-%                 end
-%                 isMpc = isMpc && ~switch3;
-%             end
-%         end
+        if isMpc == 1  
+            for i = 1:indexMultipath - 1
+                switch3 = 1;
+                for j = 1:(orderOfReflection * 3) + 6
+                    switch3 = switch3 && (multipath(i,j) == multipath(indexMultipath,j));
+                end
+                isMpc = isMpc && ~switch3;
+            end
+        end
         
         % the delay, AoA, AoD, path loss of the path are stored in output parameter
         dRay = zeros(1, nVarOut);

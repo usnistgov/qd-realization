@@ -14,4 +14,4 @@ carrierFrequency	60e9
 qdFilesFloatPrecision	6
 useOptimizedOutputToFile	1
 outputFormat	json
-materialLibraryPath	material_libraries/LectureRoomAllMaterialsCeilingFloor.csv
+materialLibraryPath	material_libraries/materialLibraryLectureRoom.csv

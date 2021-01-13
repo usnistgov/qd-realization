@@ -327,7 +327,7 @@
         <color><r>0.1</r><g>0.1</g><b>0.1</b></color>
     </material>
     <material id="4">
-        <metadata type="name">RightWallAll</metadata>
+        <metadata type="name">RightWall</metadata>
         <color><r>0.1</r><g>0.1</g><b>0.1</b></color>
     </material>
     <material id="5">

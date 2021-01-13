@@ -54,7 +54,8 @@ if exist(cacheFilePath, 'file')
         return
         
     else
-        warning('Cache file exists but might be outdated. Ignoring it.')
+        warning(strcat('Cache file exists but might be outdated. ',...
+            ' Ignoring it and generating new one.'));
         
     end
     

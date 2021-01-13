@@ -1,4 +1,4 @@
-%--------------------------Software Disclaimer-----------------------------
+% -------------------------Software Disclaimer-----------------------------
 %
 % NIST-developed software is provided by NIST as a public service. You may 
 % use, copy and distribute copies of the software in any medium, provided 
@@ -44,7 +44,7 @@ addpath('raytracer', 'utils', 'quaternions')
 
 %% Initialization
 rootFolderPath = pwd;
-fprintf('-------- NIST/CTL Quasi-Deterministic mmWave Channel Model --------\n');
+fprintf('----- NIST/CTL Quasi-Deterministic mmWave Channel Model -----\n');
 fprintf('Current root folder:\n\t%s\n',rootFolderPath);
 [path,folderName] = fileparts(rootFolderPath);
 if strcmp(folderName, 'src')
@@ -58,7 +58,7 @@ end
 % To Run Existing Scenario Given in 'src/examples/' Folder, 
 % Set scenarioNameStr = 'examples/FolderName' 
 % e.g., scenarioNameStr = 'examples/Indoor1';
-scenarioNameStr = 'examples/ParkingLot';
+scenarioNameStr = 'examples/Indoor1';
 
 if ~isempty(scenarioNameStr)
     fprintf('Use customized scenario: %s.\n',scenarioNameStr);
@@ -88,9 +88,9 @@ end
 paraCfg = parameterCfg(scenarioNameStr);
 % Input Node Related Parameters
 [paraCfg, nodeCfg] = nodeProfileCfg(paraCfg);
-% Run Raytracing Function and Generate Outputs
+% Run Raytracing Function and Generate Output
 outputPath = Raytracer(paraCfg, nodeCfg);
 
 fprintf('Save output data to:\n%s\n',outputPath);
-fprintf('--------- Simulation Complete ----------\n');
 toc(t0);
+fprintf('--------- Simulation Complete ----------\n');
