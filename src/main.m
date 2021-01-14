@@ -58,7 +58,7 @@ end
 % To Run Existing Scenario Given in 'src/examples/' Folder, 
 % Set scenarioNameStr = 'examples/FolderName' 
 % e.g., scenarioNameStr = 'examples/Indoor1';
-scenarioNameStr = 'examples/Indoor1';
+scenarioNameStr = 'examples/LivingRoom';
 
 if ~isempty(scenarioNameStr)
     fprintf('Use customized scenario: %s.\n',scenarioNameStr);
