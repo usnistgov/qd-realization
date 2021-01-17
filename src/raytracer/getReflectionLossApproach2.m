@@ -42,8 +42,9 @@ reflectionLoss = prod(sum(reflectionCoefficient)/2);
 reflectionLossdB = -20*log10(abs((reflectionLoss))); 
 end
 
-function reflectionCoefficient = getReflectance(MaterialLibrary,materialIndex,multipath)
-% Calculate angles of incident 
+function reflectionCoefficient = getReflectance(MaterialLibrary,...
+                                                materialIndex,multipath)
+% This function calculates reflection coefficients
 incidentAngle = angleOfIncident(multipath);
 orderReflection = multipath(1,1);
 reflectionCoefficient = ones(2, orderReflection);
@@ -58,7 +59,8 @@ for reflectionOrderIndex = 1:orderReflection
         'higher than second order reflection.'));
     end
     % Use Fresnel equation to derive power reflectivity                
-    relativePermittivity = MaterialLibrary.RelativePermittivity(reflectionMaterialIndex); 
+    relativePermittivity = MaterialLibrary.RelativePermittivity...
+                            (reflectionMaterialIndex); 
     aor = incidentAngle(reflectionOrderIndex);
     B_h =  relativePermittivity - sind(aor)^2;                
     B_v = (relativePermittivity - sind(aor)^2)/relativePermittivity^2; 
@@ -68,21 +70,39 @@ for reflectionOrderIndex = 1:orderReflection
 end     
 end
 
-function incidentAngle = angleOfIncident(multipath)
-diff25 = multipath(1,5:7)-multipath(1,2:4);
-diff58 = multipath(1,5:7)-multipath(1,8:10);
-diff25 = -diff25./norm(diff25);
-diff58 = -diff58./norm(diff58);
-
-dpAoI = dot(diff25,diff58);
+function incidentAngle = angleOfIncident(multipath) 
+% This function calculates angle of incident for first and second order
+% reflections
+differenceVectorRxFirstPoI = (multipath(1,2:4) - multipath(1,5:7))...
+                                /norm(multipath(1,2:4) - multipath(1,5:7));
+% differenceVectorRxFirstPoI is the difference vector between Rx 
+% and first point of incidence (PoI).
+differenceVectorTxFirstPoI = (multipath(1,8:10) - multipath(1,5:7))...
+                            /( norm(multipath(1,8:10) - multipath(1,5:7)));
+% differenceVectorTxFirstPoI is the difference vector between Tx 
+% and first point of incidence (PoI). 
+dpAoI = dot(differenceVectorRxFirstPoI, differenceVectorTxFirstPoI);
+% dpAoI is the dot product between differenceVectorRxFirstPoI and 
+% differenceVectorTxFirstPoI will give the cos of angle between the vectors.
 incidentAngle(1) = 0.5*acosd(dpAoI);
-
-if multipath(1,1) == 2
-    diff85 = -diff58;
-    diff811 = multipath(1,8:10)-multipath(1,11:13);
-    diff811 = -diff811./norm(diff811);
-
-    dpAoI = dot(diff85,diff811);
-    incidentAngle(2) = 0.5*acosd(dpAoI);
+% Half of the angle between the vectors differenceVectorRxFirstPoI and 
+% differenceVectorTxFirstPoI is the angle of incidence. This is because 
+% angle of incidence is equal to angle of reflection.
+if multipath(1,1) == 2 % This is for second order reflection
+    differenceVectorRxSecondPoI = (multipath(1,2:4) - multipath(1,5:7))...
+                                /norm(multipath(1,2:4) - multipath(1,5:7));
+    differenceVectorFirstPoISecondPoI =...  
+                            (multipath(1,8:10) - multipath(1,5:7))...
+                            /( norm(multipath(1,8:10) - multipath(1,5:7)));
+    differenceVectorSecondPoIFirstPoI = -differenceVectorFirstPoISecondPoI;
+    differenceVectorTxFirstPoI =...
+        (multipath(1,11:13) - multipath(1,8:10))/...
+        norm((multipath(1,11:13) - multipath(1,8:10)));
+    dpAoI = dot(differenceVectorSecondPoIFirstPoI,...
+                differenceVectorTxFirstPoI);
+    incidentAngle(1) = 0.5*acosd(dpAoI);
+    dpAoI = dot(differenceVectorRxSecondPoI,...
+                differenceVectorFirstPoISecondPoI);
+    incidentAngle(2)  = 0.5*acosd(dpAoI);
 end
 end

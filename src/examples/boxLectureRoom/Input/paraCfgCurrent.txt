@@ -1,6 +1,5 @@
 ParameterName	ParameterValue
 environmentFileName	Box.xml
-generalizedScenario	0
 indoorSwitch	1
 numberOfTimeDivisions	1
 referencePoint	[0,0,0]
