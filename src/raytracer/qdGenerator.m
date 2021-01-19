@@ -171,9 +171,6 @@ materialIdx = arrayOfMaterials(end); % QD based on last reflector
 
 switch(prePostParam)
     case 'pre'
-        if materialIdx == 0 
-            ioi= 1
-        end
         params.s_K = materialLibrary.s_K_Precursor(materialIdx);
         params.sigma_K = materialLibrary.sigma_K_Precursor(materialIdx);
         params.s_gamma = materialLibrary.s_gamma_Precursor(materialIdx);
