@@ -4,7 +4,7 @@ function [ArrayOfPoints, ArrayOfPlanes, numberOfPlanes,...
     totalNumberOfReflections, numberOfReflections,...
     previousIterationRowNumber, numberOfPlanes, pointIndexOfPresentIteration,...
     planeIndexofPresentIteration, Rx, Tx, ArrayOfPoints, ArrayOfPlanes,...
-    switchMaterial, arrayOfMaterials, indexMaterials, generalizedScenario)
+    switchMaterial, arrayOfMaterials, indexMaterials)
 % Treetraversal generates all plane combinations for nth order reflections
 % using backtracking (special case of DFS).
 %
@@ -110,14 +110,7 @@ for iterateNumberofRows = 1:size(CADop,1)
             scenario = -1;
             
             % checking whether a path exists between the plane and Tx
-            if generalizedScenario == 0
-                booleanPathExistence = verifypathTreeTraversal(Point1Plane1,Point2Plane1,Point3Plane1,Tx,Tx,Tx,normalPlane1,normalPlane1,plane1,plane1,scenario);
-                
-            else
-                booleanPathExistence = 1;
-                
-            end
-            
+            booleanPathExistence = 1;
             if booleanPathExistence == 1
                 ArrayOfPlanes(numberOfPlanes,...
                     indexPlanesTemporary:indexPlanesTemporary + 3) = CADop(iterateNumberofRows,10:13);
@@ -147,16 +140,7 @@ for iterateNumberofRows = 1:size(CADop,1)
             point3Plane2 = ArrayOfPoints(numberOfPlanes,indexTemporary - 3:indexTemporary - 1);
             
             % checking whether a path exists between the plane1 and plane2
-            if generalizedScenario == 0
-                [booleanPathExistence] = verifypathTreeTraversal(Point1Plane1,Point2Plane1,Point3Plane1,...
-                    point1Plane2,point2Plane2,point3Plane2,normalPlane1,normal2,plane1,...
-                    plane2,scenario);
-                
-            else
-                booleanPathExistence = 1;
-                
-            end
-            
+              booleanPathExistence = 1;
         end
         
         if booleanPathExistence == 0
@@ -204,7 +188,7 @@ for iterateNumberofRows = 1:size(CADop,1)
                 totalNumberOfReflections, numberOfReflections - 1,iterateNumberofRows,...
                 numberOfPlanes,indexTemporary,indexPlanesTemporary,Rx,Tx,...
                 ArrayOfPoints,ArrayOfPlanes,...
-                switchMaterial,arrayOfMaterials,indexMaterialsTemporary,generalizedScenario);
+                switchMaterial,arrayOfMaterials,indexMaterialsTemporary);
         end
     end
     
@@ -258,15 +242,7 @@ for iterateNumberofRows = 1:size(CADop,1)
         
         if previousIterationRowNumber == 0
             scenario = 1;
-            
-            if generalizedScenario == 0
-                [booleanPathExistence] = verifypathTreeTraversal(Point1Plane1,Point2Plane1,Point3Plane1,...
-                    Tx,Tx,Tx,normalPlane1,normalPlane1,plane1,plane2,scenario);
-                
-            else
-                booleanPathExistence = 1;
-                
-            end
+            booleanPathExistence = 1;
             
             if booleanPathExistence == 1
                 ArrayOfPlanes(numberTemporary,indexPlanesTemporary) = numberOfReflections;
@@ -278,15 +254,8 @@ for iterateNumberofRows = 1:size(CADop,1)
         if ((previousIterationRowNumber ~= 0 || (booleanPathExistence == 1 && previousIterationRowNumber == 1)) && ...
                 totalNumberOfReflections > 1) || (totalNumberOfReflections == 1 && booleanPathExistence == 1)
             scenario = 1;
+            booleanPathExistence = 1;
             
-            if generalizedScenario == 0
-                [booleanPathExistence] = verifypathTreeTraversal(Point1Plane1,Point2Plane1,Point3Plane1,...
-                    Rx,Rx,Rx,normalPlane1,normalPlane1,plane1,plane2,scenario);
-                
-            else
-                booleanPathExistence = 1;
-                
-            end
             
         end
         

@@ -47,7 +47,7 @@ para = cell2struct(paraCell(2,:), paraCell(1,:), 2);
 
 % Generalized Scenario
 % = 1 (Default)
-para = fieldToNum(para, 'generalizedScenario', [0,1], 1);
+% % para = fieldToNum(para, 'generalizedScenario', [0,1], 1);
 
 % Switch Indoor
 % = 1;
@@ -145,12 +145,17 @@ para = fieldToNum(para, 'qdFilesFloatPrecision', [], 6);
 % Default: 1 (true)
 para = fieldToNum(para, 'useOptimizedOutputToFile', [], 1);
 
+% % Path to material library
+% if ~isfield(para, 'materialLibraryPath')
+%     warning('Environment file path not defined. Using default material library.')
+%     para.switchQDGenerator = 0;
+% end
+    
 % Path to material library
 if ~isfield(para, 'materialLibraryPath')
     warning('Environment file path not defined. Using default material library.')
-    para.switchQDGenerator = 0;
+    para.materialLibraryPath = 'material_libraries/materialLibraryEmpty.csv';
 end
-    
 
 % Use output in Json format. Json output reduces number of output files and
 % reduces execution time as output is written only once at the end of the 
