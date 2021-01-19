@@ -76,7 +76,7 @@ switch(extension(2:end))
         
     case 'obj'
         [CADop, switchMaterial] = importObjFile(environmentFilePath,...
-            MaterialLibrary, referencePoint, selectPlanesByDist);
+            MaterialLibrary, referencePoint, selectPlanesByDist); 
         
     otherwise
         error('Cannot handle ''%s'' extension properly', extension)

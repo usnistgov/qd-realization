@@ -2,7 +2,7 @@ function [qdRay, multipath] =...
     multipath(ArrayOfPlanes, ArrayOfPoints, Rx, Tx, CADOutput,...
     numberOfRowsArraysOfPlanes, MaterialLibrary, arrayOfMaterials,...
     switchMaterial, velocityTx, velocityRx, ...
-    qdGeneratorSwitch, qdApproachSwitch, scenarioName, frequency, varargin)
+    qdGeneratorSwitch, qdModelSwitch, scenarioName, frequency, varargin)
 % INPUTS -
 % ArrayOfPoints - combinations of multiple triangles, every row is a unique
 % combination. every triangle occupies 9 columns (3 vertices). (o/p of
@@ -127,12 +127,12 @@ if numberOfRowsArraysOfPlanes>0
         % Compute reflection loss
         if isMpc == 1
             if  switchMaterial == 1 
-                switch qdApproachSwitch 
-                    case 1
+                switch qdModelSwitch 
+                    case 'nistMeasurements'
                 reflectionLoss = getReflectionLossApproach1(MaterialLibrary,...
                     arrayOfMaterials(iterateNumberOfRowsArraysOfPlanes,:), 'randOn', qdGeneratorSwitch); % Issue: check indexMultipath is correct or not. should it be iterateNumberOfRowsArraysOfPlanes
-                    case 2
-                reflectionLoss = getReflectionLossApproach2(MaterialLibrary,... be 
+                    case 'tgayMeasurements'
+                reflectionLoss = getReflectionLossApproach2(MaterialLibrary,...  
                     arrayOfMaterials(iterateNumberOfRowsArraysOfPlanes,:), multipath(indexMultipath,:));
                     case 'NA'
                         % Assumption: 10dB loss at each reflection
@@ -184,7 +184,7 @@ if numberOfRowsArraysOfPlanes>0
                 [~, rPreCursor, rPostCursor] =...
                     qdGenerator(outputQd(indexOutput).dRay,...
                     arrayOfMaterials(iterateNumberOfRowsArraysOfPlanes,:), MaterialLibrary,...
-                    qdApproachSwitch,scenarioName);                         % issue: arrayOfMaterials repleced by arrayOfMaterials(iterateNumberOfRowsArraysOfPlanes,:)
+                    qdModelSwitch,scenarioName);                         % issue: arrayOfMaterials repleced by arrayOfMaterials(iterateNumberOfRowsArraysOfPlanes,:)
                 outputQd(indexOutput).rPreCursor  = rPreCursor;
                 outputQd(indexOutput).rPostCursor = rPostCursor;
 

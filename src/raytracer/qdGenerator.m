@@ -1,6 +1,6 @@
 function [output,  outputPre, outputPost] =...
     qdGenerator(dRayOutput, arrayOfMaterials, materialLibrary,...
-    qdApproachSwitch, scenarioName)
+    qdModelSwitch, scenarioName)
 % QDGENERATOR generates diffused components starting from deterministic rays
 % following NIST's Quasi-Deterministic model if qdApproachSwitch = 1
 % and Quasi-Deterministic model given in 802.11ay channel document
@@ -72,17 +72,17 @@ cursorOutput = dRayOutput;
 % cursorOutput(9) = getRandomPg0(dRayOutput, arrayOfMaterials, materialLibrary);
 
 % Pre/post cursors output
-switch qdApproachSwitch 
-    case 1
+switch qdModelSwitch 
+    case 'nistMeasurements'
     outputPre = getQdOutputApproach1(cursorOutput, arrayOfMaterials,...
                 materialLibrary, 'pre');
     outputPost = getQdOutputApproach1(cursorOutput, arrayOfMaterials,...
                 materialLibrary, 'post');
-    case 2
+    case 'tgayMeasurements'
     outputPre = getQdOutputApproach2(cursorOutput, scenarioName, 'pre');
     outputPost = getQdOutputApproach2(cursorOutput, scenarioName, 'post');
     otherwise
-    error('qdApproachSwitch can be either 1 or 2.');
+    error('switchQDModel can be either nistMeasurements or tgayMeasurements.');
 end    
 
 output = [outputPre; cursorOutput; outputPost];

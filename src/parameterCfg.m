@@ -72,39 +72,34 @@ else
     para.referencePoint = [3,3,2];
 end
 
-% This is selection of planes/nodes by distance. r = 0 means that there is
+% This is selection of planes/nodes by distance. r = inf means that there is
 % no limitation (Default).
-para = fieldToNum(para, 'selectPlanesByDist', [], 0);
+para = fieldToNum(para, 'selectPlanesByDist', [], inf);
 
 % Switch to turn ON or OFF the Qausi dterministic module
 % 1 = ON, 0 = OFF (Default)
 para = fieldToNum(para, 'switchQDGenerator', [0,1], 0);
 
-% Switch to select two different Qausi dterministic approaches
-% first approach considers NIST measured QD parameters using Rician model 
-% and the second one uses QD parameters given in the 11ay channel document
-% 1 = approach based on NIST measured QD parameters, 
-% 2 = approach based on channel document QD parameters
-if ~isfield(para, 'switchQDApproach')...
-        || str2double(para.switchQDApproach) > 2....
-        ||  str2double(para.switchQDApproach) == 0
-    warning(strcat('Approach to generate diffuse components is either incorrect ',....
-    ' or not defined. Thus,  switchQDGenerator is set to 0 and',....
-    ' switchQDApproach is set to NA to have 10 dB (defualt) reflection  ',....
-    ' loss for each reflection.'));
+% Switch to select Qausi deterministic model
+% nistMeasurements : model based on NIST measurements, 
+% tgayMeasurements : model based on TGay channel document measurements.
+if ~isfield(para, 'switchQDModel')
+    warning(strcat('Q-D model is not defined in paraCfgCurrent.txt. ',...
+    ' Thus,  switchQDGenerator is set to 0 and',...
+    ' switchQDModel is set to NA to have 10 dB (defualt) reflection  ',...
+    ' loss for each specular reflection.'));
     para.switchQDGenerator = 0;
-    para.switchQDApproach = 'NA';
+    para.switchQDModel = 'NA';
 else
-    para.switchQDApproach = str2double(para.switchQDApproach);
-    if para.switchQDApproach == 1 
+    if strcmp(para.switchQDModel,'nistMeasurements')
         if strcmp(para.environmentFileName,'LivingRoom.xml') ||...
             strcmp(para.inputScenarioName(10:end),'OpenAreaHotspot.xml') ||...
             strcmp(para.inputScenarioName(10:end),'StreetCanyon.xml') ||...
             strcmp(para.inputScenarioName(10:end),'HotelLobby.xml') ||...
             strcmp(para.inputScenarioName(10:end),'CityBlock.xml')
-            warning(strcat('switchQDApproach should be 2 for this scenario. ',...
-            ' Thus, setting para.switchQDApproach = 2'));
-                para.switchQDApproach = 2;
+            warning(strcat('switchQDModel should be tgayMeasurements for this scenario. ',...
+            ' Thus, setting para.switchQDModel = tgayMeasurements'));
+                para.switchQDModel = 'tgayMeasurements';
         end
     else
         if strcmp(para.environmentFileName,'Box.xml') ||...
@@ -113,9 +108,9 @@ else
             strcmp(para.inputScenarioName(10:end),'L-Room.xml') ||...
             strcmp(para.inputScenarioName(10:end),'DataCenter.xml') ||...
             strcmp(para.inputScenarioName(10:end),'ParkingLot.xml') 
-        warning(strcat('switchQDApproach should be 1 for this scenario. ',...
-        ' Thus, setting para.switchQDApproach = 1'));
-            para.switchQDApproach = 1;
+        warning(strcat('switchQDModel should be nistMeasurements for this scenario. ',...
+        ' Thus, setting para.switchQDModel = nistMeasurements'));
+            para.switchQDModel = 'nistMeasurements';
         end
     end        
 end
@@ -123,6 +118,10 @@ end
 % Order of reflection.
 % 1 = multipath until first order, 2 = multipath until second order (Default)
 para = fieldToNum(para, 'totalNumberOfReflections', [], 2);
+if strcmp(para.switchQDModel,'tgayMeasurements') ...
+        && para.totalNumberOfReflections>2 
+    para.totalNumberOfReflections = 2;
+end
 
 % t is the time period in seconds. The time period for which the simulation
 % has to run when mobility is ON

@@ -187,7 +187,7 @@ for iterateObjects = 1:lengthObject                            % For multiple ob
             CADOutputTemp(13) = round(D, 4);
             
             % We are using distance limitation at this step
-            if r==0
+            if r==inf
                 [switchDistance] = 1;
             else
                 [switchDistance] = verifydistance(r, referencePoint, CADOutputTemp, 1);
