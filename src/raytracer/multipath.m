@@ -127,13 +127,15 @@ if numberOfRowsArraysOfPlanes>0
             reflectionLoss = 10*orderOfReflection; 
         end
         
+        % Corner case: MPC on the edge of triangles would be considered
+        % twice. Check if it has been already stored otherwise discard.
         if isMpc == 1
             for i = 1:indexMultipath - 1
-                switch3 = 1;
+                isMpcNonUnique = 1;
                 for j = 1:(orderOfReflection * 3) + 6
-                    switch3 = switch3 && (multipath(i,j) == multipath(indexMultipath,j));
+                    isMpcNonUnique = isMpcNonUnique && (multipath(i,j) == multipath(indexMultipath,j));
                 end
-                isMpc = isMpc && ~switch3;
+                isMpc = isMpc && ~isMpcNonUnique;
             end
         end
         
