@@ -1,6 +1,6 @@
 function [az, el] = vector2angle(angleVector)
-%VECTOR2ANGLE returns the azimuth and the elevation correspondent to the
-%input angle vector
+%VECTOR2ANGLE returns the azimuth and the elevation in degree correspondent
+%to the input angle vector
 %
 %[az, el] = VECTOR2ANGLE(angleVector)
 
