@@ -164,7 +164,7 @@ for iterateTimeDivision = 1:paraCfgInput.numberOfTimeDivisions
                     % Store MPC
                     if paraCfgInput.switchSaveVisualizerFiles && isLos
                         multipath1 = [Tx, Rx];
-                            Mpc{iterateTx,iteratePaaTx,iterateRx,iteratePaaRx, 1, iterateTimeDivision+1} =multipath1;
+                        Mpc{iterateTx,iteratePaaTx,iterateRx,iteratePaaRx, 1, iterateTimeDivision+1} =multipath1;
                     end
                     
                     % Higher order reflections (Non LOS)
@@ -177,7 +177,7 @@ for iterateTimeDivision = 1:paraCfgInput.numberOfTimeDivisions
                             0, 1, 1, 1, Rx, Tx, [], [],...
                             switchMaterial, [], 1, paraCfgInput.generalizedScenario);
                         
-                        numberOfPlanes = numberOfPlanes - 1;               
+                        numberOfPlanes = numberOfPlanes - 1;
                         
                         [outputTemporary, multipathTemporary] = ...
                             multipath(...
