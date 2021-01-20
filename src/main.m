@@ -36,7 +36,7 @@ clear
 close all
 clc
 t0 = tic; % parallel processing-safe
-addpath('raytracer', 'utils', 'quaternions')
+addpath('raytracer', 'utils', 'utils/quaternions')
 
 %% Initialization
 rootFolderPath = pwd;
