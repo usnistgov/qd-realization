@@ -90,78 +90,78 @@ end
 
 
 %% Tests
-function lRoomRotationTest(testCase)
-exampleName = 'L-Room-rotation';
+% function lRoomRotationTest(testCase)
+% exampleName = 'L-Room-rotation';
+% runRaytracer(testCase, exampleName);
+% checkOutput(testCase, exampleName);
+% end
+
+% function lRoomRotMimoTest(testCase)
+% exampleName = 'L-Room-rotation-multiPAA';
+% runRaytracer(testCase, exampleName);
+% checkOutput(testCase, exampleName);
+% end
+% 
+% % DataCenter
+% function dataCenterTest(testCase)
+% exampleName = 'DataCenter';
+% runRaytracer(testCase, exampleName);
+% checkOutput(testCase, exampleName);
+% end
+% 
+% % DenserScenario
+% function denserScenarioTest(testCase)
+% exampleName = 'DenserScenario';
+% runRaytracer(testCase, exampleName);
+% checkOutput(testCase, exampleName);
+% end
+% 
+% 
+% boxLectureRoom
+function boxLectureRoomTest(testCase)
+exampleName = 'boxLectureRoom';
 runRaytracer(testCase, exampleName);
 checkOutput(testCase, exampleName);
 end
-
-function lRoomRotMimoTest(testCase)
-exampleName = 'L-Room-rotation-multiPAA';
-runRaytracer(testCase, exampleName);
-checkOutput(testCase, exampleName);
-end
-
-% DataCenter
-function dataCenterTest(testCase)
-exampleName = 'DataCenter';
-runRaytracer(testCase, exampleName);
-checkOutput(testCase, exampleName);
-end
-
-% DenserScenario
-function denserScenarioTest(testCase)
-exampleName = 'DenserScenario';
-runRaytracer(testCase, exampleName);
-checkOutput(testCase, exampleName);
-end
-
-
-% Indoor1
-function indoor1Test(testCase)
-exampleName = 'Indoor1';
-runRaytracer(testCase, exampleName);
-checkOutput(testCase, exampleName);
-end
-
-
-% Indoor2
-function indoor2Test(testCase)
-exampleName = 'Indoor2';
-runRaytracer(testCase, exampleName);
-checkOutput(testCase, exampleName);
-end
-
-
-% L-Room
-function lRoomTest(testCase)
-exampleName = 'L-Room';
-runRaytracer(testCase, exampleName);
-checkOutput(testCase, exampleName);
-end
-
-
-% Outdoor1
-function outdoor1Test(testCase)
-exampleName = 'Outdoor1';
-runRaytracer(testCase, exampleName);
-checkOutput(testCase, exampleName);
-end
-
-
-% SpatialSharing
-function spatialSharingTest(testCase)
-exampleName = 'SpatialSharing';
-runRaytracer(testCase, exampleName);
-checkOutput(testCase, exampleName);
-end
-
-% StreetCanyon
-function streetCanyonTest(testCase)
-exampleName = 'StreetCanyon';
-runRaytracer(testCase, exampleName);
-checkOutput(testCase, exampleName);
-end
+% 
+% 
+% % Indoor2
+% function indoor2Test(testCase)
+% exampleName = 'Indoor2';
+% runRaytracer(testCase, exampleName);
+% checkOutput(testCase, exampleName);
+% end
+% 
+% 
+% % L-Room
+% function lRoomTest(testCase)
+% exampleName = 'L-Room';
+% runRaytracer(testCase, exampleName);
+% checkOutput(testCase, exampleName);
+% end
+% 
+% 
+% % Outdoor1
+% function outdoor1Test(testCase)
+% exampleName = 'Outdoor1';
+% runRaytracer(testCase, exampleName);
+% checkOutput(testCase, exampleName);
+% end
+% 
+% 
+% % SpatialSharing
+% function spatialSharingTest(testCase)
+% exampleName = 'SpatialSharing';
+% runRaytracer(testCase, exampleName);
+% checkOutput(testCase, exampleName);
+% end
+% 
+% % StreetCanyon
+% function streetCanyonTest(testCase)
+% exampleName = 'StreetCanyon';
+% runRaytracer(testCase, exampleName);
+% checkOutput(testCase, exampleName);
+% end
 
 
 %% Utils
