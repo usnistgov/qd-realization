@@ -6,8 +6,8 @@ function reflectionLoss = getReflectionLoss(materialLibrary, arrayOfMaterials, v
 %pathLossFinal = GETREFLECTIONLOSS(___, 'randOn', value) can be used to specify if
 %the reflection loss returned is deterministic (value = 0) and
 %correspondent to mean value u measured. Otherwise (value = 1) the
-%reflection loss is extracted from a folded gaussian distribution with mean
-%value u and variance s^2, which have been also measured
+%reflection loss is extracted from a rician distribution with parameters s
+%(Noncentrality), sigma(Scale) which have been measured.
 
 % NIST-developed software is provided by NIST as a public service. You may
 % use, copy and distribute copies of the software in any medium, provided
@@ -52,10 +52,16 @@ reflectionLoss = 0;
 %% Loop over reflection order
 for i = 1:length(arrayOfMaterials)
     matIdx = arrayOfMaterials(i);
-    s_material = randOn*materialLibrary.s_RL(matIdx);
-    sigma_material = randOn*materialLibrary.sigma_RL(matIdx);
-    rl = rndRician(s_material, sigma_material, 1, 1);
-    muRl = materialLibrary.mu_RL(matIdx);
-    reflectionLoss = reflectionLoss - (rl - (1-randOn)*muRl);
+    if randOn ==0
+        muRl = materialLibrary.mu_RL(matIdx);
+        reflectionLoss = reflectionLoss + muRl;
+
+    else
+        s_material = materialLibrary.s_RL(matIdx);
+        sigma_material = materialLibrary.sigma_RL(matIdx);
+        rl = rndRician(s_material, sigma_material, 1, 1);
+        reflectionLoss = reflectionLoss + rl ;
+    end
+
 end
 end
