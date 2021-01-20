@@ -46,12 +46,10 @@ angleVectorNorm = getLightSpeed*delay;
 angleVectorZ =angleVectorNorm.*cosd(el);
 
 %% Get Y component
-signY = double(az<180);
-signY(signY == 0 ) = -1;
-angleVectorY =signY.*sqrt((angleVectorNorm.^2-angleVectorZ.^2)./(1./tand(az).^2 +1));
+angleVectorY = angleVectorNorm.*sind(el).*sind(az);
 
 %% Get X component
-angleVectorX = angleVectorY./tand(az);
+angleVectorX = angleVectorNorm.*sind(el).*cosd(az);
 
 %% Output
 angleVector = [angleVectorX, angleVectorY, angleVectorZ];
