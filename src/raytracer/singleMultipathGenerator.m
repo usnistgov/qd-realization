@@ -9,34 +9,26 @@ function [booleanMultipathExistance, Intersection, directionOfDeparture,...
 % Refer to "singleMultipathGenerator - Method of Images. ppt". The ppt has a slide show. Each
 % step is explained in the notes
 %INPUT:
-%number - number of row of Array_of_planes/Array_of_points for which
+%iterateNumberOfRowsArraysOfPlanes - number of row of Array_of_planes/Array_of_points for which
 %multipath has to be generated (o/p of multipath)
-%order_of_R - order of reflection
-%order_of_i - order within recursion. recursion occurs for a number equal
+%orderOfReflection - order of reflection
+%indexMultipath
+%indexOrderOfReflection - order within recursion. recursion occurs for a number equal
 %to order_of_R
-%Array_of_points - combinations of multiple triangles, every row is a unique
-%combination. every triangle occupies 9 columns (3 vertices). (o/p of
-%treetraversal)
 %Array_of_planes - Similar to Array of points. Each triangle occupies 4
 %columns (plane equation). The first column has the order of reflection
 %(o/p of treetraversal)
-%Reflected - reflected image of Tx
+%Array_of_points - combinations of multiple triangles, every row is a unique
+%combination. every triangle occupies 9 columns (3 vertices). (o/p of
+%treetraversal)
+%ReflectedPoint - reflected image of Tx
 %Rx - Rx position
 %Tx - Tx position
 %CADop - CAD output
 %multipath - vectors and points of intersection of multipath
-%count - number of rows of Array_of_planes/Array_of_points (o/p of
-%treetraversal)
-% vtx, vrx are velocities of tx and rx respectively
-% Polarization_switch_temp - switch to enable or disable polarization
-% module
-% Polarization_tx/ Polarization_rx - Tx/Rx Polarization
-% Antenna_orientation_tx/ Antenna_orientation_rx - Tx/Rx antenna
-% oreientation
-% nt_array -
+%vtx, vrx are velocities of tx and rx respectively
 %switch_cp - a boolean to describe whether cross polarization is selected
-%or not. 1 means there is cross polarization and 0 means there is no cross
-%polarization
+
 %
 %OUTPUT:
 %booleanMultipathExistance - whether multipath exists
@@ -46,11 +38,6 @@ function [booleanMultipathExistance, Intersection, directionOfDeparture,...
 %multipath
 %distance - total length of multipath
 % doppler_factor - doppler factor
-% PL - path loss
-% Polarization_tx/ Polarization_rx - Tx/Rx Polarization
-% phi_x,phi_y - vectors of Jones vector directions for polarization in
-% global coordinate system
-% Antenna_orientation_tx/ Antenna_orientation_rx - Tx/Rx antenna
 % v_temp - relative velocity
 
 
