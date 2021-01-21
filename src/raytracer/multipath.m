@@ -72,9 +72,11 @@ p = inputParser;
 addParameter(p,'indStoc',1)
 addParameter(p,'qTx',struct('center', Tx, 'angle', [0 0 0]))
 addParameter(p,'qRx',struct('center', Rx, 'angle', [0 0 0]))
+addParameter(p,'reflectionLoss',10);
 parse(p, varargin{:});
 qTx = p.Results.qTx;
 qRx = p.Results.qRx;
+rl  = p.Results.reflectionLoss;
 
 %% Init
 indexMultipath = 1;
@@ -123,8 +125,8 @@ if numberOfRowsArraysOfPlanes>0
             reflectionLoss = getReflectionLoss(MaterialLibrary,...
                 arrayOfMaterials(indexMultipath,:), 'randOn', qdGeneratorSwitch);
         else
-            % Assumption: 10dB loss at each reflection
-            reflectionLoss = 10*orderOfReflection; 
+            % Assumption: rl loss at each reflection
+            reflectionLoss = rl*orderOfReflection; 
         end
         
         % Corner case: MPC on the edge of triangles would be considered
@@ -166,7 +168,7 @@ if numberOfRowsArraysOfPlanes>0
             
             % refer to "multipath - WCL17_revised.pdf" in this folder for QD model
             if  switchMaterial == 1 && qdGeneratorSwitch == 1
-                [dRay, rPreCursor, rPostCursor] =...
+                [~, rPreCursor, rPostCursor] =...
                     qdGenerator(outputQd(indexOutput).dRay, arrayOfMaterials, MaterialLibrary);
                 outputQd(indexOutput).rPreCursor  = rPreCursor;
                 outputQd(indexOutput).rPostCursor = rPostCursor;

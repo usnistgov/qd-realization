@@ -110,8 +110,13 @@ para = fieldToNum(para, 'useOptimizedOutputToFile', [], 1);
 if ~isfield(para, 'materialLibraryPath')
     warning('Environment file path not defined. Using default material library.')
     para.materialLibraryPath = 'material_libraries/materialLibraryEmpty.csv';
+    cache = fullfile(scenarioNameStr, 'Input/cachedCadOutput.mat');
+    if isfile(cache)
+        delete(cache)
+    end
 end
     
+para = fieldToNum(para, 'reflectionLoss', [], 10);
 
 % Use output in Json format. Json output reduces number of output files and
 % reduces execution time as output is written only once at the end of the 
