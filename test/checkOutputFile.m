@@ -38,10 +38,7 @@ assertEqual(testCase,scenarioFileName,exampleFileName)
 scenarioFilePath = fullfile(scenarioFolder, scenarioFileName);
 exampleFilePath = fullfile(exampleFolder, exampleFileName);
 
-if isNodesPosition(scenarioFilePath)
-    scenarioOut = readNodesPosition(scenarioFilePath);
-    exampleOut = readNodesPosition(exampleFilePath);
-elseif isQdFile(scenarioFilePath)
+if isQdFile(scenarioFilePath)
     sortBy = {'delay','pathGain','phaseOffset','aodEl','aodAz','aoaEl','aoaAz'};
     scenarioOut = readQdFile(scenarioFilePath, sortBy);
     exampleOut = readQdFile(exampleFilePath, sortBy);
