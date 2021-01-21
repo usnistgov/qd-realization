@@ -2,11 +2,11 @@ ParameterName	ParameterValue
 environmentFileName	CityBlock.xml
 indoorSwitch	0
 numberOfTimeDivisions	1
-referencePoint	[285.27,178.7,2]
-selectPlanesByDist	50
+referencePoint	[-17056.8,75574,4]
+selectPlanesByDist	100000
 switchQDGenerator	0
 switchQDModel	tgayMeasurements
-totalNumberOfReflections	2
+totalNumberOfReflections	1
 totalTimeDuration	1
 switchSaveVisualizerFiles	1
 carrierFrequency	60e9
