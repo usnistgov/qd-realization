@@ -5,7 +5,6 @@ numberOfTimeDivisions	5
 referencePoint	[0,0,0]
 selectPlanesByDist	inf
 switchQDGenerator	1
-switchQDModel	nistMeasurements
 totalNumberOfReflections	2
 totalTimeDuration	10
 switchSaveVisualizerFiles	1

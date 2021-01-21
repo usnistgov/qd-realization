@@ -180,7 +180,7 @@ switch(prePostParam)
         params.s_lambda = materialLibrary.s_lambda_Precursor(materialIdx);
         params.sigma_lambda = materialLibrary.sigma_lambda_Precursor(materialIdx);
         params.delayMultiplier = -1;
-        params.nRays = 3;
+        params.nRays = materialLibrary.n_Precursor(materialIdx);
         
     case 'post'
         params.s_K = materialLibrary.s_K_Postcursor(materialIdx);
@@ -192,7 +192,7 @@ switch(prePostParam)
         params.s_lambda = materialLibrary.s_lambda_Postcursor(materialIdx);
         params.sigma_lambda = materialLibrary.sigma_lambda_Postcursor(materialIdx);
         params.delayMultiplier = 1;
-        params.nRays = 16;
+        params.nRays = materialLibrary.n_Postcursor(materialIdx);;
         
     otherwise
         error('prePostParam=''%s''. Should be ''pre'' or ''post''', prePostParam)
