@@ -148,9 +148,9 @@ nodePaaInitialPosition = cell(numberOfNodes,1); %PAA vector position w.r.t node 
 nodePaaOrientation     = cell(numberOfNodes,1); 
 
 for iterateNumberOfNodes = 1:numberOfNodes
-    paaFile = fullfile(inputPath, sprintf('node%dpaa.dat', iterateNumberOfNodes-1));
+    paaFile = fullfile(inputPath, sprintf('NodePaa%d.dat', iterateNumberOfNodes-1));
     
-    % If nodeXpaa.dat is defined
+    % If NodePaaX.dat is defined
     if isfile(paaFile)
         nodePaaInfo =  readmatrix(paaFile);
         
