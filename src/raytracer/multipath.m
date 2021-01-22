@@ -185,7 +185,8 @@ if numberOfRowsArraysOfPlanes>0
     reshape([outputQd.dRay],nVarOut, []).';...
     reshape([outputQd.rPreCursor].', nVarOut, []).';...
     reshape([outputQd.rPostCursor].', nVarOut, []).'];
-   
+    qdRay(isnan(qdRay(:,1)),:) =[];
+    
     if indexMultipath>=1
         multipath(indexMultipath:end,:) = [];
     end

@@ -111,7 +111,7 @@ aoaElevationSpread = rndRician(params.s_sigmaAlphaEl, params.sigma_sigmaAlphaEl,
 phase = rand(params.nRays, 1) * 2*pi;
 dopplerShift = zeros(params.nRays, 1);
 output = fillOutputQd(taus, pg, aodAz, aodEl, aoaAz, aoaEl, phase, dopplerShift, dRayOutput(1));
-output(end+1:end+mpcRemoved, :) = nan;
+output(end+1:end+mpcRemoved, :) = nan(mpcRemoved, size(output,2));
 
 end
 
