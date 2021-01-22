@@ -1,6 +1,6 @@
 function [output,  outputPre, outputPost] =...
     qdGenerator(dRayOutput, arrayOfMaterials, materialLibrary,...
-    qdModelSwitch, scenarioName)
+    qdModelSwitch, scenarioName, diffusePathGainThreshold)
 % QDGENERATOR generates diffused components starting from deterministic rays
 % following NIST's Quasi-Deterministic model if qdApproachSwitch = 1
 % and Quasi-Deterministic model given in 802.11ay channel document
@@ -75,9 +75,9 @@ cursorOutput = dRayOutput;
 switch qdModelSwitch 
     case 'nistMeasurements'
     outputPre = getQdOutputApproach1(cursorOutput, arrayOfMaterials,...
-                materialLibrary, 'pre');
+                materialLibrary, diffusePathGainThreshold, 'pre');
     outputPost = getQdOutputApproach1(cursorOutput, arrayOfMaterials,...
-                materialLibrary, 'post');
+                materialLibrary, diffusePathGainThreshold, 'post');
     case 'tgayMeasurements'
     outputPre = getQdOutputApproach2(cursorOutput, scenarioName, 'pre');
     outputPost = getQdOutputApproach2(cursorOutput, scenarioName, 'post');
@@ -108,7 +108,7 @@ end
 % end
 
 
-function output = getQdOutputApproach1(dRayOutput, arrayOfMaterials, materialLibrary, prePostParam)
+function output = getQdOutputApproach1(dRayOutput, arrayOfMaterials, materialLibrary, diffusePathGainThreshold, prePostParam)
 params = getParams(arrayOfMaterials, materialLibrary, prePostParam);
 
 % delays
@@ -139,8 +139,9 @@ sigma_s = rndRician(params.s_sigmaS, params.sigma_sigmaS, 1, 1); % [std.err in e
 s = sigma_s * randn(params.nRays, 1);
 pg = pg0db - Kdb + 10*log10(exp(1)) * (-abs(taus - tau0)/gamma + s);
 
-% Remove MPCs with more power than main cursor
-removeMpcMask = pg >= pg0db;
+% Remove MPCs with more power than main cursor and  consider only MPCs up 
+% to diffusePathGainThreshold dB below the main cursor
+removeMpcMask = pg >= pg0db | pg <= pg0db + diffusePathGainThreshold;
 taus(removeMpcMask) = [];
 pg(removeMpcMask) = [];
 mpcRemoved = sum(removeMpcMask);
@@ -160,10 +161,14 @@ aoaElevationSpread = rndRician(params.s_sigmaAlphaEl, params.sigma_sigmaAlphaEl,
 phase = rand(params.nRays, 1) * 2*pi;
 dopplerShift = zeros(params.nRays, 1);
 output = fillOutputQd(taus, pg, aodAz, aodEl, aoaAz, aoaEl, phase, dopplerShift, dRayOutput(1));
-output(end+1:end+mpcRemoved, :) = nan;
+% if isempty(output)
+%     output(end+1:end+mpcRemoved, :) = nan*ones(mpcRemoved,size(dRayOutput,2));
+% else
+%     output(end+1:end+mpcRemoved, :) = nan; 
+% end
+output(end+1:end+mpcRemoved, :) = nan*ones(mpcRemoved,size(dRayOutput,2));
 
 end
-
 
 function params = getParams(arrayOfMaterials, materialLibrary, prePostParam)
 

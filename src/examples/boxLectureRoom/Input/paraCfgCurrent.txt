@@ -4,7 +4,9 @@ indoorSwitch	1
 numberOfTimeDivisions	5
 referencePoint	[0,0,0]
 selectPlanesByDist	inf
-switchQDGenerator	1
+switchDiffuseComponent	1
+diffusePathGainThreshold	-25
+switchQDModel	nistMeasurements
 totalNumberOfReflections	2
 totalTimeDuration	10
 switchSaveVisualizerFiles	1

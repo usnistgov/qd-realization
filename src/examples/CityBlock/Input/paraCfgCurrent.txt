@@ -4,7 +4,7 @@ indoorSwitch	0
 numberOfTimeDivisions	1
 referencePoint	[-17.0568,75.574,4]
 selectPlanesByDist	10
-switchQDGenerator	0
+switchDiffuseComponent	0
 switchQDModel	tgayMeasurements
 totalNumberOfReflections	2
 totalTimeDuration	1

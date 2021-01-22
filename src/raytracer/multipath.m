@@ -2,7 +2,8 @@ function [qdRay, multipath] =...
     multipath(ArrayOfPlanes, ArrayOfPoints, Rx, Tx, CADOutput,...
     numberOfRowsArraysOfPlanes, MaterialLibrary, arrayOfMaterials,...
     switchMaterial, velocityTx, velocityRx, ...
-    qdGeneratorSwitch, qdModelSwitch, scenarioName, frequency, varargin)
+    diffuseGeneratorSwitch, qdModelSwitch, scenarioName, frequency, ...
+    diffusePathGainThreshold, varargin)
 % INPUTS -
 % ArrayOfPoints - combinations of multiple triangles, every row is a unique
 % combination. every triangle occupies 9 columns (3 vertices). (o/p of
@@ -19,7 +20,7 @@ function [qdRay, multipath] =...
 % triangle. The data is the row number of material from Material library
 % switchMaterial - whether triangle materials properties are present
 % vtx, vrx are velocities of tx and rx respectively
-% QDGeneratorSwitch - Switch to turn ON or OFF the Qausi dterministic module
+% diffuseGeneratorSwitch - Switch to turn ON or OFF the Qausi dterministic module
 % 1 = ON, 0 = OFF
 % qdApproachSwitch - Switch to select the approach to generate diffuse components 
 % 1 = approach based on NIST measured QD parameters, 
@@ -130,7 +131,7 @@ if numberOfRowsArraysOfPlanes>0
                 switch qdModelSwitch 
                     case 'nistMeasurements'
                 reflectionLoss = getReflectionLossApproach1(MaterialLibrary,...
-                    arrayOfMaterials(iterateNumberOfRowsArraysOfPlanes,:), 'randOn', qdGeneratorSwitch); % Issue: check indexMultipath is correct or not. should it be iterateNumberOfRowsArraysOfPlanes
+                    arrayOfMaterials(iterateNumberOfRowsArraysOfPlanes,:), 'randOn', diffuseGeneratorSwitch); % Issue: check indexMultipath is correct or not. should it be iterateNumberOfRowsArraysOfPlanes
                     case 'tgayMeasurements'
                 reflectionLoss = getReflectionLossApproach2(MaterialLibrary,...  
                     arrayOfMaterials(iterateNumberOfRowsArraysOfPlanes,:), multipath(indexMultipath,:));
@@ -180,11 +181,11 @@ if numberOfRowsArraysOfPlanes>0
             outputQd(indexOutput).dRay = dRay;
             
             % refer to "multipath - WCL17_revised.pdf" in this folder for QD model
-            if  switchMaterial == 1 && qdGeneratorSwitch == 1
+            if  switchMaterial == 1 && diffuseGeneratorSwitch == 1
                 [~, rPreCursor, rPostCursor] =...
                     qdGenerator(outputQd(indexOutput).dRay,...
                     arrayOfMaterials(iterateNumberOfRowsArraysOfPlanes,:), MaterialLibrary,...
-                    qdModelSwitch,scenarioName);                         % issue: arrayOfMaterials repleced by arrayOfMaterials(iterateNumberOfRowsArraysOfPlanes,:)
+                    qdModelSwitch, scenarioName, diffusePathGainThreshold);                         % issue: arrayOfMaterials repleced by arrayOfMaterials(iterateNumberOfRowsArraysOfPlanes,:)
                 outputQd(indexOutput).rPreCursor  = rPreCursor;
                 outputQd(indexOutput).rPostCursor = rPostCursor;
 

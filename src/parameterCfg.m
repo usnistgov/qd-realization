@@ -78,17 +78,23 @@ para = fieldToNum(para, 'selectPlanesByDist', [], inf);
 
 % Switch to turn ON or OFF the Qausi dterministic module
 % 1 = ON, 0 = OFF (Default)
-para = fieldToNum(para, 'switchQDGenerator', [0,1], 0);
+para = fieldToNum(para, 'switchDiffuseComponent', [], 0);
+
+% Switch to consider only diffuse components up to 
+% diffusePathGainThreshold (in dB) below the deterministic ray. This switch 
+% is only used for NIST measurement based scenarios. Default value is set 
+% as inf which means software does not discard any diffuse components
+para = fieldToNum(para, 'diffusePathGainThreshold', [], -inf);
 
 % Switch to select Qausi deterministic model
 % nistMeasurements : model based on NIST measurements, 
 % tgayMeasurements : model based on TGay channel document measurements.
 if ~isfield(para, 'switchQDModel')
     warning(strcat('Q-D model is not defined in paraCfgCurrent.txt. ',...
-    ' Thus,  switchQDGenerator is set to 0 and',...
+    ' Thus,  switchDiffuseComponent is set to 0 and',...
     ' switchQDModel is set to NA to have 10 dB (defualt) reflection  ',...
     ' loss for each specular reflection.'));
-    para.switchQDGenerator = 0;
+    para.switchDiffuseComponent = 0;
     para.switchQDModel = 'NA';
 else
     if strcmp(para.switchQDModel,'nistMeasurements')
@@ -102,8 +108,7 @@ else
                 para.switchQDModel = 'tgayMeasurements';
         end
     else
-        if strcmp(para.environmentFileName,'Box.xml') ||...
-            strcmp(para.inputScenarioName(10:end),'LectureRoom.xml') ||...
+        if strcmp(para.inputScenarioName(10:end),'LectureRoom.xml') ||...
             strcmp(para.inputScenarioName(10:end),'DataCenter.xml') ||...
             strcmp(para.inputScenarioName(10:end),'ParkingLot.xml') 
         warning(strcat('switchQDModel should be nistMeasurements for this scenario. ',...
@@ -146,7 +151,7 @@ para = fieldToNum(para, 'useOptimizedOutputToFile', [], 1);
 % % Path to material library
 % if ~isfield(para, 'materialLibraryPath')
 %     warning('Environment file path not defined. Using default material library.')
-%     para.switchQDGenerator = 0;
+%     para.switchDiffuseComponent = 0;
 % end
     
 % Path to material library
