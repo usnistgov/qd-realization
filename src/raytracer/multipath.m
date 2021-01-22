@@ -123,7 +123,7 @@ if numberOfRowsArraysOfPlanes>0
         % Compute reflection loss
         if  switchMaterial == 1
             reflectionLoss = getReflectionLoss(MaterialLibrary,...
-                arrayOfMaterials(indexMultipath,:), 'randOn', qdGeneratorSwitch);
+                arrayOfMaterials(iterateNumberOfRowsArraysOfPlanes,:), 'randOn', qdGeneratorSwitch);
         else
             % Assumption: rl loss at each reflection
             reflectionLoss = rl*orderOfReflection; 
@@ -169,7 +169,7 @@ if numberOfRowsArraysOfPlanes>0
             % refer to "multipath - WCL17_revised.pdf" in this folder for QD model
             if  switchMaterial == 1 && qdGeneratorSwitch == 1
                 [~, rPreCursor, rPostCursor] =...
-                    qdGenerator(outputQd(indexOutput).dRay, arrayOfMaterials, MaterialLibrary);
+                    qdGenerator(outputQd(indexOutput).dRay, arrayOfMaterials(iterateNumberOfRowsArraysOfPlanes,:), MaterialLibrary);
                 outputQd(indexOutput).rPreCursor  = rPreCursor;
                 outputQd(indexOutput).rPostCursor = rPostCursor;
 
