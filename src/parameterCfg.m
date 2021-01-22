@@ -115,7 +115,8 @@ if ~isfield(para, 'materialLibraryPath')
         delete(cache)
     end
 end
-    
+
+% Reflection Loss used if material library is not defined
 para = fieldToNum(para, 'reflectionLoss', [], 10);
 
 % Use output in Json format. Json output reduces number of output files and
