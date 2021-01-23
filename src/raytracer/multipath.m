@@ -120,7 +120,8 @@ if numberOfRowsArraysOfPlanes>0
         % multipath parameter)                
         [isMpc,~,dod,doa,multipath,distance,dopplerFactor,...
            ~] = singleMultipathGenerator...
-            (iterateNumberOfRowsArraysOfPlanes,orderOfReflection,indexOrderOfReflection,ArrayOfPlanes,...
+            (iterateNumberOfRowsArraysOfPlanes,orderOfReflection,...
+            indexOrderOfReflection,ArrayOfPlanes,...
             ArrayOfPoints,Reflected,Rx,Tx,CADOutput,...
             multipath,indexMultipath,velocityTx,velocityRx);
         
@@ -133,18 +134,20 @@ if numberOfRowsArraysOfPlanes>0
             if  switchMaterial == 1 
                 switch qdModelSwitch 
                     case 'nistMeasurements'
-                reflectionLoss = getReflectionLossApproach1(MaterialLibrary,...
-                    arrayOfMaterials(iterateNumberOfRowsArraysOfPlanes,:), 'randOn', diffuseGeneratorSwitch); % Issue: check indexMultipath is correct or not. should it be iterateNumberOfRowsArraysOfPlanes
+                    reflectionLoss = getReflectionLossApproach1(MaterialLibrary,...
+                        arrayOfMaterials(iterateNumberOfRowsArraysOfPlanes,:),...
+                        'randOn', diffuseGeneratorSwitch); 
                     case 'tgayMeasurements'
-                reflectionLoss = getReflectionLossApproach2(MaterialLibrary,...  
-                    arrayOfMaterials(iterateNumberOfRowsArraysOfPlanes,:), multipath(indexMultipath,:));
+                    reflectionLoss = getReflectionLossApproach2(MaterialLibrary,...  
+                        arrayOfMaterials(iterateNumberOfRowsArraysOfPlanes,:),...
+                        multipath(indexMultipath,:));
                     case 'NA'
                         % Assumption: r1 loss at each reflection
-                reflectionLoss = r1*orderOfReflection; 
+                    reflectionLoss = rl*orderOfReflection; 
                 end
             else
                 % Assumption: r1 loss at each reflection
-                reflectionLoss = r1*orderOfReflection; 
+                reflectionLoss = rl*orderOfReflection; 
             end
         end
         
@@ -154,13 +157,15 @@ if numberOfRowsArraysOfPlanes>0
             for i = 1:indexMultipath - 1
                 isMpcNonUnique = 1;
                 for j = 1:(orderOfReflection * 3) + 6
-                    isMpcNonUnique = isMpcNonUnique && (multipath(i,j) == multipath(indexMultipath,j));
+                    isMpcNonUnique = isMpcNonUnique && ....
+                        (multipath(i,j) == multipath(indexMultipath,j));
                 end
                 isMpc = isMpc && ~isMpcNonUnique;
             end
         end
         
-        % the delay, AoA, AoD, path loss of the path are stored in output parameter
+        % the delay, AoA, AoD, path loss of the path are stored 
+        % in output parameter
         dRay = zeros(1, nVarOut);
         if  isMpc == 1
             
@@ -172,7 +177,8 @@ if numberOfRowsArraysOfPlanes>0
             % Time delay
             dRay(8) = distance/c;
             % Friis transmission loss
-            dRay(9) = 20*log10(wavelength / (4*pi*distance)) - reflectionLoss;            
+            dRay(9) = 20*log10(wavelength / (4*pi*distance)) ...
+                        - reflectionLoss;            
             % Aod azimuth
             dRay(10) = mod(atan2d(dod(2),dod(1)), 360);
             % Aod elevation
@@ -186,12 +192,12 @@ if numberOfRowsArraysOfPlanes>0
             dRay(21) = 0;
             outputQd(indexOutput).dRay = dRay;
             
-            % refer to "multipath - WCL17_revised.pdf" in this folder for QD model
             if  switchMaterial == 1 && diffuseGeneratorSwitch == 1
                 [~, rPreCursor, rPostCursor] =...
                     qdGenerator(outputQd(indexOutput).dRay,...
-                    arrayOfMaterials(iterateNumberOfRowsArraysOfPlanes,:), MaterialLibrary,...
-                    qdModelSwitch, scenarioName, diffusePathGainThreshold);                         % issue: arrayOfMaterials repleced by arrayOfMaterials(iterateNumberOfRowsArraysOfPlanes,:)
+                    arrayOfMaterials(iterateNumberOfRowsArraysOfPlanes,:),...
+                    MaterialLibrary,qdModelSwitch, scenarioName,...
+                    diffusePathGainThreshold);                         
                 outputQd(indexOutput).rPreCursor  = rPreCursor;
                 outputQd(indexOutput).rPostCursor = rPostCursor;
 

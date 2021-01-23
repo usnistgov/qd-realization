@@ -134,7 +134,8 @@ for iterateNumberofRows = 1:size(CADop,1)
             % plane2, point21, point22, point23 correspond to previous planes
             % and points in Array_of_planes and Array_of_points
             plane2 = ArrayOfPlanes(numberOfPlanes,indexPlanesTemporary - 4:indexPlanesTemporary - 1);
-            normal2(1) = plane2(1:3);
+%             normal2(1) = plane2(1:3);
+            normal2 = plane2(1:3);
             point1Plane2 = ArrayOfPoints(numberOfPlanes,indexTemporary - 9:indexTemporary - 7);
             point2Plane2 = ArrayOfPoints(numberOfPlanes,indexTemporary - 6:indexTemporary - 4);
             point3Plane2 = ArrayOfPoints(numberOfPlanes,indexTemporary - 3:indexTemporary - 1);

@@ -1,7 +1,6 @@
 
 % -------------------------Software Disclaimer-----------------------------
 %
-
 % NIST-developed software is provided by NIST as a public service. You may 
 % use, copy and distribute copies of the software in any medium, provided 
 % that you keep intact this entire notice. You may improve, modify and  
@@ -13,7 +12,6 @@
 % source of the software.
 % 
 % NIST-developed software is expressly provided "AS IS." NIST MAKES NO
-
 % WARRANTY OF ANY KIND, EXPRESS, IMPLIED, IN FACT OR ARISING BY OPERATION  
 % OF LAW, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTY OF 
 % MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, NON-INFRINGEMENT AND 
@@ -24,8 +22,7 @@
 % NOT LIMITED TO THE CORRECTNESS, ACCURACY, RELIABILITY, OR USEFULNESS OF 
 % THE SOFTWARE.
 %
-% You are solely responsible for determining the appropriateness of using
-% 
+% You are solely responsible for determining the appropriateness of using 
 % and distributing the software and you assume all risks associated with  
 % its use, including but not limited to the risks and costs of program 
 % errors, compliance with applicable laws, damage to or loss of data, 
@@ -35,7 +32,6 @@
 % software developed by NIST employees is not subject to copyright 
 % protection within the United States.
 %
-
 % Modified by: 
 % Mattia Lecci <leccimat@dei.unipd.it>, Automatic path check
 % Neeraj Varshney <neeraj.varshney@nist.gov>, to enable warnings 
@@ -59,14 +55,11 @@ else
 end
 
 %% Input
-
-
 % Leave Empty for Default 'ScenarioTest' e.g., scenarioNameStr = '';
 % To Run Existing Scenario Given in 'src/examples/' Folder, 
 % Set scenarioNameStr = 'examples/FolderName' 
 % e.g., scenarioNameStr = 'examples/Indoor1';
 scenarioNameStr = 'examples/boxLectureRoom';
-
 
 if ~isempty(scenarioNameStr)
     fprintf('Use customized scenario: %s.\n',scenarioNameStr);
