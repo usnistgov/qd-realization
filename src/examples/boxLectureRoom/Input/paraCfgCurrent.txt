@@ -1,14 +1,14 @@
 ParameterName	ParameterValue
 environmentFileName	Box.xml
 indoorSwitch	1
-numberOfTimeDivisions	5
+numberOfTimeDivisions	21
 referencePoint	[0,0,0]
 selectPlanesByDist	inf
 switchDiffuseComponent	1
 diffusePathGainThreshold	-25
 switchQDModel	nistMeasurements
 totalNumberOfReflections	3
-totalTimeDuration	10
+totalTimeDuration	21
 switchSaveVisualizerFiles	1
 carrierFrequency	60e9
 qdFilesFloatPrecision	6
