@@ -45,10 +45,6 @@ paraList = readtable(cfgPath,'Delimiter','\t', 'Format','auto' );
 paraCell = (table2cell(paraList))';
 para = cell2struct(paraCell(2,:), paraCell(1,:), 2);
 
-% Generalized Scenario
-% = 1 (Default)
-% % para = fieldToNum(para, 'generalizedScenario', [0,1], 1);
-
 % Switch Indoor
 % = 1;
 para = fieldToNum(para, 'indoorSwitch', [0,1], 1);
@@ -87,42 +83,22 @@ para = fieldToNum(para, 'switchDiffuseComponent', [], 0);
 para = fieldToNum(para, 'diffusePathGainThreshold', [], -inf);
 
 % Switch to select Qausi deterministic model
-% nistMeasurements : model based on NIST measurements, 
-% tgayMeasurements : model based on TGay channel document measurements.
+% nistMeasurements : model based on NIST measurements (Default), 
+% tgayMeasurements : model based on TGay channel document measurements. 
 if ~isfield(para, 'switchQDModel')
     warning(strcat('Q-D model is not defined in paraCfgCurrent.txt. ',...
-    ' Thus,  switchDiffuseComponent is set to 0 and',...
-    ' switchQDModel is set to NA to have 10 dB (defualt) reflection  ',...
-    ' loss for each specular reflection.'));
-    para.switchDiffuseComponent = 0;
-    para.switchQDModel = 'NA';
-else
-    if strcmp(para.switchQDModel,'nistMeasurements')
-        if strcmp(para.environmentFileName,'LivingRoom.xml') ||...
-            strcmp(para.inputScenarioName(10:end),'OpenAreaHotspot.xml') ||...
-            strcmp(para.inputScenarioName(10:end),'StreetCanyon.xml') ||...
-            strcmp(para.inputScenarioName(10:end),'HotelLobby.xml') ||...
-            strcmp(para.inputScenarioName(10:end),'CityBlock.xml')
-            warning(strcat('switchQDModel should be tgayMeasurements for this scenario. ',...
-            ' Thus, setting para.switchQDModel = tgayMeasurements'));
-                para.switchQDModel = 'tgayMeasurements';
-        end
-    else
-        if strcmp(para.inputScenarioName(10:end),'LectureRoom.xml') ||...
-            strcmp(para.inputScenarioName(10:end),'DataCenter.xml') ||...
-            strcmp(para.inputScenarioName(10:end),'ParkingLot.xml') 
-        warning(strcat('switchQDModel should be nistMeasurements for this scenario. ',...
-        ' Thus, setting para.switchQDModel = nistMeasurements'));
-            para.switchQDModel = 'nistMeasurements';
-        end
-    end        
+    ' Thus, considering nistMeasurements (default) switchQDModel.'));
+    para.switchQDModel = 'nistMeasurements';
 end
+
 
 % Order of reflection.
 % 1 = multipath until first order, 2 = multipath until second order (Default)
 para = fieldToNum(para, 'totalNumberOfReflections', [], 2);
 if strcmp(para.switchQDModel,'tgayMeasurements') ...
-        && para.totalNumberOfReflections>2 
+        && para.totalNumberOfReflections>2
+    warning(strcat('totalNumberOfReflections for switchQDModel = tgayMeasurements',...
+        'can not be considered higher than 2. Thus, setting Default value (2).'));
     para.totalNumberOfReflections = 2;
 end
 
@@ -149,8 +125,17 @@ para = fieldToNum(para, 'qdFilesFloatPrecision', [], 6);
 para = fieldToNum(para, 'useOptimizedOutputToFile', [], 1);
 
 % Path to material library
-if ~isfield(para, 'materialLibraryPath')
-    warning('Environment file path not defined. Using default material library.')
+% if ~isfield(para, 'materialLibraryPath')
+%     warning('Environment file path not defined. Using default material library.')
+%     para.materialLibraryPath = 'material_libraries/materialLibraryEmpty.csv';
+%     cache = fullfile(scenarioNameStr, 'Input/cachedCadOutput.mat');
+%     if isfile(cache)
+%         delete(cache)
+%     end
+% end
+if ~isfield(para, 'materialLibraryPath') || ~isfile(para.materialLibraryPath)...
+        || ~isMaterialLibraryFileFormat(para)
+    warning('Material library path or file not defined correctly. Using Empty material library.');
     para.materialLibraryPath = 'material_libraries/materialLibraryEmpty.csv';
     cache = fullfile(scenarioNameStr, 'Input/cachedCadOutput.mat');
     if isfile(cache)
@@ -231,4 +216,21 @@ function b = isNodePositionPresent(path)
 files = dir(fullfile(path, 'Input'));
 
 b = any(startsWith({files.name},'NodePosition'));
+end
+
+function isMaterialLibraryFileFormat = isMaterialLibraryFileFormat(para)
+if isfile(para.materialLibraryPath)
+    materialLibrary = importMaterialLibrary(para.materialLibraryPath);
+    if strcmp(para.switchQDModel,'tgayMeasurements') && ...
+            size(materialLibrary,2) == 3
+        isMaterialLibraryFileFormat = true(1);
+    elseif strcmp(para.switchQDModel,'nistMeasurements') && ...
+            size(materialLibrary,2) == 26
+        isMaterialLibraryFileFormat = true(1);
+    else
+        isMaterialLibraryFileFormat = false(1);
+    end
+else
+    isMaterialLibraryFileFormat = false(1);
+end
 end

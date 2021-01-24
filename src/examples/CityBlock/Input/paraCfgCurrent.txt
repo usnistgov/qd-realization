@@ -2,8 +2,8 @@ ParameterName	ParameterValue
 environmentFileName	CityBlock.xml
 indoorSwitch	0
 numberOfTimeDivisions	1
-referencePoint	[-17.0568,75.574,4]
-selectPlanesByDist	10
+referencePoint	[-12,81,3]
+selectPlanesByDist	50
 switchDiffuseComponent	0
 switchQDModel	tgayMeasurements
 totalNumberOfReflections	2
@@ -12,5 +12,5 @@ switchSaveVisualizerFiles	1
 carrierFrequency	60e9
 qdFilesFloatPrecision	6
 useOptimizedOutputToFile	1
-outputFormat	json
+outputFormat	txt
 materialLibraryPath	material_libraries/materialLibraryCityBlock.csv

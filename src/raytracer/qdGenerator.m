@@ -74,13 +74,13 @@ cursorOutput = dRayOutput;
 % Pre/post cursors output
 switch qdModelSwitch 
     case 'nistMeasurements'
-    outputPre = getQdOutputApproach1(cursorOutput, arrayOfMaterials,...
+    outputPre = getNistQdOutput(cursorOutput, arrayOfMaterials,...
                 materialLibrary, diffusePathGainThreshold, 'pre');
-    outputPost = getQdOutputApproach1(cursorOutput, arrayOfMaterials,...
+    outputPost = getNistQdOutput(cursorOutput, arrayOfMaterials,...
                 materialLibrary, diffusePathGainThreshold, 'post');
     case 'tgayMeasurements'
-    outputPre = getQdOutputApproach2(cursorOutput, scenarioName, 'pre');
-    outputPost = getQdOutputApproach2(cursorOutput, scenarioName, 'post');
+    outputPre = getTgayQdOutput(cursorOutput, scenarioName, 'pre');
+    outputPost = getTgayQdOutput(cursorOutput, scenarioName, 'post');
     otherwise
     error('switchQDModel can be either nistMeasurements or tgayMeasurements.');
 end    
@@ -108,7 +108,7 @@ end
 % end
 
 
-function output = getQdOutputApproach1(dRayOutput, arrayOfMaterials, materialLibrary, diffusePathGainThreshold, prePostParam)
+function output = getNistQdOutput(dRayOutput, arrayOfMaterials, materialLibrary, diffusePathGainThreshold, prePostParam)
 params = getParams(arrayOfMaterials, materialLibrary, prePostParam);
 
 % delays
@@ -238,7 +238,7 @@ az = mod(az, 360);
 end
 
 
-function output = getQdOutputApproach2(dRayOutput, scenarioName, prePostParam)
+function output = getTgayQdOutput(dRayOutput, scenarioName, prePostParam)
 intraClusterParams = getIntraClusterParams(scenarioName, prePostParam);
 aodAzCursor = dRayOutput(10);
 aodElCursor = dRayOutput(11);

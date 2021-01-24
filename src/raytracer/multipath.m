@@ -91,7 +91,7 @@ indexMultipath = 1;
 indexOutput = 1;
 nVarOut = 21;
 sizeArrayOfPlanes = size(ArrayOfPlanes);
-dRay = zeros(1, nVarOut);
+% dRay = zeros(1, nVarOut);
 multipath = [];
 c = getLightSpeed;
 wavelength = c / frequency;
@@ -131,26 +131,33 @@ if numberOfRowsArraysOfPlanes>0
         
         % Compute reflection loss
         if isMpc == 1
-            if  switchMaterial == 1 
-                switch qdModelSwitch 
-                    case 'nistMeasurements'
-                    reflectionLoss = getReflectionLossApproach1(MaterialLibrary,...
+            switch qdModelSwitch 
+                case 'nistMeasurements'
+                    if  switchMaterial == 1  
+                        reflectionLoss = getNistReflectionLoss(MaterialLibrary,...
                         arrayOfMaterials(iterateNumberOfRowsArraysOfPlanes,:),...
                         'randOn', diffuseGeneratorSwitch); 
-                    case 'tgayMeasurements'
-                    reflectionLoss = getReflectionLossApproach2(MaterialLibrary,...  
+                    else
+                        % Assumption: r1 loss at each reflection if
+                        % material is not present in the material library
+                        reflectionLoss = rl*orderOfReflection;
+                    end
+                case 'tgayMeasurements'
+                    if  switchMaterial == 1  
+                        reflectionLoss = getTgayReflectionLoss(MaterialLibrary,...  
                         arrayOfMaterials(iterateNumberOfRowsArraysOfPlanes,:),...
                         multipath(indexMultipath,:));
-                    case 'NA'
-                        % Assumption: r1 loss at each reflection
-                    reflectionLoss = rl*orderOfReflection; 
-                end
-            else
-                % Assumption: r1 loss at each reflection
-                reflectionLoss = rl*orderOfReflection; 
+                    else
+                        % Assumption: r1 loss at each reflection if
+                        % material is not present in the material library
+                        reflectionLoss = rl*orderOfReflection;
+                    end
+                
+                    
             end
         end
-        
+
+                    
         % Corner case: MPC on the edge of triangles would be considered
         % twice. Check if it has been already stored otherwise discard.
         if isMpc == 1

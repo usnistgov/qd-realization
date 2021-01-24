@@ -6,6 +6,7 @@ referencePoint	[0,0,0]
 selectPlanesByDist	inf
 switchDiffuseComponent	1
 diffusePathGainThreshold	-25
+reflectionLoss	20
 switchQDModel	nistMeasurements
 totalNumberOfReflections	3
 totalTimeDuration	21
