@@ -5,7 +5,6 @@ numberOfTimeDivisions	21
 referencePoint	[0,0,0]
 selectPlanesByDist	inf
 switchDiffuseComponent	0
-diffusePathGainThreshold	-25
 switchQDModel	nistMeasurements
 totalNumberOfReflections	1
 totalTimeDuration	21

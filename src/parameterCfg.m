@@ -124,10 +124,12 @@ para = fieldToNum(para, 'qdFilesFloatPrecision', [], 6);
 % Default: 1 (true)
 para = fieldToNum(para, 'useOptimizedOutputToFile', [], 1);
 
+% Path to material library
+if isfield(para, 'materialLibraryPath') 
 currentPath =pwd;
 materialLibraryAbsPath = fullfile(currentPath(1:find((pwd==filesep)==1, ...
                             1, 'last')), 'src',para.materialLibraryPath);
-% Path to material library
+end
 if ~isfield(para, 'materialLibraryPath') || ~isfile(materialLibraryAbsPath)...
         || ~isMaterialLibraryFileFormat(para,materialLibraryAbsPath)
     warning(strcat('Using Empty material library. Check following issues: ',...
