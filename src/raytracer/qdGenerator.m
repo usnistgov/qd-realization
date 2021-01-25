@@ -91,22 +91,21 @@ end
 
 %% Utils
 
-% function pg = getRandomPg0(dRayOutput, arrayOfMaterials, materialLibrary)
-% % Baseline: deterministic path gain
-% pg = dRayOutput(9);
-% for i = 1:length(arrayOfMaterials)
-%     matIdx = arrayOfMaterials(i);
-%     
-%     s_material = materialLibrary.s_RL(matIdx);
-%     sigma_material = materialLibrary.sigma_RL(matIdx);
-%     rl = rndRician(s_material, sigma_material, 1, 1);
-%     
-%     muRl = materialLibrary.mu_RL(matIdx);
-%     pg = pg - (rl - muRl);
-% end
-%  
-% end
+function pg = getRandomPg0(dRayOutput, arrayOfMaterials, materialLibrary)
+% Baseline: deterministic path gain
+pg = dRayOutput(9);
+for i = 1:length(arrayOfMaterials)
+    matIdx = arrayOfMaterials(i);
 
+    s_material = materialLibrary.s_RL(matIdx);
+    sigma_material = materialLibrary.sigma_RL(matIdx);
+    rl = rndRician(s_material, sigma_material, 1, 1);
+
+    muRl = materialLibrary.mu_RL(matIdx);
+    pg = pg - (rl - muRl);
+end
+
+end
 
 function output = getNistQdOutput(dRayOutput, arrayOfMaterials, materialLibrary, diffusePathGainThreshold, prePostParam)
 params = getParams(arrayOfMaterials, materialLibrary, prePostParam);
@@ -161,12 +160,7 @@ aoaElevationSpread = rndRician(params.s_sigmaAlphaEl, params.sigma_sigmaAlphaEl,
 phase = rand(params.nRays, 1) * 2*pi;
 dopplerShift = zeros(params.nRays, 1);
 output = fillOutputQd(taus, pg, aodAz, aodEl, aoaAz, aoaEl, phase, dopplerShift, dRayOutput(1));
-% if isempty(output)
-%     output(end+1:end+mpcRemoved, :) = nan*ones(mpcRemoved,size(dRayOutput,2));
-% else
-%     output(end+1:end+mpcRemoved, :) = nan; 
-% end
-output(end+1:end+mpcRemoved, :) = nan*ones(mpcRemoved,size(dRayOutput,2));
+output(end+1:end+mpcRemoved, :) = nan(mpcRemoved,size(dRayOutput,2));
 
 end
 

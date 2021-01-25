@@ -35,7 +35,7 @@ function para = parameterCfg(scenarioNameStr)
 %
 % Modified by: 
 % Mattia Lecci <leccimat@dei.unipd.it>, Updated implementation
-% Neeraj Varshney <neeraj.varshney@nist.gov., for QD approaaches 
+% Neeraj Varshney <neeraj.varshney@nist.gov., for QD approaches 
 
 
 % Load Parameters
@@ -82,7 +82,7 @@ para = fieldToNum(para, 'switchDiffuseComponent', [], 0);
 % as inf which means software does not discard any diffuse components
 para = fieldToNum(para, 'diffusePathGainThreshold', [], -inf);
 
-% Switch to select Qausi deterministic model
+% Qausi deterministic model
 % nistMeasurements : model based on NIST measurements (Default), 
 % tgayMeasurements : model based on TGay channel document measurements. 
 if ~isfield(para, 'switchQDModel')
@@ -125,14 +125,6 @@ para = fieldToNum(para, 'qdFilesFloatPrecision', [], 6);
 para = fieldToNum(para, 'useOptimizedOutputToFile', [], 1);
 
 % Path to material library
-% if ~isfield(para, 'materialLibraryPath')
-%     warning('Environment file path not defined. Using default material library.')
-%     para.materialLibraryPath = 'material_libraries/materialLibraryEmpty.csv';
-%     cache = fullfile(scenarioNameStr, 'Input/cachedCadOutput.mat');
-%     if isfile(cache)
-%         delete(cache)
-%     end
-% end
 if ~isfield(para, 'materialLibraryPath') || ~isfile(para.materialLibraryPath)...
         || ~isMaterialLibraryFileFormat(para)
     warning(strcat('Using Empty material library. Check following issues: ',...
@@ -219,6 +211,7 @@ function b = isNodePositionPresent(path)
 files = dir(fullfile(path, 'Input'));
 
 b = any(startsWith({files.name},'NodePosition'));
+
 end
 
 function isMaterialLibraryFileFormat = isMaterialLibraryFileFormat(para)
@@ -236,4 +229,5 @@ if isfile(para.materialLibraryPath)
 else
     isMaterialLibraryFileFormat = false(1);
 end
+
 end
