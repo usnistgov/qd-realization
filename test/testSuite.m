@@ -22,12 +22,12 @@ close all
 clc
 
 %% Run test suite
-% % Runs a single precedure from exampleOutputsTest
-% testResults = runtests('exampleOutputsTest',...
-%     'ProcedureName', 'indoor1Test',...
-%     'OutputDetail', 3);
+% Runs a single precedure from exampleOutputsTest
+testResults = runtests('exampleOutputsTest',...
+    'ProcedureName', 'boxLectureRoomTest',...
+    'OutputDetail', 3);
 
 % Runs all procedures from exampleOutputsTest
-testResults = runtests('exampleOutputsTest',...
-    'OutputDetail', 3);
-disp(testResults)
+% testResults = runtests('exampleOutputsTest',...
+%     'OutputDetail', 3);
+% disp(testResults)

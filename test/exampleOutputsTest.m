@@ -54,7 +54,7 @@ srcFolder = '../src';
 addpath(srcFolder,...
     fullfile(srcFolder, 'raytracer'),...
     fullfile(srcFolder,'utils'),...
-    fullfile(srcFolder,'quaternions'))
+    fullfile(srcFolder,'utils/quaternions'))
 
 testCase.TestData.examplesFolderPath = fullfile(srcFolder,'examples');
 end
@@ -90,6 +90,18 @@ end
 
 
 %% Tests
+function boxLectureRoomTest(testCase)
+exampleName = 'boxLectureRoom';
+runRaytracer(testCase, exampleName);
+checkOutput(testCase, exampleName);
+end
+
+function livingRoomTest(testCase)
+exampleName = 'LivingRoom';
+runRaytracer(testCase, exampleName);
+checkOutput(testCase, exampleName);
+end
+
 function lRoomRotationTest(testCase)
 exampleName = 'L-Room-rotation';
 runRaytracer(testCase, exampleName);

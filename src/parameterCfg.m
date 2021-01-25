@@ -124,9 +124,12 @@ para = fieldToNum(para, 'qdFilesFloatPrecision', [], 6);
 % Default: 1 (true)
 para = fieldToNum(para, 'useOptimizedOutputToFile', [], 1);
 
+currentPath =pwd;
+materialLibraryAbsPath = fullfile(currentPath(1:find((pwd==filesep)==1, ...
+                            1, 'last')), 'src',para.materialLibraryPath);
 % Path to material library
-if ~isfield(para, 'materialLibraryPath') || ~isfile(para.materialLibraryPath)...
-        || ~isMaterialLibraryFileFormat(para)
+if ~isfield(para, 'materialLibraryPath') || ~isfile(materialLibraryAbsPath)...
+        || ~isMaterialLibraryFileFormat(para,materialLibraryAbsPath)
     warning(strcat('Using Empty material library. Check following issues: ',...
         ' 1. Material library path not defined. ',...
         ' 2. Material file not exist. ',...
@@ -214,8 +217,9 @@ b = any(startsWith({files.name},'NodePosition'));
 
 end
 
-function isMaterialLibraryFileFormat = isMaterialLibraryFileFormat(para)
-if isfile(para.materialLibraryPath)
+function isMaterialLibraryFileFormat = isMaterialLibraryFileFormat(para,...
+                                        materialLibraryAbsPath)
+if isfile(materialLibraryAbsPath)
     materialLibrary = importMaterialLibrary(para.materialLibraryPath);
     if strcmp(para.switchQDModel,'tgayMeasurements') && ...
             size(materialLibrary,2) == 3
@@ -229,5 +233,4 @@ if isfile(para.materialLibraryPath)
 else
     isMaterialLibraryFileFormat = false(1);
 end
-
 end
