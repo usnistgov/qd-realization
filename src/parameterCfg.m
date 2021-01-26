@@ -125,21 +125,27 @@ para = fieldToNum(para, 'qdFilesFloatPrecision', [], 6);
 para = fieldToNum(para, 'useOptimizedOutputToFile', [], 1);
 
 % Path to material library
-if isfield(para, 'materialLibraryPath') 
-    currentPath =pwd;
-    materialLibraryAbsPath = fullfile(currentPath(1:find((pwd==filesep)==1, ...
-        1, 'last')), 'src',para.materialLibraryPath);
-end
-if ~isfield(para, 'materialLibraryPath') || ~isfile(materialLibraryAbsPath)...
-        || ~isMaterialLibraryFileFormat(para.switchQDModel,materialLibraryAbsPath)
-    warning(strcat('Using Empty material library. Check following issues: ',...
-        ' 1. Material library path not defined. ',...
-        ' 2. Material file not exist. ',...
-        ' 3. Material file format not correct.'));
+if ~isfield(para, 'materialLibraryPath')
+    warning('Material library path not defined. Using Empty material library.');
     para.materialLibraryPath = 'material_libraries/materialLibraryEmpty.csv';
     cache = fullfile(scenarioNameStr, 'Input/cachedCadOutput.mat');
     if isfile(cache)
         delete(cache)
+    end
+else
+    currentPath =pwd;
+    materialLibraryAbsPath = fullfile(currentPath(1:find((pwd==filesep)==1, ...
+        1, 'last')), 'src',para.materialLibraryPath); % For test suite
+    if ~isfile(materialLibraryAbsPath)...
+        || ~isMaterialLibraryFileFormat(para.switchQDModel,materialLibraryAbsPath)
+        warning(strcat('Using Empty material library. Check following issues: ',...
+            ' 1. Material file not exist. ',...
+            ' 2. Material file format not correct.'));
+        para.materialLibraryPath = 'material_libraries/materialLibraryEmpty.csv';
+        cache = fullfile(scenarioNameStr, 'Input/cachedCadOutput.mat');
+        if isfile(cache)
+            delete(cache)
+        end
     end
 end
 
