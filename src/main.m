@@ -56,7 +56,7 @@ end
 
 %% Input
 % Leave empty for default 'ScenarioTest'
-scenarioNameStr = 'examples/CityBlock';
+scenarioNameStr = 'examples/boxLectureRoom';
 
 if ~isempty(scenarioNameStr)
     fprintf('Use customized scenario: %s.\n',scenarioNameStr);
