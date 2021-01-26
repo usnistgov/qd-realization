@@ -35,7 +35,7 @@ function para = parameterCfg(scenarioNameStr)
 %
 % Modified by: 
 % Mattia Lecci <leccimat@dei.unipd.it>, Updated implementation
-% Neeraj Varshney <neeraj.varshney@nist.gov., for QD approaches 
+% Neeraj Varshney <neeraj.varshney@nist.gov., Updated implementation
 
 
 % Load Parameters

@@ -5,35 +5,42 @@ function [qdRay, multipath] =...
     diffuseGeneratorSwitch, qdModelSwitch, scenarioName, frequency, ...
     diffusePathGainThreshold, varargin)
 % INPUTS -
-% ArrayOfPoints - combinations of multiple triangles, every row is a unique
-% combination. every triangle occupies 9 columns (3 vertices). (o/p of
-% treetraversal)
 % ArrayOfPlanes - Similar to Array of points. Each triangle occupies 4
-% columns (plane equation). The first column has the order of reflection
-% (o/p of treetraversal)
+%   columns (plane equation). The first column has the order of reflection
+%   (o/p of treetraversal)
+% ArrayOfPoints - combinations of multiple triangles, every row is a unique
+%   combination. every triangle occupies 9 columns (3 vertices). (o/p of
+%   treetraversal)
 % Rx - Rx position
 % Tx - Tx position
-% CADop - CAD output
+% CADOutput - CAD output
+% numberOfRowsArraysOfPlanes - number of arrays of planes
 % MaterialLibrary - Similar to Array of points. Each triangle occupies 1
-% triangle. The data is the row number of material from Material library
-% arrayOfMaterials - Similar to Array of points. Each triangle occupies 1
-% triangle. The data is the row number of material from Material library
+%   triangle. The data is the row number of material from Material library
+%   arrayOfMaterials - Similar to Array of points. Each triangle occupies 1
+%   triangle. The data is the row number of material from Material library
+% arrayOfMaterials - array of material corresponding to each planes
 % switchMaterial - whether triangle materials properties are present
-% vtx, vrx are velocities of tx and rx respectively
-% diffuseGeneratorSwitch - Switch to turn ON or OFF the Qausi dterministic module
-% 1 = ON, 0 = OFF
-% qdApproachSwitch - Switch to select the approach to generate diffuse components 
+% velocityTx, velocityRx are velocities of tx and rx respectively
+% diffuseGeneratorSwitch - Switch to turn ON or OFF the Qausi dterministic 
+% module 1 = ON, 0 = OFF
+% diffuseGeneratorSwitch - Switch to select the approach to generate   
+% diffuse components 
 % 1 = approach based on NIST measured QD parameters, 
 % 0 = approach based on channel document QD parameters
-% frequency: the carrier frequency at which the system operates
+% qdModelSwitch - Switch to select the QD model 
+% scenarioName - define scenario name 
+% frequency - the carrier frequency at which the system operates
+% diffusePathGainThreshold - This value is used to filter out diffuse
+% components for qdModelSwitch = nistMeasurements 
 %
-%OUTPUT -
-%output - multipath parameters
-%multipath - output to be plottd on f1 multipath plot
+% OUTPUTS -
+% qdRay - consists of specular and diffuse multipath parameters
+% multipath - consists of specular multipath parameters
 %
-% The phase information in case of presence of polarization information and is
-% encoded in the Jones vector. In case of absence of polarization, order of
-% reflection is multiplied by pi to give phase shift
+% The phase information in case of presence of polarization information and 
+% is encoded in the Jones vector. In case of absence of polarization, order 
+% of reflection is multiplied by pi to give phase shift
 
 
 %--------------------------Software Disclaimer-----------------------------
@@ -70,9 +77,10 @@ function [qdRay, multipath] =...
 % protection within the United States.
 
 % Modified by: Mattia Lecci <leccimat@dei.unipd.it>, Used MATLAB functions 
-% instead of custom ones, vectorized code, improved access to MaterialLibrary
+%   instead of custom ones, vectorized code, improved access to 
+%   MaterialLibrary
 % Modified by: Neeraj Varshney <neeraj.varshney@nist.gov>, to calculate RL
-% based on new material libraries given in 802.11ay channel document
+%   based on new material libraries given in 802.11ay channel document
 
 
 %% Varargin processing 
