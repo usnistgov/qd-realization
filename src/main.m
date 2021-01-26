@@ -55,11 +55,8 @@ else
 end
 
 %% Input
-% Leave Empty for Default 'ScenarioTest' e.g., scenarioNameStr = '';
-% To Run Existing Scenario Given in 'src/examples/' Folder, 
-% Set scenarioNameStr = 'examples/FolderName' 
-% e.g., scenarioNameStr = 'examples/Indoor1';
-scenarioNameStr = 'examples/boxLectureRoom';
+% Leave empty for default 'ScenarioTest'
+scenarioNameStr = 'examples/LivingRoom';
 
 if ~isempty(scenarioNameStr)
     fprintf('Use customized scenario: %s.\n',scenarioNameStr);
@@ -87,14 +84,11 @@ end
 
 % Input System Parameters
 paraCfg = parameterCfg(scenarioNameStr);
-
 % Input Node Related Parameters
 [paraCfg, nodeCfg] = nodeProfileCfg(paraCfg);
-
 % Run Raytracing Function and Generate Output
 outputPath = Raytracer(paraCfg, nodeCfg);
 
 fprintf('Save output data to:\n%s\n',outputPath);
 toc(t0);
 fprintf('--------- Simulation Complete ----------\n');
-toc(t0);

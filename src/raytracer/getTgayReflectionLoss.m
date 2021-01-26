@@ -1,7 +1,6 @@
 function reflectionLossdB = getTgayReflectionLoss(MaterialLibrary,...
                 materialIndex, multipath)
-% getReflectionLossApproach2 returns reflection loss in dB. 
-% This function is based on the MATLAB WLAN toolbox.
+% getTgayReflectionLoss returns reflection loss in dB. 
 
 % NIST-developed software is provided by NIST as a public service. You may
 % use, copy and distribute copies of the software in any medium, provided
@@ -34,12 +33,12 @@ function reflectionLossdB = getTgayReflectionLoss(MaterialLibrary,...
 %
 % 2020-2021 NIST/CTL (neeraj.varshney@nist.gov)
 
-% Get reflectances for V and H
+% Get reflectances for Vertical and Horizontal polarization
 reflectionCoefficient = getReflectance(MaterialLibrary,materialIndex,multipath);
 % Calculate reflection loss. It is the sum (in dB) of the mean
-% of the V and H reflectances for each reflection.
-reflectionLoss = prod(sum(reflectionCoefficient)/2);
-reflectionLossdB = -20*log10(abs((reflectionLoss))); 
+% of the Vertical and Horizontal reflectances for each reflection.
+reflectionLoss = prod(mean(reflectionCoefficient));
+reflectionLossdB = -20*log10(abs(reflectionLoss)); 
 end
 
 function reflectionCoefficient = getReflectance(MaterialLibrary,...
@@ -65,8 +64,8 @@ for reflectionOrderIndex = 1:orderReflection
     B_h =  relativePermittivity - sind(aor)^2;                
     B_v = (relativePermittivity - sind(aor)^2)/relativePermittivity^2; 
     reflectionCoefficient(:, reflectionOrderIndex) = [ ...
-        (cosd(aor) - sqrt(B_v))/(cosd(aor) + sqrt(B_v)); ... % V
-        (cosd(aor) - sqrt(B_h))/(cosd(aor) + sqrt(B_h))];    % H
+        (cosd(aor) - sqrt(B_v))/(cosd(aor) + sqrt(B_v)); ... % Vertical
+        (cosd(aor) - sqrt(B_h))/(cosd(aor) + sqrt(B_h))];    % Horizontal
 end     
 end
 

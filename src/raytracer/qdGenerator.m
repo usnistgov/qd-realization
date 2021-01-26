@@ -72,25 +72,24 @@ cursorOutput = dRayOutput;
 % cursorOutput(9) = getRandomPg0(dRayOutput, arrayOfMaterials, materialLibrary);
 
 % Pre/post cursors output
-switch qdModelSwitch 
+switch qdModelSwitch
     case 'nistMeasurements'
-    outputPre = getNistQdOutput(cursorOutput, arrayOfMaterials,...
-                materialLibrary, diffusePathGainThreshold, 'pre');
-    outputPost = getNistQdOutput(cursorOutput, arrayOfMaterials,...
-                materialLibrary, diffusePathGainThreshold, 'post');
+        outputPre = getNistQdOutput(cursorOutput, arrayOfMaterials,...
+            materialLibrary, diffusePathGainThreshold, 'pre');
+        outputPost = getNistQdOutput(cursorOutput, arrayOfMaterials,...
+            materialLibrary, diffusePathGainThreshold, 'post');
     case 'tgayMeasurements'
-    outputPre = getTgayQdOutput(cursorOutput, scenarioName, 'pre');
-    outputPost = getTgayQdOutput(cursorOutput, scenarioName, 'post');
+        outputPre = getTgayQdOutput(cursorOutput, scenarioName, 'pre');
+        outputPost = getTgayQdOutput(cursorOutput, scenarioName, 'post');
     otherwise
-    error('switchQDModel can be either nistMeasurements or tgayMeasurements.');
-end    
+        error('switchQDModel can be either nistMeasurements or tgayMeasurements.');
+end
 
 output = [outputPre; cursorOutput; outputPost];
 
 end
 
 %% Utils
-
 function pg = getRandomPg0(dRayOutput, arrayOfMaterials, materialLibrary)
 % Baseline: deterministic path gain
 pg = dRayOutput(9);
@@ -255,8 +254,8 @@ if intraClusterParams.n ~= 0
     % generate path gain, doa/dod, AOA/AOD (AZ & EL) and phase offset 
     for i = 1:intraClusterParams.n
         output(i, 1) = (dRayOutput(1)+(i)./10^ceil(log10(intraClusterParams.n))); 
-        output(i, 9) =  pow2db((db2pow(dRayOutput(9))...
-                        /db2pow(intraClusterParams.Kfactor)).*...
+        output(i, 9) =  pow2db((db2pow(dRayOutput(9)...
+                        -intraClusterParams.Kfactor)).*...
                         exp(-intraClusterParams.delayMultiplier...
                         *((taus(i+1)-taus(1))/intraClusterParams.gamma)));
         angleSpread = intraClusterParams.sigma*randn(1,4);            

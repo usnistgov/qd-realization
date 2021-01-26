@@ -74,12 +74,12 @@ para = fieldToNum(para, 'selectPlanesByDist', [], inf);
 
 % Switch to turn ON or OFF the Qausi dterministic module
 % 1 = ON, 0 = OFF (Default)
-para = fieldToNum(para, 'switchDiffuseComponent', [], 0);
+para = fieldToNum(para, 'switchDiffuseComponent', [0,1], 0);
 
 % Switch to consider only diffuse components up to 
 % diffusePathGainThreshold (in dB) below the deterministic ray. This switch 
 % is only used for NIST measurement based scenarios. Default value is set 
-% as inf which means software does not discard any diffuse components
+% as -inf which means software does not discard any diffuse components
 para = fieldToNum(para, 'diffusePathGainThreshold', [], -inf);
 
 % Qausi deterministic model
@@ -87,7 +87,7 @@ para = fieldToNum(para, 'diffusePathGainThreshold', [], -inf);
 % tgayMeasurements : model based on TGay channel document measurements. 
 if ~isfield(para, 'switchQDModel')
     warning(strcat('Q-D model is not defined in paraCfgCurrent.txt. ',...
-    ' Thus, considering nistMeasurements (default) switchQDModel.'));
+        ' Thus, considering nistMeasurements (default) switchQDModel.'));
     para.switchQDModel = 'nistMeasurements';
 end
 
@@ -126,12 +126,12 @@ para = fieldToNum(para, 'useOptimizedOutputToFile', [], 1);
 
 % Path to material library
 if isfield(para, 'materialLibraryPath') 
-currentPath =pwd;
-materialLibraryAbsPath = fullfile(currentPath(1:find((pwd==filesep)==1, ...
-                            1, 'last')), 'src',para.materialLibraryPath);
+    currentPath =pwd;
+    materialLibraryAbsPath = fullfile(currentPath(1:find((pwd==filesep)==1, ...
+        1, 'last')), 'src',para.materialLibraryPath);
 end
 if ~isfield(para, 'materialLibraryPath') || ~isfile(materialLibraryAbsPath)...
-        || ~isMaterialLibraryFileFormat(para,materialLibraryAbsPath)
+        || ~isMaterialLibraryFileFormat(para.switchQDModel,materialLibraryAbsPath)
     warning(strcat('Using Empty material library. Check following issues: ',...
         ' 1. Material library path not defined. ',...
         ' 2. Material file not exist. ',...
@@ -219,20 +219,20 @@ b = any(startsWith({files.name},'NodePosition'));
 
 end
 
-function isMaterialLibraryFileFormat = isMaterialLibraryFileFormat(para,...
+function isMaterialLibraryFileFormat = isMaterialLibraryFileFormat(switchQDModel,...
                                         materialLibraryAbsPath)
 if isfile(materialLibraryAbsPath)
-    materialLibrary = importMaterialLibrary(para.materialLibraryPath);
-    if strcmp(para.switchQDModel,'tgayMeasurements') && ...
+    materialLibrary = importMaterialLibrary(materialLibraryAbsPath);
+    if strcmp(switchQDModel,'tgayMeasurements') && ...
             size(materialLibrary,2) == 3
-        isMaterialLibraryFileFormat = true(1);
-    elseif strcmp(para.switchQDModel,'nistMeasurements') && ...
+        isMaterialLibraryFileFormat = true;
+    elseif strcmp(switchQDModel,'nistMeasurements') && ...
             size(materialLibrary,2) == 26
-        isMaterialLibraryFileFormat = true(1);
+        isMaterialLibraryFileFormat = true;
     else
-        isMaterialLibraryFileFormat = false(1);
+        isMaterialLibraryFileFormat = false;
     end
 else
-    isMaterialLibraryFileFormat = false(1);
+    isMaterialLibraryFileFormat = false;
 end
 end
