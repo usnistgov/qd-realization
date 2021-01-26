@@ -147,32 +147,6 @@ if numberOfRowsArraysOfPlanes>0
                 reflectionLoss = rl*orderOfReflection;
             end
         end
-%         if isMpc == 1
-%             switch qdModelSwitch 
-%                 case 'nistMeasurements'
-%                     if  switchMaterial == 1  
-%                         reflectionLoss = getNistReflectionLoss(MaterialLibrary,...
-%                         arrayOfMaterials(iterateNumberOfRowsArraysOfPlanes,:),...
-%                         'randOn', diffuseGeneratorSwitch); 
-%                     else
-%                         % Assumption: r1 loss at each reflection if
-%                         % material is not present in the material library
-%                         reflectionLoss = rl*orderOfReflection;
-%                     end
-%                 case 'tgayMeasurements'
-%                     if  switchMaterial == 1  
-%                         reflectionLoss = getTgayReflectionLoss(MaterialLibrary,...  
-%                         arrayOfMaterials(iterateNumberOfRowsArraysOfPlanes,:),...
-%                         multipath(indexMultipath,:));
-%                     else
-%                         % Assumption: r1 loss at each reflection if
-%                         % material is not present in the material library
-%                         reflectionLoss = rl*orderOfReflection;
-%                     end
-%                 
-%                     
-%             end
-%         end
                     
         % Corner case: MPC on the edge of triangles would be considered
         % twice. Check if it has been already stored otherwise discard.

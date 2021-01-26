@@ -34,12 +34,10 @@
 %
 % Modified by: 
 % Mattia Lecci <leccimat@dei.unipd.it>, Automatic path check
-% Neeraj Varshney <neeraj.varshney@nist.gov>, to enable warnings 
 
 clear
 close all
 clc
-warning('on') % to enable all warnings
 t0 = tic; % parallel processing-safe
 addpath('raytracer', 'utils', 'utils/quaternions')
 
@@ -56,7 +54,7 @@ end
 
 %% Input
 % Leave empty for default 'ScenarioTest'
-scenarioNameStr = 'examples/boxLectureRoom';
+scenarioNameStr = 'examples/LivingRoom';
 
 if ~isempty(scenarioNameStr)
     fprintf('Use customized scenario: %s.\n',scenarioNameStr);

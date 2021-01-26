@@ -106,7 +106,8 @@ end
 
 end
 
-function output = getNistQdOutput(dRayOutput, arrayOfMaterials, materialLibrary, diffusePathGainThreshold, prePostParam)
+function output = getNistQdOutput(dRayOutput, arrayOfMaterials, ...
+    materialLibrary, diffusePathGainThreshold, prePostParam)
 params = getParams(arrayOfMaterials, materialLibrary, prePostParam);
 
 % delays
@@ -240,35 +241,37 @@ aoaElCursor = dRayOutput(13);
 
 if intraClusterParams.n ~= 0
     output = zeros(intraClusterParams.n,21);
-    % generate delays
     taus = nan(intraClusterParams.n+1, 1);
     taus(1) = dRayOutput(8); 
-    i = 1;
-    while i <= intraClusterParams.n
-        diff = randomExponetialGenerator(intraClusterParams.lambda);
-        taus(i+1) = taus(i)+intraClusterParams.delayMultiplier*diff;
-        output(i,8) = taus(i+1);
-        i = i+1;
-    end
-    
-    % generate path gain, doa/dod, AOA/AOD (AZ & EL) and phase offset 
+    % generate path gain, delay, doa/dod, AOA/AOD (AZ & EL) and phase offset 
     for i = 1:intraClusterParams.n
-        output(i, 1) = (dRayOutput(1)+(i)./10^ceil(log10(intraClusterParams.n))); 
+        output(i, 1) = (dRayOutput(1)+(i)./10^ceil(log10(intraClusterParams.n)));
+        
+        diff = randomExponetialGenerator(intraClusterParams.lambda);
+		taus(i+1) = taus(i)+intraClusterParams.delayMultiplier*diff;
+        output(i,8) = taus(i+1);
+        
         output(i, 9) =  pow2db((db2pow(dRayOutput(9)...
-                        -intraClusterParams.Kfactor)).*...
-                        exp(-intraClusterParams.delayMultiplier...
-                        *((taus(i+1)-taus(1))/intraClusterParams.gamma)));
+            -intraClusterParams.Kfactor)).*...
+            exp(-intraClusterParams.delayMultiplier...
+            *((taus(i+1)-taus(1))/intraClusterParams.gamma)));
+        
         angleSpread = intraClusterParams.sigma*randn(1,4);            
         output(i, 10:11) = wrapAngles(aodAzCursor + angleSpread(1),...
-                            aodElCursor + angleSpread(2)); % aod az/el
+            aodElCursor + angleSpread(2)); % aod az/el
+         
         output(i, 12:13) = wrapAngles(aoaAzCursor + angleSpread(3), ...
-                            aoaElCursor + angleSpread(4)); % aoa az/el
+            aoaElCursor + angleSpread(4)); % aoa az/el
+        
         output(i,18) = rand*2*pi;   % phase shift          
+        
         output(i,20) = 0;           % doppler frequency
+        
         output(i, 2:4) = angleToVector(output(i, 10),...
-                        output(i, 11),output(i,8)); % dod
+            output(i, 11),output(i,8)); % dod
+        
         output(i, 5:7) = angleToVector(output(i, 12),...
-                        output(i, 13),output(i,8)); % doa
+            output(i, 13),output(i,8)); % doa
    end
 else
     output = [];
