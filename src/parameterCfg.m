@@ -194,38 +194,6 @@ assert(any(para.(field) == validValues),...
 end
 
 
-function defaultMobilitySwitch = getDefaultMobilitySwitch(scenarioNameStr)
-if isNodePositionPresent(scenarioNameStr)
-    defaultMobilitySwitch = 1;
-else
-    defaultMobilitySwitch = 0;
-end
-
-end
-
-
-function defaultMobilityType = getDefaultMobilityType(scenarioNameStr, mobilitySwitch)
-if ~mobilitySwitch
-    defaultMobilityType = 1;
-    return
-end
-
-% Mobility switch activated
-if isNodePositionPresent(scenarioNameStr)
-    defaultMobilityType = 1;
-else
-    defaultMobilityType = 0;
-end
-
-end
-
-function b = isNodePositionPresent(path)
-files = dir(fullfile(path, 'Input'));
-
-b = any(startsWith({files.name},'NodePosition'));
-
-end
-
 function isMaterialLibraryFileFormat = isMaterialLibraryFileFormat(switchQDModel,...
                                         materialLibraryAbsPath,materialLibraryPath)
 if isfile(materialLibraryAbsPath)

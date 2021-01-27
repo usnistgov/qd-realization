@@ -7,7 +7,7 @@ selectPlanesByDist	inf
 switchDiffuseComponent	1
 diffusePathGainThreshold	-25
 switchQDModel	nistMeasurements
-totalNumberOfReflections	1
+totalNumberOfReflections	3
 totalTimeDuration	21
 switchSaveVisualizerFiles	1
 carrierFrequency	60e9

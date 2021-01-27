@@ -1,10 +1,10 @@
 function [output,  outputPre, outputPost] =...
     qdGenerator(dRayOutput, arrayOfMaterials, materialLibrary,...
     qdModelSwitch, scenarioName, diffusePathGainThreshold)
-% QDGENERATOR generates diffused components starting from deterministic rays
-% following NIST's Quasi-Deterministic model if qdApproachSwitch = 1
+% QDGENERATOR generates diffused components starting from deterministic 
+% rays following NIST's Quasi-Deterministic model if qdModelSwitch = 1
 % and Quasi-Deterministic model given in 802.11ay channel document
-% if qdApproachSwitch = 2.
+% if qdModelSwitch = 2.
 
 
 % Copyright (c) 2020, University of Padova, Department of Information
@@ -69,7 +69,6 @@ end
 
 % Add randomness to deterministic reflection loss
 cursorOutput = dRayOutput;
-% cursorOutput(9) = getRandomPg0(dRayOutput, arrayOfMaterials, materialLibrary);
 
 % Pre/post cursors output
 switch qdModelSwitch
@@ -90,22 +89,6 @@ output = [outputPre; cursorOutput; outputPost];
 end
 
 %% Utils
-function pg = getRandomPg0(dRayOutput, arrayOfMaterials, materialLibrary)
-% Baseline: deterministic path gain
-pg = dRayOutput(9);
-for i = 1:length(arrayOfMaterials)
-    matIdx = arrayOfMaterials(i);
-
-    s_material = materialLibrary.s_RL(matIdx);
-    sigma_material = materialLibrary.sigma_RL(matIdx);
-    rl = rndRician(s_material, sigma_material, 1, 1);
-
-    muRl = materialLibrary.mu_RL(matIdx);
-    pg = pg - (rl - muRl);
-end
-
-end
-
 function output = getNistQdOutput(dRayOutput, arrayOfMaterials, ...
     materialLibrary, diffusePathGainThreshold, prePostParam)
 params = getParams(arrayOfMaterials, materialLibrary, prePostParam);
@@ -267,10 +250,10 @@ if intraClusterParams.n ~= 0
         
         output(i,20) = 0;           % doppler frequency
         
-        output(i, 2:4) = angleToVector(output(i, 10),...
+        output(i, 2:4) = angle2vector(output(i, 10),...
             output(i, 11),output(i,8)); % dod
         
-        output(i, 5:7) = angleToVector(output(i, 12),...
+        output(i, 5:7) = angle2vector(output(i, 12),...
             output(i, 13),output(i,8)); % doa
    end
 else
@@ -279,7 +262,7 @@ end
 end
 
 function intraClusterParams = getIntraClusterParams(scenarioName, prePostParam)
-icParams = importIntraClusterParameters('material_libraries/intraClusterParameters.txt');
+icParams = importIntraClusterParameters('material_libraries/intraClusterTgayParameters.txt');
 indexScenario = [];
 for iRow = 1:length(icParams.Scenario)
         if strcmp(icParams.Scenario{iRow},scenarioName)
