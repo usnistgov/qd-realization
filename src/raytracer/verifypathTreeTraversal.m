@@ -1,7 +1,8 @@
-function switch3 = verifypathTreeTraversal(Point11, Point12, Point13,...
+function isPathPossible = verifypathTreeTraversal(Point11, Point12, Point13,...
     Point21, Point22, Point23, Normal1, Normal2, Plane1, Plane2, condition1)
 % verifypathTreeTraversal is used to check whether two planes are facing
-%each other or whether the the point and the plane (normal) are on the same side.
+% each other or whether the the point and the plane (normal) are on the same 
+% side.
 %
 % For two planes to be facing each other the dot product between one plane's
 % normal and the difference vector between a pair of points on either plane
@@ -10,24 +11,24 @@ function switch3 = verifypathTreeTraversal(Point11, Point12, Point13,...
 % case. to get around this case we take the difference between three
 % distinct pairs and check for dotproduct.
 %
-%For a plane and a point to be on same side. We populate the vertices input
-%with three copies of the point coordinates. Normal of the plane doesnt
-%matter. The function will perform all the above steps for two planes while
-%avoiding the reciprocal case.
+% For a plane and a point to be on same side. We populate the vertices input
+% with three copies of the point coordinates. Normal of the plane doesnt
+% matter. The function will perform all the above steps for two planes while
+% avoiding the reciprocal case.
 %
-%Inputs:
-%Point11, Point12, Point13 - vertices of triangle 1
-%Point21, Point22, Point23 - vertices of triangle 2
-%Normal1 - normal of the plane of triangle 1
-%Normal2 - normal of the plane of triangle 2
-%Plane1 - plane equation of triangle 1
-%Plane2 - plane equation of triangle 2
+% Inputs:
+% Point11, Point12, Point13 - vertices of triangle 1
+% Point21, Point22, Point23 - vertices of triangle 2
+% Normal1 - normal of the plane of triangle 1
+% Normal2 - normal of the plane of triangle 2
+% Plane1 - plane equation of triangle 1
+% Plane2 - plane equation of triangle 2
 % condition1 - -1 to verify path between Tx and plane
 %               0 to verify path between two planes
 %               1 to verify path between plane and Rx
 %
-%Outputs:
-%switch3 - boolean which holds the information of possibility of path
+% Output:
+% isPathPossible - boolean which holds the information of possibility of path
 
 
 %--------------------------Software Disclaimer-----------------------------
@@ -75,7 +76,7 @@ vectorPoint3Plane1Point3Plane2 = Point13 - Point23;
 vectorPoint3Plane2Point3Plane1 = Point23 - Point13;
 
 % Using short-circuit logic
-switch3 = dot(vectorPoint1Plane1Point1Plane2,Normal1) <= 0 &&...
+isPathPossible = dot(vectorPoint1Plane1Point1Plane2,Normal1) <= 0 &&...
     dot(vectorPoint2Plane1Point2Plane2,Normal1) <= 0 &&...
     dot(vectorPoint3Plane1Point3Plane2,Normal1) <= 0 &&...
     (distanceOfPointFromPlane(Point21, Plane1) ~= 0 ||...
@@ -83,7 +84,7 @@ switch3 = dot(vectorPoint1Plane1Point1Plane2,Normal1) <= 0 &&...
     distanceOfPointFromPlane(Point23, Plane1)~=0);
 
 if(condition1==0)
-    switch3 = switch3 &&...
+    isPathPossible = isPathPossible &&...
         dot(vectorPoint1Plane2Point1Plane1,Normal2) <= 0 &&...
         dot(vectorPoint2Plane2Point2Plane1,Normal2) <= 0 &&...
         dot(vectorPoint3Plane2Point3Plane1,Normal2) <= 0 &&...

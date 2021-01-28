@@ -1,4 +1,4 @@
-function switch3 = verifyPath(Intersection, Reflected, vector, plane,...
+function isPathExist = verifyPath(Intersection, Reflected, vector, plane,...
     plane2, CADOutput, condition1, isVerifyMobility)
 %  Given the CAD model and the vectors one can verify if the vector passes
 %  through any one of the planes in the CAD model. While verifying about
@@ -6,12 +6,12 @@ function switch3 = verifyPath(Intersection, Reflected, vector, plane,...
 %  triangle case only (not on triangle).
 %
 %  Inputs:
-%  vector - vectorial representation of the path that has to be verified
 %  Intersection - point of origin of vector
 %  Reflected - point of destination of vector
+%  vector - vectorial representation of the path that has to be verified
 %  Plane - plane where point of origin is present on
 %  plane2 - plane where point of destination is present
-%  CADop - output of xmlreader (see xml reader for more information)
+%  CADOutput - output of xmlreader (see xml reader for more information)
 %  Condition1 - describes the scenario where the path has to be verified
 %             case 0 = when the path reflects from a plane and is 
 %                      going impede on another plane
@@ -24,8 +24,8 @@ function switch3 = verifyPath(Intersection, Reflected, vector, plane,...
 %  the plane, false if the intersection point can only lie between
 %  the point of origin and the destination.
 %
-%  Outputs:
-%  switch3 - boolean which has information whether the path exists or not
+%  Output:
+%  isPathExist - boolean which has information whether the path exists or not
 
 
 %--------------------------Software Disclaimer-----------------------------
@@ -65,7 +65,7 @@ function switch3 = verifyPath(Intersection, Reflected, vector, plane,...
 % instead of custom ones, supporting mobility check, improved if/else chain
 
 
-switch3 = 1;
+isPathExist = 1;
 
 % Loop which iterates through all the planes of the CAD file
 for i = 1:size(CADOutput,1)
@@ -91,20 +91,20 @@ for i = 1:size(CADOutput,1)
     end
     
     if condition1 == 0 && any(plane ~= plane1) && any(plane ~= plane2)
-        switch3 = ~switch1;
+        isPathExist = ~switch1;
         
     elseif condition1 == -1 && any(plane ~= plane1)
-        switch3 = ~switch1;
+        isPathExist = ~switch1;
         
     elseif condition1 == 1 && any(plane ~= plane2)
-        switch3 = ~switch1;
+        isPathExist = ~switch1;
         
     elseif condition1 == 2
-        switch3 = ~switch1;
+        isPathExist = ~switch1;
         
     end
     
-    if switch3 == 0
+    if isPathExist == 0
         break;
     end
     

@@ -56,13 +56,6 @@ displayProgress = 1;
 ts = paraCfgInput.totalTimeDuration/paraCfgInput.numberOfTimeDivisions;
 outputPaa = cell(paraCfgInput.numberOfNodes,paraCfgInput.numberOfNodes);
 
-% Input checking
-if paraCfgInput.switchDiffuseComponent == 1 &&...
-        paraCfgInput.carrierFrequency ~= 60e9
-    warning(['Please, note that diffuse scattering model is only ',...
-        'valid for fc=60 or 28 GHz'])
-end
-
 % List of paths
 inputPath = fullfile(paraCfgInput.inputScenarioName, 'Input');
 outputPath = fullfile(paraCfgInput.inputScenarioName, 'Output');

@@ -65,7 +65,7 @@ para = fieldToNum(para, 'numberOfTimeDivisions', [], 10);
 if isfield(para,'referencePoint')
     para.referencePoint = str2num(para.referencePoint); %#ok<ST2NM>
 else
-    para.referencePoint = [3,3,2];
+    para.referencePoint = [0,0,0];
 end
 
 % This is selection of planes/nodes by distance. r = inf means that there is
@@ -82,12 +82,12 @@ para = fieldToNum(para, 'switchDiffuseComponent', [0,1], 0);
 % as -inf which means software does not discard any diffuse components
 para = fieldToNum(para, 'diffusePathGainThreshold', [], -inf);
 
-% Qausi deterministic model
+% Qausi-deterministic model
 % nistMeasurements : model based on NIST measurements (Default), 
 % tgayMeasurements : model based on TGay channel document measurements. 
 if ~isfield(para, 'switchQDModel')
-    warning(strcat('Q-D model is not defined in paraCfgCurrent.txt. ',...
-        ' Thus, considering nistMeasurements (default) switchQDModel.'));
+    warning(['Q-D model is not defined in paraCfgCurrent.txt. ',...
+        'Thus, considering nistMeasurements (default) switchQDModel.']);
     para.switchQDModel = 'nistMeasurements';
 end
 
@@ -97,8 +97,8 @@ end
 para = fieldToNum(para, 'totalNumberOfReflections', [], 2);
 if strcmp(para.switchQDModel,'tgayMeasurements') ...
         && para.totalNumberOfReflections>2
-    warning(strcat('totalNumberOfReflections for switchQDModel = tgayMeasurements',...
-        'can not be considered higher than 2. Thus, setting Default value (2).'));
+    warning(['totalNumberOfReflections for switchQDModel = tgayMeasurements ',...
+        'can not be considered higher than 2. Thus, setting Default value (2).']);
     para.totalNumberOfReflections = 2;
 end
 
@@ -134,14 +134,14 @@ if ~isfield(para, 'materialLibraryPath')
     end
 else
     currentPath =pwd;
-    materialLibraryAbsPath = fullfile(currentPath(1:find((pwd==filesep)==1, ...
-        1, 'last')), 'src',para.materialLibraryPath); % For test suite
+    materialLibraryAbsPath = fullfile(fileparts(currentPath),...
+        'src',para.materialLibraryPath); % For test suite
     if ~isfile(materialLibraryAbsPath)...
-        || ~isMaterialLibraryFileFormat(para.switchQDModel,...
-        materialLibraryAbsPath,para.materialLibraryPath)
-        warning(strcat('Using Empty material library. Check following issues: ',...
+            || ~isMaterialLibraryFileFormat(para.switchQDModel,...
+            materialLibraryAbsPath,para.materialLibraryPath)
+        warning(['Using Empty material library. Check following issues: ',...
             ' 1. Material file not exist. ',...
-            ' 2. Material file format not correct.'));
+            ' 2. Material file format not correct.']);
         para.materialLibraryPath = 'material_libraries/materialLibraryEmpty.csv';
         cache = fullfile(scenarioNameStr, 'Input/cachedCadOutput.mat');
         if isfile(cache)

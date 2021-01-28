@@ -2,16 +2,21 @@ function tests = exampleOutputsTest
 %EXAMPLEOUTPUTTEST Tests to check whether new fixes, improvements, or
 % changes affect the output of the ray-tracer. The example scenarios are
 % taken as baselines, specifically:
+% - LectureRoom
+% - BoxLectureRoom
+% - DenserScenario
+% - SpatialSharing
+% - L-Room
 % - L-Room-rotation
 % - L-Room-rotation-multiPAA 
 % - DataCenter
-% - DenserScenario
-% - Indoor1
-% - Indoor2
-% - L-Room
-% - Outdoor1
-% - SpatialSharing
+% - ParkingLot
+% - Simplified ParkingLot
+% - LivingRoom
 % - StreetCanyon
+% - HotelLobby
+% - OpenAreaHotspot
+% - CityBlock
 % The Output/ folders contain the results of the respective scenario run
 % using rng('default'). For the current MATLAB version, the documentation
 % states that: "This way, the same random numbers are produced as if you
@@ -91,15 +96,15 @@ end
 
 %% Tests
 % LectureRoom
-function LectureRoomTest(testCase)
+function lectureRoomTest(testCase)
 exampleName = 'LectureRoom';
 runRaytracer(testCase, exampleName);
 checkOutput(testCase, exampleName);
 end
 
 % boxLectureRoom
-function boxLectureRoomTest(testCase)
-exampleName = 'boxLectureRoom';
+function BoxLectureRoomTest(testCase)
+exampleName = 'BoxLectureRoom';
 runRaytracer(testCase, exampleName);
 checkOutput(testCase, exampleName);
 end
@@ -155,7 +160,7 @@ end
 
 % simplifiedParkingLot
 function simplifiedParkingLotTest(testCase)
-exampleName = 'simplifiedParkingLot';
+exampleName = 'SimplifiedParkingLot';
 runRaytracer(testCase, exampleName);
 checkOutput(testCase, exampleName);
 end

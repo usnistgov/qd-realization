@@ -1,13 +1,14 @@
 function reflectionLoss = getNistReflectionLoss(materialLibrary, arrayOfMaterials, varargin)
-%GETREFLECTIONLOSS returns the ray reflection loss based on NIST measurements
+% GETNISTREFLECTIONLOSS returns the ray reflection loss based on NIST 
+% measurements
+% 
+% reflectionLoss = GETNISTREFLECTIONLOSS(materialLibrary, arrayOfMaterials)
 %
-%pathLossFinal = GETNISTREFLECTIONLOSS(materialLibrary, arrayOfMaterials)
-%
-%pathLossFinal = GETNISTREFLECTIONLOSS(___, 'randOn', value) can be used to
-%specify if the reflection loss returned is deterministic (value = 0) and
-%correspondent to mean value u measured. Otherwise (value = 1) the
-%reflection loss is extracted from a rician distribution with parameters s
-%(Noncentrality), sigma(Scale) which have been measured.
+% reflectionLoss = GETNISTREFLECTIONLOSS(___, 'randOn', value) can be used to
+% specify if the reflection loss returned is deterministic (value = 0) and
+% correspondent to mean value u measured. Otherwise (value = 1) the
+% reflection loss is extracted from a rician distribution with parameters s
+% (Noncentrality), sigma(Scale) which have been measured.
 
 % NIST-developed software is provided by NIST as a public service. You may
 % use, copy and distribute copies of the software in any medium, provided

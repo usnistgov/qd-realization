@@ -1,12 +1,19 @@
 function [CADOutput, materialSwitch] = xmlreader(filename, ...
     MaterialLibrary, referencePoint, r, IndoorSwitch)
-%XML redaer extracts the information of CAD file (AMF). 
-% The input of the function is filename, the material database with all the 
-% material parameters (Material_library), reference point (referencePoint)
-% and distance limitation(r)
-% The output is extracted triangles (CADop),
-% and a boolean to know whether the material information is
-% present in the CAD file (switch1)
+% XMLREADER function extracts the information of CAD file (AMF). 
+% 
+% Inputs:
+% filename - file name 
+% MaterialLibrary - material database with all the material parameters
+% referencePoint - center of the sphere 
+% r - radius of the sphere
+% IndoorSwitch - defines whether the scenario is indoor or not
+% 
+% Outputs:
+% CADOutput - contains all the extracted triangles
+% materialSwitch - a boolean to know whether the material information is
+%   present in the CAD file. If any one of the materials is missing 
+%   XMLREADER function returns materialSwitch = 0
 
 
 %--------------------------Software Disclaimer-----------------------------
@@ -189,7 +196,7 @@ for iterateObjects = 1:lengthObject                            % For multiple ob
             CADOutputTemp(13) = round(D, 4);
             
             % We are using distance limitation at this step
-            if r==inf
+            if isinf(r)
                 [switchDistance] = 1;
             else
                 [switchDistance] = verifydistance(r, referencePoint, CADOutputTemp, 1);

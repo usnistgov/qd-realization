@@ -1,6 +1,16 @@
-function switch1 = verifydistance(r, Tx, CADop, i)
+function isTriangleWithinSphere = verifydistance(r, referencePoint, CADop, i)
 % This part of the code verifies whether the given triangle (denoted by ith
-% row of CAop) is within a sphere of radius r and centered at Tx.
+% row of CAD output) is within a sphere of radius r and centered at 
+% referencePoint.
+%
+% Inputs:
+% r - denotes radius of the sphere
+% referencePoint - denotes the center of the sphere
+% CADop - contains either one row or each of the rows of CAD output
+% i - 1 if CADop contains one row otherwise it defines ith row of CADop
+%
+% Output:
+% isTriangleWithinSphere - 0 if triangle is within sphere otherwise 1
 
 %--------------------------Software Disclaimer-----------------------------
 %
@@ -40,24 +50,24 @@ function switch1 = verifydistance(r, Tx, CADop, i)
 
 
 plane1 = CADop(i,10:13);
-switch1 = 0;
+isTriangleWithinSphere = 0;
 
 % checks whether vertices are within the sphere
 for iterator = 1:3
-    d = norm([CADop(i,(iterator - 1) + 1) - Tx(1),...
-        CADop(i,(iterator - 1) + 2) - Tx(2),...
-        CADop(i,(iterator - 1) + 3) - Tx(3)]);
+    d = norm([CADop(i,(iterator - 1) + 1) - referencePoint(1),...
+        CADop(i,(iterator - 1) + 2) - referencePoint(2),...
+        CADop(i,(iterator - 1) + 3) - referencePoint(3)]);
     
     if d <= r
-        switch1 = 1;
+        isTriangleWithinSphere = 1;
         break;
     end
     
 end
 
-if switch1 ~= 1
-    d1 = (distanceOfPointFromPlane(Tx, plane1));
-    Point = pointOnPlane(Tx, plane1);
+if isTriangleWithinSphere ~= 1
+    d1 = (distanceOfPointFromPlane(referencePoint, plane1));
+    Point = pointOnPlane(referencePoint, plane1);
     Point1 = CADop(i, 1:3);
     Point2 = CADop(i, 4:6);
     Point3 = CADop(i, 7:9);
@@ -67,7 +77,7 @@ if switch1 ~= 1
     switchtriangle = PointInTriangle(Point,Point1,Point2,Point3);
     
     if d1 <= r && switchtriangle == 1
-        switch1 = 1;
+        isTriangleWithinSphere = 1;
         
     elseif d1 <= r && switchtriangle == 0
         triangleVertices = [Point1;Point2;Point3;Point1];
@@ -86,7 +96,7 @@ if switch1 ~= 1
             
             if dot(v1-pointOnSide, v2-pointOnSide) <= 0 &&...
                     (d1^2) + (d2) <= r^2
-                switch1 = 1;
+                isTriangleWithinSphere = 1;
                 break;
             end
             

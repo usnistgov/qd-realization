@@ -1,6 +1,28 @@
 function reflectionLossdB = getTgayReflectionLoss(MaterialLibrary,...
-                materialIndex, multipath)
-% getTgayReflectionLoss returns reflection loss in dB. 
+                arrayOfMaterials, multipath)
+% GETTGAYREFLECTIONLOSS returns the ray reflection loss in dB 
+% based on TGay measurements [1]
+% [1] A. Maltsev, A. Pudeyev, A. Lomayev, and I. Bolotin, "Channel models 
+% for IEEE 802.11ay," IEEE doc, pp. 802{11, 2017.
+%
+% This function first calculates the reflectances for vertical and 
+% horizontal polarization for each reflection using the incident angle and  
+% relative permittivity of the material in the Fresnel equation.
+% Subsequently, the reflection loss for each reflection is calculated by 
+% the taking the average of the vertical and horizontal reflectances.
+%
+% Inputs:
+% MaterialLibrary - contains each of the reflectors along with their
+%   material and relative permittivity value
+% arrayOfMaterials - array of materials corresponding to each of the planes
+%   where a ray is reflected. The dats is the row number of material from 
+%   MaterialLibrary. 
+% multipath - consists of specular multipath parameters. This vector is
+%   used to calculate angle(s) of incident and also to get information about
+%   the order of reflection
+%
+% Output: 
+% reflectionLossdB - ray reflection loss in dB
 
 % NIST-developed software is provided by NIST as a public service. You may
 % use, copy and distribute copies of the software in any medium, provided
@@ -34,7 +56,7 @@ function reflectionLossdB = getTgayReflectionLoss(MaterialLibrary,...
 % 2020-2021 NIST/CTL (neeraj.varshney@nist.gov)
 
 % Get reflectances for Vertical and Horizontal polarization
-reflectionCoefficient = getReflectance(MaterialLibrary,materialIndex,multipath);
+reflectionCoefficient = getReflectance(MaterialLibrary,arrayOfMaterials,multipath);
 % Calculate reflection loss. It is the sum (in dB) of the mean
 % of the Vertical and Horizontal reflectances for each reflection.
 reflectionLoss = prod(mean(reflectionCoefficient));
@@ -42,16 +64,33 @@ reflectionLossdB = -20*log10(abs(reflectionLoss));
 end
 
 function reflectionCoefficient = getReflectance(MaterialLibrary,...
-                                                materialIndex,multipath)
-% This function calculates reflection coefficients
+                                                arrayOfMaterials,multipath)
+% REFLECTIONCOEFFICIENT function returns reflectances for Vertical and 
+% Horizontal polarization for each reflection using the incident angle and  
+% relative permittivity of the material in the Fresnel equation.
+% 
+% Inputs:
+% MaterialLibrary - contains each of the reflectors along with their
+%   material and relative permittivity value
+% arrayOfMaterials - array of materials corresponding to each of the planes
+%   where a ray is reflected. The dats is the row number of material from 
+%   MaterialLibrary. 
+% multipath - consists of specular multipath parameters. This vector is
+%   used to calculate angle(s) of incident and also to get information about
+%   the order of reflection
+% 
+% Output:
+% reflectionCoefficient - reflectances for Vertical and Horizontal 
+% polarization for each of the reflections
+
 incidentAngle = angleOfIncident(multipath);
 orderReflection = multipath(1,1);
 reflectionCoefficient = ones(2, orderReflection);
 for reflectionOrderIndex = 1:orderReflection
     if reflectionOrderIndex == 1
-        reflectionMaterialIndex = materialIndex(1,1);
+        reflectionMaterialIndex = arrayOfMaterials(1,1);
     elseif  reflectionOrderIndex == 2
-        reflectionMaterialIndex = materialIndex(1,2);
+        reflectionMaterialIndex = arrayOfMaterials(1,2);
     else
         error(strcat('Incident angles are obtained till second order ',...
         'reflection. Thus, order of reflection cannot be considered ',... 
@@ -70,8 +109,16 @@ end
 end
 
 function incidentAngle = angleOfIncident(multipath) 
-% This function calculates angle of incident for first and second order
+% INCIDENTANGLE returns angle of incident for first and second order
 % reflections
+% 
+% Inputs:
+% multipath - consists of specular multipath parameters. This vector is
+% used to calculate angle(s) of incident.
+% 
+% Output: 
+% incidentAngle - incident angles till second order reflections
+
 differenceVectorRxFirstPoI = (multipath(1,2:4) - multipath(1,5:7))...
                                 /norm(multipath(1,2:4) - multipath(1,5:7));
 % differenceVectorRxFirstPoI is the difference vector between Rx 

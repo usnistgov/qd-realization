@@ -1,11 +1,32 @@
 function [output,  outputPre, outputPost] =...
     qdGenerator(dRayOutput, arrayOfMaterials, materialLibrary,...
     qdModelSwitch, scenarioName, diffusePathGainThreshold)
-% QDGENERATOR generates diffused components starting from deterministic 
-% rays following NIST's Quasi-Deterministic model if qdModelSwitch = 1
-% and Quasi-Deterministic model given in 802.11ay channel document
-% if qdModelSwitch = 2.
-
+% QDGENERATOR generates diffused or intra-cluster components starting 
+% from deterministic rays following 
+%   - NIST's Quasi-deterministic (QD) model if qdModelSwitch is set as 
+%     nistMeasurements 
+%   - Quasi-deterministic model given in 802.11ay channel document if 
+%     qdModelSwitch is set as tgayMeasurements
+% 
+% Inputs:
+% dRayOutput - deterministic ray parameter obtained using ray tracing
+% arrayOfMaterials - array of materials corresponding to each of the planes
+%   where a ray is reflected. The dats is the row number of material from 
+%   MaterialLibrary. 
+% materialLibrary - For tgayMeasurements, materialLibrary contains each of 
+%   the reflectors along with their material and relative permittivity value
+%   For nistMeasurements, materialLibrary contains each of the reflectors
+%   and their QD parameters
+% qdModelSwitch - defines QD model
+% scenarioName - defines scenario name
+% diffusePathGainThreshold - defines threshold to filter out diffuse 
+% components.  
+%
+% Outputs:
+% output - contains ray parameters for deterministic and pre/post cursor
+%   diffuse components
+% outputPre - contains ray parameters for pre cursor diffuse components
+% outputPost - contains ray parameters for post cursor diffuse components
 
 % Copyright (c) 2020, University of Padova, Department of Information
 % Engineering, SIGNET lab.
