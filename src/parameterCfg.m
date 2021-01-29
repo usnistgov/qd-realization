@@ -82,7 +82,7 @@ para = fieldToNum(para, 'switchDiffuseComponent', [0,1], 0);
 % as -inf which means software does not discard any diffuse components
 para = fieldToNum(para, 'diffusePathGainThreshold', [], -inf);
 
-% Qausi-deterministic model
+% Quasi-deterministic model
 % nistMeasurements : model based on NIST measurements (Default), 
 % tgayMeasurements : model based on TGay channel document measurements. 
 if ~isfield(para, 'switchQDModel')
@@ -140,8 +140,8 @@ else
             || ~isMaterialLibraryFileFormat(para.switchQDModel,...
             materialLibraryAbsPath,para.materialLibraryPath)
         warning(['Using Empty material library. Check following issues: ',...
-            ' 1. Material file not exist. ',...
-            ' 2. Material file format not correct.']);
+            '1. Material file not exist. ',...
+            '2. Material file format not correct.']);
         para.materialLibraryPath = 'material_libraries/materialLibraryEmpty.csv';
         cache = fullfile(scenarioNameStr, 'Input/cachedCadOutput.mat');
         if isfile(cache)

@@ -103,7 +103,7 @@ checkOutput(testCase, exampleName);
 end
 
 % boxLectureRoom
-function BoxLectureRoomTest(testCase)
+function boxLectureRoomTest(testCase)
 exampleName = 'BoxLectureRoom';
 runRaytracer(testCase, exampleName);
 checkOutput(testCase, exampleName);

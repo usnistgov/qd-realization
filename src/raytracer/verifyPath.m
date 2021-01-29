@@ -1,4 +1,4 @@
-function isPathExist = verifyPath(Intersection, Reflected, vector, plane,...
+function pathExists = verifyPath(Intersection, Reflected, vector, plane,...
     plane2, CADOutput, condition1, isVerifyMobility)
 %  Given the CAD model and the vectors one can verify if the vector passes
 %  through any one of the planes in the CAD model. While verifying about
@@ -25,7 +25,7 @@ function isPathExist = verifyPath(Intersection, Reflected, vector, plane,...
 %  the point of origin and the destination.
 %
 %  Output:
-%  isPathExist - boolean which has information whether the path exists or not
+%  pathExists - boolean which has information whether the path exists or not
 
 
 %--------------------------Software Disclaimer-----------------------------
@@ -65,7 +65,7 @@ function isPathExist = verifyPath(Intersection, Reflected, vector, plane,...
 % instead of custom ones, supporting mobility check, improved if/else chain
 
 
-isPathExist = 1;
+pathExists = 1;
 
 % Loop which iterates through all the planes of the CAD file
 for i = 1:size(CADOutput,1)
@@ -91,20 +91,20 @@ for i = 1:size(CADOutput,1)
     end
     
     if condition1 == 0 && any(plane ~= plane1) && any(plane ~= plane2)
-        isPathExist = ~switch1;
+        pathExists = ~switch1;
         
     elseif condition1 == -1 && any(plane ~= plane1)
-        isPathExist = ~switch1;
+        pathExists = ~switch1;
         
     elseif condition1 == 1 && any(plane ~= plane2)
-        isPathExist = ~switch1;
+        pathExists = ~switch1;
         
     elseif condition1 == 2
-        isPathExist = ~switch1;
+        pathExists = ~switch1;
         
     end
     
-    if isPathExist == 0
+    if pathExists == 0
         break;
     end
     

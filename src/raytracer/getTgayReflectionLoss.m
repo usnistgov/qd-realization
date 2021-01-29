@@ -83,7 +83,7 @@ function reflectionCoefficient = getReflectance(MaterialLibrary,...
 % reflectionCoefficient - reflectances for Vertical and Horizontal 
 % polarization for each of the reflections
 
-incidentAngle = angleOfIncident(multipath);
+incidentAngle = angleOfIncidence(multipath);
 orderReflection = multipath(1,1);
 reflectionCoefficient = ones(2, orderReflection);
 for reflectionOrderIndex = 1:orderReflection
@@ -108,8 +108,8 @@ for reflectionOrderIndex = 1:orderReflection
 end     
 end
 
-function incidentAngle = angleOfIncident(multipath) 
-% INCIDENTANGLE returns angle of incident for first and second order
+function incidentAngle = angleOfIncidence(multipath) 
+% ANGLEOFINCIDENCE returns angle of incident for first and second order
 % reflections
 % 
 % Inputs:
