@@ -1,5 +1,5 @@
 ParameterName	ParameterValue
-environmentFileName	Box.xml
+environmentFileName	BoxLectureRoom.xml
 indoorSwitch	1
 numberOfTimeDivisions	100
 referencePoint	[0,0,0]

@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <amf unit="millimeter">
-	<metadata type="FreeCAD-buildRevisionHash">980bf9060e28555fecd9e3462f68ca74007b70f8</metadata>
-	<metadata type="cad">FreeCAD 0.18</metadata>
+	<metadata type="author">Neeraj Varshney, neeraj.varshney@nist.gov</metadata> 
 	<object id="0">
 		<metadata type="name">BuildingD2</metadata>
 		<mesh>
