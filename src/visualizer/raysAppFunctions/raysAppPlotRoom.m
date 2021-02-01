@@ -21,7 +21,7 @@ function raysAppPlotRoom(app)
 delete(app.roomPlotHandle)
 
 % Prepare data
-path = sprintf('%s/RoomCoordinates/RoomCoordinates.csv', app.visualizerPath);
+path = sprintf('%s/RoomCoordinates.csv', app.visualizerPath);
 
 roomCoords = readRoomCoordinates(path);
 [Tri,X,Y,Z] = roomCoords2triangles(roomCoords); % triangle vertices

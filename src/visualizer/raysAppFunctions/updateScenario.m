@@ -51,6 +51,8 @@ app.ns3Path = fullfile(app.outputPath,'Ns3');
 raysAppPlotRoom(app)
 
 setupNodes(app);
+setupPaas(app);
+
 setupTimestepInfo(app);
 
 end
@@ -58,10 +60,10 @@ end
 
 %% Utils
 function setupNodes(app)
-initialPos = readNodesPosition(sprintf('%s/NodesPosition/NodesPosition.csv',...
-    app.ns3Path));
+initialPos = readNodeJsonFile(sprintf('%s/NodePositions.json',...
+    app.visualizerPath));
 
-app.numNodes = size(initialPos,1);
+app.numNodes = size([initialPos.Node],2);
 
 if app.numNodes < 2
     error('There should be at least 2 nodes in the scenario')
@@ -87,6 +89,7 @@ app.timestepInfo = struct();
 extractQdFilesInfo(app);
 extractMpcCoordinatesInfo(app);
 extractNodePositionsInfo(app);
+extractPaaInfo(app);
 
 totalTimesteps = length(app.timestepInfo);
 app.currentTimestep = 1; % added listener to this variable 
@@ -113,68 +116,159 @@ end
 
 function extractQdFilesInfo(app)
 qdFiles = dir(sprintf('%s/QdFiles',app.ns3Path));
-
-for i = 1:length(qdFiles)
-    token = regexp(qdFiles(i).name,'Tx(\d+)Rx(\d+).txt','tokens');
-    if isempty(token)
-        continue
-    end
-    
-    % else
-    Tx = str2double(token{1}{1}) + 1;
-    Rx = str2double(token{1}{2}) + 1;
-    
-    qd = readQdFile(sprintf('%s/%s',...
-        qdFiles(i).folder,qdFiles(i).name));
-    
-    for t = 1:length(qd)
-        app.timestepInfo(t).qdInfo(Tx,Rx) = qd(t);
-    end
+qdfileName = qdFiles(3).name;
+[~,~,extension]=fileparts(qdfileName);
+switch extension
+    case '.json'
+        qdFile = readQdJsonFile(sprintf('%s/QdFiles/qdOutput.json',...
+            app.ns3Path));
+        for i = 1:size(qdFile,2)
+            for timestep = 1:size(qdFile(1).Delay,1)
+                out = struct('TX', cell(1,1), ...
+                    'RX', cell(1,1), ...
+                    'PAA_TX', cell(1,1), ...
+                    'PAA_RX', cell(1,1), ...
+                    'Delay', cell(1,1), ...
+                    'Gain', cell(1,1), ...
+                    'Phase', cell(1,1), ...
+                    'AODEL', cell(1,1), ...
+                    'AODAZ', cell(1,1), ...
+                    'AOAEL', cell(1,1), ...
+                    'AOAAZ', cell(1,1) ...
+                    );
+                out.TX = qdFile(i).TX + 1;
+                out.RX = qdFile(i).RX + 1;
+                out.PAA_TX = qdFile(i).PAA_TX + 1;
+                out.PAA_RX = qdFile(i).PAA_RX + 1;
+                if size(qdFile(1).Delay,1)> 1
+                    out.Delay =  cell2mat(qdFile(i).Delay(timestep, :));
+                    out.Gain =   cell2mat(qdFile(i).Gain(timestep, :));
+                    out.Phase =  cell2mat(qdFile(i).Phase(timestep, :));
+                    out.AODEL =  cell2mat(qdFile(i).AODEL(timestep, :));
+                    out.AODAZ =  cell2mat(qdFile(i).AODAZ(timestep, :));
+                    out.AOAEL =  cell2mat(qdFile(i).AOAEL(timestep, :));
+                    out.AOAAZ =  cell2mat(qdFile(i).AOAAZ(timestep, :));
+                else
+                    out.Delay =  (qdFile(i).Delay(timestep, :));
+                    out.Gain =   (qdFile(i).Gain(timestep, :));
+                    out.Phase =  (qdFile(i).Phase(timestep, :));
+                    out.AODEL =  (qdFile(i).AODEL(timestep, :));
+                    out.AODAZ =  (qdFile(i).AODAZ(timestep, :));
+                    out.AOAEL =  (qdFile(i).AOAEL(timestep, :));
+                    out.AOAAZ =  (qdFile(i).AOAAZ(timestep, :));
+                end
+                
+                app.timestepInfo(timestep).paaInfo(out.PAA_TX,out.PAA_RX).qdInfo(out.TX,out.RX) = out;
+            end
+        end
+    case '.txt'
+        for i = 1:length(qdFiles)
+            token = regexp(qdFiles(i).name,'Tx(\d+)Rx(\d+).txt','tokens');
+            if isempty(token)
+                continue
+            end
+            
+            % else
+            Tx = str2double(token{1}{1}) + 1;
+            Rx = str2double(token{1}{2}) + 1;
+            
+            qd = readQdFile(sprintf('%s/%s',...
+                qdFiles(i).folder,qdFiles(i).name));
+            
+            for t = 1:length(qd)
+                app.timestepInfo(t).qdInfo(Tx,Rx) = qd(t);
+            end
+        end
 end
+
 end
 
 
 function extractMpcCoordinatesInfo(app)
-mpcFiles = dir(sprintf('%s/MpcCoordinates',app.visualizerPath));
+mpcFile = readMpcJsonFile(sprintf('%s/Mpc.json',...
+    app.visualizerPath));
+TxList = [mpcFile.TX];
+RxList = [mpcFile.RX];
+PaaTxList = [mpcFile.PAA_TX];
+PaaRxList = [mpcFile.PAA_RX];
+Rorder = [mpcFile.Rorder];
+for i = 1:size(mpcFile,2)
 
-for i = 1:length(mpcFiles)
-    token = regexp(mpcFiles(i).name,'MpcTx(\d+)Rx(\d+)Refl(\d+)Trc(\d+).csv','tokens');
-    if isempty(token)
-        continue
+    Tx = TxList(i) + 1;
+    Rx = RxList(i) + 1;
+    PaaTx = PaaTxList(i) + 1;
+    PaaRx = PaaRxList(i) + 1;    
+    Refl = Rorder(i) + 1;
+    
+    for timestep = 1:size(mpcFile(i).MPC,1)
+        if ~iscell(mpcFile(i).MPC)
+            switch Refl 
+                case 1
+                    numColumns = 6;
+                case 2
+                    numColumns = 9;
+                case 3 
+                    numColumns = 12;
+                case 4
+                    numColumns = 15;
+            end
+            app.timestepInfo(timestep).paaInfo(PaaTx,PaaRx).mpcs{Tx,Rx,Refl} ...
+                        = reshape(mpcFile(i).MPC(timestep,:,:),[],numColumns);
+         else
+             app.timestepInfo(timestep).PaaInfo(PaaTx,PaaRx).mpcs{Tx,Rx,Refl} = [];
+        end
+
     end
-    
-    % else
-    Tx = str2double(token{1}{1}) + 1;
-    Rx = str2double(token{1}{2}) + 1;
-    Refl = str2double(token{1}{3}) + 1;
-    timestep = str2double(token{1}{4}) + 1;
-    
-    if timestep > length(app.timestepInfo) ||...
-            ~isfield(app.timestepInfo(timestep),'mpcs') ||...
-            isempty(app.timestepInfo(timestep).mpcs)
-        app.timestepInfo(timestep).mpcs = cell(app.numNodes,app.numNodes,0);
-    end
-    
-    mpcs = readNodePositions(sprintf('%s/%s',...
-        mpcFiles(i).folder,mpcFiles(i).name));
-    app.timestepInfo(timestep).mpcs{Tx,Rx,Refl} = mpcs;
 end
+
 end
 
 
 function extractNodePositionsInfo(app)
-posFiles = dir(sprintf('%s/NodePositions',app.visualizerPath));
+posFile = readNodeJsonFile(sprintf('%s/NodePositions.json',app.visualizerPath));
 
-for i = 1:length(posFiles)
-    t = regexp(posFiles(i).name,'NodePositionsTrc(\d+).csv','tokens');
-    if isempty(t)
-        continue
+for timestep = 1:size(posFile(1).Position,1) 
+    pos = zeros(size(posFile,2),3);
+    for i = 1:size(posFile,2)
+        pos(i,:) = posFile(i).Position(timestep,:,:);
     end
-    
-    % else
-    timestep = str2double(t{1}{1}) + 1;
-    pos = readNodePositions(sprintf('%s/%s',...
-        posFiles(i).folder,posFiles(i).name));
     app.timestepInfo(timestep).pos = pos;
 end
+
+end
+
+function setupPaas(app)
+% get number of PAAs per node e.g., [2;2]- 2 nodes each has 2 PAAs
+paaPosFile = readPaaJsonFile(sprintf('%s/PAAPosition.json',app.visualizerPath));
+
+getPaaInfo = tabulate([paaPosFile.Node]);
+
+app.numPaas = getPaaInfo(:,2);
+
+if app.numPaas < 1
+    error('There should be at least 1 paa per node in the scenario')
+end
+
+end
+
+function extractPaaInfo(app)
+paaPosFile = readPaaJsonFile(sprintf('%s/PAAPosition.json',app.visualizerPath));
+getPaaInfo = tabulate([paaPosFile.Node]);
+for timestep = 1:size(paaPosFile(1).Position,1) 
+    index  = 1;
+    paaPos = {};
+    paaOri = {};
+    for iNode = 1:size(getPaaInfo,1)       
+        for iPaa = 1:getPaaInfo(iNode,2)           
+            paaPos{iPaa,iNode} = paaPosFile(index).Position(timestep,:,:);
+            paaOri{iPaa,iNode} = reshape(paaPosFile(index).Orientation,1,[]);
+
+            index = index+1;
+        end        
+    end
+    app.timestepInfo(timestep).paaPos = paaPos;
+    app.timestepInfo(timestep).paaOri = paaOri; 
+
+end
+
 end
