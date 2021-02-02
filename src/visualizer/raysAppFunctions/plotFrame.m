@@ -26,29 +26,20 @@ end
 
 function plotNodes(app)
 delete(app.nodesPlotHandle)
-delete(app.paasTxPaaFacePlotHandle)
-delete(app.paasRxPaaFacePlotHandle)
+delete(app.paasTxPlotHandle)
+delete(app.paasRxPlotHandle)
 
 t = app.currentTimestep;
 tx = app.txIndex;
 rx = app.rxIndex;
 paaPostx = cell2mat(app.timestepInfo(t).paaPos(:,tx));
 paaPosrx = cell2mat(app.timestepInfo(t).paaPos(:,rx));
-app.paasTxPaaFacePlotHandle = plotPaa(app.UIAxes,paaPostx);
-app.paasRxPaaFacePlotHandle = plotPaa(app.UIAxes,paaPosrx);
+app.paasTxPlotHandle = plotPaa(app.UIAxes,paaPostx);
+app.paasRxPlotHandle = plotPaa(app.UIAxes,paaPosrx);
 
-% pos = app.timestepInfo(t).pos([tx,rx],:);
-% plotNode(app.UIAxes,pos);
-% app.nodesPlotHandle = scatter3(app.UIAxes,...
-%     paaPostx(:,1), paaPostx(:,2), paaPostx(:,3),'s',...
-%     'm', 'filled');
-% app.nodesPlotHandle = scatter3(app.UIAxes,...
-%     paaPosrx(:,1), paaPosrx(:,2), paaPosrx(:,3),'s',...
-%     'm', 'filled');
-% 
 pos = app.timestepInfo(t).pos([tx,rx],:);
 app.nodesPlotHandle = scatter3(app.UIAxes,...
-    pos(:,1), pos(:,2), pos(:,3),100,'s',...
+    pos(:,1), pos(:,2), pos(:,3),50,'s',...
     'r', 'filled');
 
 end
@@ -69,11 +60,16 @@ for ipaatx = 1:paatx
             % no rays
             return
         end
-
-        mpcs = timestepInfo.paaInfo(ipaatx,ipaarx).mpcs(tx,rx,:);
+        % if and else loop to deal with discarded combinations in Mpc.json
+        if size(timestepInfo.paaInfo(ipaatx,ipaarx).mpcs,1) >= tx
+            mpcs = timestepInfo.paaInfo(ipaatx,ipaarx).mpcs(tx,rx,:);
+        else
+            % use reverse rx/tx 
+            mpcs = timestepInfo.paaInfo(ipaarx,ipaatx).mpcs(rx,tx,:);
+        end
         if all(cellfun(@isempty, mpcs))
             % use reverse rx/tx
-            mpcs = timestepInfo.paaInfo(ipaatx,ipaarx).mpcs(rx,tx,:);
+            mpcs = timestepInfo.paaInfo(ipaarx,ipaatx).mpcs(rx,tx,:);
         end
 
         for i = 1:length(mpcs)
@@ -121,7 +117,8 @@ end
 
 end
 
-function paasNodePaaFacePlotHandle = plotPaa(UIAxes,paalocation)
+function paasNodePlotHandle = plotPaa(UIAxes,paalocation)
+paasNodePlotHandle = zeros(1,size(paalocation,1));
 for ipaa = 1:size(paalocation,1)
     left = paalocation(ipaa,1) - 0.25;
     right = paalocation(ipaa,1) + 0.25;
@@ -130,7 +127,7 @@ for ipaa = 1:size(paalocation,1)
     x = [left left right right];
     y = [bottom top top bottom];
     z = zeros(size(x)) + paalocation(ipaa,3);
-    paasNodePaaFacePlotHandle(ipaa) = fill3(UIAxes,x, y, z, 'k');
+    paasNodePlotHandle(ipaa) = fill3(UIAxes,x, y, z, 'k');
 end
 
 end
