@@ -20,6 +20,9 @@ function updateScenario(app, mainPath)
 % See the License for the specific language governing permissions and
 % limitations under the License.
 
+% Updated by: Neeraj Varshney <neeraj.varshney@nist.gov> for JSON format, 
+% node rotation and paa orientation
+
 if nargin < 2
     mainPath = uigetdir(app.srcPath);
 end
@@ -89,7 +92,7 @@ app.timestepInfo = struct();
 extractQdFilesInfo(app);
 extractMpcCoordinatesInfo(app);
 extractNodePositionsInfo(app);
-extractPaaInfo(app);
+extractPaasInfo(app);
 
 totalTimesteps = length(app.timestepInfo);
 app.currentTimestep = 1; % added listener to this variable 
@@ -158,7 +161,8 @@ switch extension
                     out.AOAAZ =  (qdFile(i).AOAAZ(timestep, :));
                 end
                 
-                app.timestepInfo(timestep).paaInfo(out.PAA_TX,out.PAA_RX).qdInfo(out.TX,out.RX) = out;
+                app.timestepInfo(timestep).paaInfo(out.PAA_TX,out.PAA_RX)...
+                    .qdInfo(out.TX,out.RX) = out;
             end
         end
     case '.txt'
@@ -256,13 +260,13 @@ end
 
 end
 
-function extractPaaInfo(app)
+function extractPaasInfo(app)
 paaPosFile = readPaaJsonFile(sprintf('%s/PAAPosition.json',app.visualizerPath));
 getPaaInfo = tabulate([paaPosFile.Node]);
 for timestep = 1:size(paaPosFile(1).Position,1) 
     index  = 1;
-    paaPos = {};
-    paaOri = {};
+    paaPos = cell(max(getPaaInfo(:,2)),size(getPaaInfo,1));
+    paaOri = cell(max(getPaaInfo(:,2)),size(getPaaInfo,1));
     for iNode = 1:size(getPaaInfo,1)       
         for iPaa = 1:getPaaInfo(iNode,2)           
             paaPos{iPaa,iNode} = paaPosFile(index).Position(timestep,:,:);

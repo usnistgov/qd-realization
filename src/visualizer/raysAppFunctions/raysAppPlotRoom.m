@@ -29,19 +29,19 @@ roomCoords = readRoomCoordinates(path);
 % trisurf cannot plot directly to specified UIAxes
 % Plot on a new figure and copy the Patch object to UIAxes instead
 fig = figure('Visible','off');
-trisurf(Tri,X,Y,Z,...
-    'FaceColor',[0.9,0.9,0.9],...
-    'FaceAlpha',0.3,...
-    'EdgeColor','k')
+% trisurf(Tri,X,Y,Z,...
+%     'FaceColor',[0.9,0.9,0.9],...
+%     'FaceAlpha',0.4,...
+%     'EdgeColor','k')
 app.roomPlotHandle = copyobj(get(gca,'Children'),app.UIAxes);
 close(fig)
 
 % activate 3D rotations
 view(app.UIAxes, [45,45])
 
-app.UIAxes.XLabel.String = 'x';
-app.UIAxes.YLabel.String = 'y';
-app.UIAxes.ZLabel.String = 'z';
+app.UIAxes.XLabel.String = 'x (meter)';
+app.UIAxes.YLabel.String = 'y (meter)';
+app.UIAxes.ZLabel.String = 'z (meter)';
 
 axis(app.UIAxes, 'equal')
 
