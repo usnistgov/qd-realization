@@ -34,8 +34,15 @@ tx = app.txIndex;
 rx = app.rxIndex;
 paaPostx = cell2mat(app.timestepInfo(t).paaPos(:,tx));
 paaPosrx = cell2mat(app.timestepInfo(t).paaPos(:,rx));
-app.paasTxPlotHandle = plotPaa(app.UIAxes,paaPostx);
-app.paasRxPlotHandle = plotPaa(app.UIAxes,paaPosrx);
+paaOritx = cell2mat(app.timestepInfo(t).paaOri(:,tx));
+paaOrirx = cell2mat(app.timestepInfo(t).paaOri(:,rx));
+nodeRottx = app.timestepInfo(t).rot(tx,:);
+nodeRotrx = app.timestepInfo(t).rot(rx,:);
+nodePostx = app.timestepInfo(t).pos(tx,:);
+nodePosrx = app.timestepInfo(t).pos(rx,:);
+
+app.paasTxPlotHandle = plotPaa(app.UIAxes,paaPostx,paaOritx,nodePostx,nodeRottx);
+app.paasRxPlotHandle = plotPaa(app.UIAxes,paaPosrx,paaOrirx,nodePosrx,nodeRotrx);
 
 pos = app.timestepInfo(t).pos([tx,rx],:);
 app.nodesPlotHandle = scatter3(app.UIAxes,...
@@ -117,17 +124,43 @@ end
 
 end
 
-function paasNodePlotHandle = plotPaa(UIAxes,paalocation)
+function paasNodePlotHandle = plotPaa(UIAxes,paalocation,paaorientation,nodeposition,noderotation)
+
 paasNodePlotHandle = zeros(1,size(paalocation,1));
 for ipaa = 1:size(paalocation,1)
-    left = paalocation(ipaa,1) - 0.25;
-    right = paalocation(ipaa,1) + 0.25;
-    bottom = paalocation(ipaa,2) - 0.25;
-    top = paalocation(ipaa,2) + 0.25;
-    x = [left left right right];
-    y = [bottom top top bottom];
-    z = zeros(size(x)) + paalocation(ipaa,3);
+    left = paalocation(ipaa,2) - 0.2;
+    right = paalocation(ipaa,2) + 0.2;
+    bottom = paalocation(ipaa,3) - 0.1;
+    top = paalocation(ipaa,3) + 0.1;
+    y = [left left right right];
+    z = [bottom top top bottom];
+    x = zeros(size(y)) + paalocation(ipaa,1);
     paasNodePlotHandle(ipaa) = fill3(UIAxes,x, y, z, 'k');
-end
+    if paaorientation(ipaa,1)~=0 % z-axis
+        rotate(paasNodePlotHandle(ipaa),[0,0,1],paaorientation(ipaa,1)*180/pi,paalocation(ipaa,:));
+        
+    end
+    if paaorientation(ipaa,2)~=0 % x-axis
+        rotate(paasNodePlotHandle(ipaa),[1,0,0],paaorientation(ipaa,2)*180/pi,paalocation(ipaa,:));
 
+    end
+    if paaorientation(ipaa,3)~=0 % y-axis
+        rotate(paasNodePlotHandle(ipaa),[0,1,0],paaorientation(ipaa,3)*180/pi,paalocation(ipaa,:));
+
+    end
+    if noderotation(1) ~= 0
+       rotate(paasNodePlotHandle(ipaa),[0,0,1],noderotation(1)*180/pi,nodeposition);
+       
+    end
+    if noderotation(2) ~= 0
+        rotate(paasNodePlotHandle(ipaa),[1,0,0],noderotation(2)*180/pi,nodeposition);
+        
+    end
+    if noderotation(3) ~= 0
+        rotate(paasNodePlotHandle(ipaa),[0,1,0],noderotation(3)*180/pi,nodeposition);
+        
+    end
+    
+
+end
 end

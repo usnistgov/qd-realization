@@ -229,10 +229,15 @@ posFile = readNodeJsonFile(sprintf('%s/NodePositions.json',app.visualizerPath));
 
 for timestep = 1:size(posFile(1).Position,1) 
     pos = zeros(size(posFile,2),3);
+    rot = zeros(size(posFile,2),3);
     for i = 1:size(posFile,2)
         pos(i,:) = posFile(i).Position(timestep,:,:);
+        rot(i,:) = posFile(i).Rotation(timestep,:,:);
+
     end
     app.timestepInfo(timestep).pos = pos;
+    app.timestepInfo(timestep).rot = rot;
+
 end
 
 end
