@@ -58,6 +58,8 @@ end
 function plotRays(app)
 delete(app.raysPlotHandle)
 
+refOrder = str2double(app.RefOrderDropdown.Value) + 1;
+
 t = app.currentTimestep;
 tx = app.txIndex;
 rx = app.rxIndex;
@@ -73,14 +75,14 @@ for ipaatx = 1:paatx
         end
         % if and else loop to deal with discarded combinations in Mpc.json
         if size(timestepInfo.paaInfo(ipaatx,ipaarx).mpcs,1) >= tx
-            mpcs = timestepInfo.paaInfo(ipaatx,ipaarx).mpcs(tx,rx,:);
+            mpcs = timestepInfo.paaInfo(ipaatx,ipaarx).mpcs(tx,rx,1:refOrder);
         else
             % use reverse rx/tx 
-            mpcs = timestepInfo.paaInfo(ipaarx,ipaatx).mpcs(rx,tx,:);
+            mpcs = timestepInfo.paaInfo(ipaarx,ipaatx).mpcs(rx,tx,1:refOrder);
         end
         if all(cellfun(@isempty, mpcs))
             % use reverse rx/tx
-            mpcs = timestepInfo.paaInfo(ipaarx,ipaatx).mpcs(rx,tx,:);
+            mpcs = timestepInfo.paaInfo(ipaarx,ipaatx).mpcs(rx,tx,1:refOrder);
         end
 
         for i = 1:length(mpcs)

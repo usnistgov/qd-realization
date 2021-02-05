@@ -195,14 +195,15 @@ TxList = [mpcFile.TX];
 RxList = [mpcFile.RX];
 PaaTxList = [mpcFile.PAA_TX];
 PaaRxList = [mpcFile.PAA_RX];
-Rorder = [mpcFile.Rorder];
+RefOrder = [mpcFile.Rorder];
+app.RefOrderDropdown.Items = array2cellstr(max(RefOrder):-1:0);
 for i = 1:size(mpcFile,2)
 
     Tx = TxList(i) + 1;
     Rx = RxList(i) + 1;
     PaaTx = PaaTxList(i) + 1;
     PaaRx = PaaRxList(i) + 1;    
-    Refl = Rorder(i) + 1;
+    Refl = RefOrder(i) + 1;
     
     for timestep = 1:size(mpcFile(i).MPC,1)
         if ~iscell(mpcFile(i).MPC)
