@@ -148,7 +148,7 @@ for ipaa = 1:size(paalocation,1)
     x1 = zeros(size(y)) + paalocation(ipaa,1) + 0.01;
     
     orientation = coordinateRotation([x', y', z'; x1', y' z'], paalocation(ipaa,:),...
-        paaorientation(ipaa,:)); % One doubt here: paalocation(ipaa,:) should be change as time time or it should be fixed as first time instant
+        paaorientation(ipaa,:)); 
  
     rotation = coordinateRotation(orientation, paalocation(ipaa,:),...
         noderotation);
