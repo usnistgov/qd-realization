@@ -196,7 +196,7 @@ RxList = [mpcFile.RX];
 PaaTxList = [mpcFile.PAA_TX];
 PaaRxList = [mpcFile.PAA_RX];
 RefOrder = [mpcFile.Rorder];
-app.RefOrderDropdown.Items = array2cellstr(max(RefOrder):-1:0);
+app.RefOrderDropdown.Items = array2cellstr([1:max(RefOrder),0]);
 for i = 1:size(mpcFile,2)
 
     Tx = TxList(i) + 1;

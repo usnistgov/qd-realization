@@ -50,8 +50,8 @@ nodeRotrx = app.timestepInfo(t).rot(rx,:);
 
 nodesPos = app.timestepInfo(t).pos([tx,rx],:);
 app.nodesPlotHandle = scatter3(app.UIAxes,...
-    nodesPos(:,1), nodesPos(:,2), nodesPos(:,3),50,'s',...
-    'r', 'filled');
+    nodesPos(:,1), nodesPos(:,2), nodesPos(:,3),20,'s',...
+    'm', 'filled');
 
 end
 
@@ -138,10 +138,10 @@ paasBackNodePlotHandle = zeros(1,size(paalocation,1));
 color = {'y','c','m','g'}; % color for PAAs
 for ipaa = 1:size(paalocation,1)
     % Back Face
-    left = paalocation(ipaa,2) - 0.2;
-    right = paalocation(ipaa,2) + 0.2;
-    bottom = paalocation(ipaa,3) - 0.1;
-    top = paalocation(ipaa,3) + 0.1;
+    left = paalocation(ipaa,2) - 0.25;
+    right = paalocation(ipaa,2) + 0.25;
+    bottom = paalocation(ipaa,3) - 0.15;
+    top = paalocation(ipaa,3) + 0.15;
     y = [left left right right];
     z = [bottom top top bottom];
     x = zeros(size(y)) + paalocation(ipaa,1);
@@ -155,9 +155,9 @@ for ipaa = 1:size(paalocation,1)
     rotation = coordinateRotation(orientation, paalocation(ipaa,:),...
         noderotation);
     paasBackNodePlotHandle(ipaa) = fill3(UIAxes,rotation(1:4,1), rotation(1:4,2),...
-        rotation(1:4,3),  color{ipaa}); % Back Face
+        rotation(1:4,3),'k'); % Back Face
     paasFrontNodePlotHandle(ipaa) = fill3(UIAxes, rotation(5:8,1), rotation(5:8,2),...
-        rotation(5:8,3),'k');  % Front Face 
+        rotation(5:8,3), color{ipaa});  % Front Face 
  
 end
 
