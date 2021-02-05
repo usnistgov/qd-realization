@@ -29,25 +29,24 @@ end
 
 function plotNodes(app)
 delete(app.nodesPlotHandle)
-delete(app.paasTxPlotHandle)
-delete(app.paasRxPlotHandle)
+delete(app.paasFrontTxPlotHandle)
+delete(app.paasBackTxPlotHandle)
+delete(app.paasFrontRxPlotHandle)
+delete(app.paasBackRxPlotHandle)
+
 
 t = app.currentTimestep;
 tx = app.txIndex;
 rx = app.rxIndex;
 paaPostx = cell2mat(app.timestepInfo(t).paaPos(:,tx));
 paaPosrx = cell2mat(app.timestepInfo(t).paaPos(:,rx));
-paaOritx = cell2mat(app.timestepInfo(t).paaOri(:,tx));
-paaOrirx = cell2mat(app.timestepInfo(t).paaOri(:,rx));
+paaOritx = cell2mat(app.timestepInfo(1).paaOri(:,tx));
+paaOrirx = cell2mat(app.timestepInfo(1).paaOri(:,rx));
 nodeRottx = app.timestepInfo(t).rot(tx,:);
 nodeRotrx = app.timestepInfo(t).rot(rx,:);
-nodePostx = app.timestepInfo(t).pos(tx,:);
-nodePosrx = app.timestepInfo(t).pos(rx,:);
 
-app.paasTxPlotHandle = plotPaa(app.UIAxes,paaPostx,paaOritx,nodePostx,...
-    nodeRottx);
-app.paasRxPlotHandle = plotPaa(app.UIAxes,paaPosrx,paaOrirx,nodePosrx,...
-    nodeRotrx);
+[app.paasFrontTxPlotHandle,app.paasBackTxPlotHandle] = plotPaa(app.UIAxes,paaPostx,paaOritx,nodeRottx);
+[app.paasFrontRxPlotHandle,app.paasBackRxPlotHandle] = plotPaa(app.UIAxes,paaPosrx,paaOrirx,nodeRotrx);
 
 nodesPos = app.timestepInfo(t).pos([tx,rx],:);
 app.nodesPlotHandle = scatter3(app.UIAxes,...
@@ -129,11 +128,14 @@ end
 
 end
 
-function paasNodePlotHandle = plotPaa(UIAxes,paalocation,paaorientation,...
-    nodeposition,noderotation)
+function [paasFrontNodePlotHandle,paasBackNodePlotHandle] = plotPaa(UIAxes,paalocation,paaorientation,...
+    noderotation)
+paasFrontNodePlotHandle = zeros(1,size(paalocation,1));
+paasBackNodePlotHandle = zeros(1,size(paalocation,1));
 
-paasNodePlotHandle = zeros(1,size(paalocation,1));
+color = {'y','b','r','g'}; % color for PAAs
 for ipaa = 1:size(paalocation,1)
+    % Back Face
     left = paalocation(ipaa,2) - 0.2;
     right = paalocation(ipaa,2) + 0.2;
     bottom = paalocation(ipaa,3) - 0.1;
@@ -141,41 +143,27 @@ for ipaa = 1:size(paalocation,1)
     y = [left left right right];
     z = [bottom top top bottom];
     x = zeros(size(y)) + paalocation(ipaa,1);
-    paasNodePlotHandle(ipaa) = fill3(UIAxes,x, y, z, 'k');
     
-    % For PAA Orientation
-    if paaorientation(ipaa,1)~=0 % z-axis
-        rotate(paasNodePlotHandle(ipaa),[0,0,1],...
-            paaorientation(ipaa,1)*180/pi,paalocation(ipaa,:));
-        
-    end
-    if paaorientation(ipaa,2)~=0 % x-axis
-        rotate(paasNodePlotHandle(ipaa),[1,0,0],...
-            paaorientation(ipaa,2)*180/pi,paalocation(ipaa,:));
-
-    end
-    if paaorientation(ipaa,3)~=0 % y-axis
-        rotate(paasNodePlotHandle(ipaa),[0,1,0],...
-            paaorientation(ipaa,3)*180/pi,paalocation(ipaa,:));
-
-    end
-    % For Node Rotation
-    if noderotation(1) ~= 0
-       rotate(paasNodePlotHandle(ipaa),[0,0,1],...
-           noderotation(1)*180/pi,paalocation(ipaa,:));
-       
-    end
-    if noderotation(2) ~= 0
-        rotate(paasNodePlotHandle(ipaa),[1,0,0],...
-            noderotation(2)*180/pi,paalocation(ipaa,:));
-        
-    end
-    if noderotation(3) ~= 0
-        rotate(paasNodePlotHandle(ipaa),[0,1,0],...
-            noderotation(3)*180/pi,paalocation(ipaa,:));
-        
-    end
+    % Front Face
+    left = paalocation(ipaa,2) - 0.2;
+    right = paalocation(ipaa,2) + 0.2;
+    bottom = paalocation(ipaa,3) - 0.1;
+    top = paalocation(ipaa,3) + 0.1;
+    y1 = [left left right right];
+    z1 = [bottom top top bottom];
+    x1 = zeros(size(y1)) + paalocation(ipaa,1) + 0.01;
     
-
+    orientation = coordinateRotation([x', y', z'; x1', y1' z1'], paalocation(ipaa,:),...
+        paaorientation(ipaa,:)); % One doubt here: paalocation(ipaa,:) should be change as time time or it should be fixed as first time instant
+ 
+    rotation = coordinateRotation(orientation, paalocation(ipaa,:),...
+        noderotation);
+    paasBackNodePlotHandle(ipaa) = fill3(UIAxes,rotation(1:length(x'),1), rotation(1:length(y'),2),...
+        rotation(1:length(z'),3),  color{ipaa}); % Back Face
+    paasFrontNodePlotHandle(ipaa) = fill3(UIAxes, rotation(length(x')+1:end,1), rotation(length(y')+1:end,2),...
+        rotation(length(z')+1:end,3),'k');  % Front Face
+ 
+ 
 end
 end
+
