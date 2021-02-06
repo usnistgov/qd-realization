@@ -29,24 +29,26 @@ end
 
 function plotNodes(app)
 delete(app.nodesPlotHandle)
-delete(app.paasFrontTxPlotHandle)
-delete(app.paasBackTxPlotHandle)
-delete(app.paasFrontRxPlotHandle)
-delete(app.paasBackRxPlotHandle)
+delete(app.paaFrontTxPlotHandle)
+delete(app.paaBackTxPlotHandle)
+delete(app.paaFrontRxPlotHandle)
+delete(app.paaBackRxPlotHandle)
 
 
 t = app.currentTimestep;
 tx = app.txIndex;
 rx = app.rxIndex;
-paaPostx = cell2mat(app.timestepInfo(t).paaPos(:,tx));
-paaPosrx = cell2mat(app.timestepInfo(t).paaPos(:,rx));
-paaOritx = cell2mat(app.timestepInfo(t).paaOri(:,tx));
-paaOrirx = cell2mat(app.timestepInfo(t).paaOri(:,rx));
-nodeRottx = app.timestepInfo(t).rot(tx,:);
-nodeRotrx = app.timestepInfo(t).rot(rx,:);
+paaPosTx = cell2mat(app.timestepInfo(t).paaPos(:,tx));
+paaPosRx = cell2mat(app.timestepInfo(t).paaPos(:,rx));
+paaOriTx = cell2mat(app.timestepInfo(t).paaOri(:,tx));
+paaOriRx = cell2mat(app.timestepInfo(t).paaOri(:,rx));
+nodeRotTx = app.timestepInfo(t).rot(tx,:);
+nodeRotRx = app.timestepInfo(t).rot(rx,:);
 
-[app.paasFrontTxPlotHandle,app.paasBackTxPlotHandle] = plotPaa(app.UIAxes,paaPostx,paaOritx,nodeRottx);
-[app.paasFrontRxPlotHandle,app.paasBackRxPlotHandle] = plotPaa(app.UIAxes,paaPosrx,paaOrirx,nodeRotrx);
+[app.paaFrontTxPlotHandle,app.paaBackTxPlotHandle] = plotPaa(app.UIAxes,...
+    paaPosTx,paaOriTx,nodeRotTx);
+[app.paaFrontRxPlotHandle,app.paaBackRxPlotHandle] = plotPaa(app.UIAxes,...
+    paaPosRx,paaOriRx,nodeRotRx);
 
 nodesPos = app.timestepInfo(t).pos([tx,rx],:);
 app.nodesPlotHandle = scatter3(app.UIAxes,...
@@ -59,14 +61,13 @@ function plotRays(app)
 delete(app.raysPlotHandle)
 
 refOrder = str2double(app.RefOrderDropdown.Value) + 1;
-
 t = app.currentTimestep;
 tx = app.txIndex;
 rx = app.rxIndex;
-paatx = app.numPaas(tx);
-paarx = app.numPaas(rx);
-for ipaatx = 1:paatx
-    for ipaarx = 1:paarx
+paaTx = app.numPaas(tx);
+paaRx = app.numPaas(rx);
+for ipaatx = 1:paaTx
+    for ipaarx = 1:paaRx
         
         timestepInfo = app.timestepInfo(t);
         if isempty(timestepInfo.paaInfo(ipaatx,ipaarx).mpcs)
@@ -86,10 +87,10 @@ for ipaatx = 1:paatx
         end
 
         for i = 1:length(mpcs)
-            relfOrder = i - 1;
+            reflOrder = i - 1;
 
             coords = mpcs{i};
-            [color, width] = getRayAspect(relfOrder);
+            [color, width] = getRayAspect(reflOrder);
 
             app.raysPlotHandle = [app.raysPlotHandle;...
                 plot3(app.UIAxes,...
@@ -99,21 +100,22 @@ for ipaatx = 1:paatx
         end
     end
 end
+
 end
 
 
-function plotQd(app,direction)
+function plotQd(app, direction)
 
-Tx = app.txIndex;
-Rx = app.rxIndex;
+tx = app.txIndex;
+rx = app.rxIndex;
 t = app.currentTimestep;
-paatx = app.numPaas(Tx);
-paarx = app.numPaas(Rx);
+numPaasTx = app.numPaas(tx);
+numPaasRx = app.numPaas(rx);
 timestampInfo = app.timestepInfo(t);
-for ipaatx = 1:paatx
-    for ipaarx = 1:paarx
+for ipaatx = 1:numPaasTx
+    for ipaarx = 1:numPaasRx
         if ~isempty(timestampInfo.paaInfo(ipaatx,ipaarx).qdInfo)
-            qd = timestampInfo.paaInfo(ipaatx,ipaarx).qdInfo(Tx,Rx);
+            qd = timestampInfo.paaInfo(ipaatx,ipaarx).qdInfo(tx,rx);
             raysAppPlotQdStruct(app, qd, direction)
         else
             switch(direction)
@@ -130,34 +132,34 @@ end
 
 end
 
-function [paasFrontNodePlotHandle,paasBackNodePlotHandle] = plotPaa(UIAxes,paalocation,paaorientation,...
-    noderotation)
-paasFrontNodePlotHandle = zeros(1,size(paalocation,1));
-paasBackNodePlotHandle = zeros(1,size(paalocation,1));
+function [paaFrontNodePlotHandle,paaBackNodePlotHandle] = plotPaa(UIAxes,...
+    paaLocation, paaOrientation, nodeRotation)
+paaFrontNodePlotHandle = zeros(1,size(paaLocation,1));
+paaBackNodePlotHandle = zeros(1,size(paaLocation,1));
 
 color = {'y','c','m','g'}; % color for PAAs
-for ipaa = 1:size(paalocation,1)
+for ipaa = 1:size(paaLocation,1)
     % Back Face
-    left = paalocation(ipaa,2) - 0.25;
-    right = paalocation(ipaa,2) + 0.25;
-    bottom = paalocation(ipaa,3) - 0.15;
-    top = paalocation(ipaa,3) + 0.15;
+    left = paaLocation(ipaa,2) - 0.25;
+    right = paaLocation(ipaa,2) + 0.25;
+    bottom = paaLocation(ipaa,3) - 0.15;
+    top = paaLocation(ipaa,3) + 0.15;
     y = [left left right right];
     z = [bottom top top bottom];
-    x = zeros(size(y)) + paalocation(ipaa,1);
+    x = zeros(size(y)) + paaLocation(ipaa,1);
     
-    % Front Face
-    x1 = zeros(size(y)) + paalocation(ipaa,1) + 0.01;
+    % Front Face where PAA is oriented
+    x1 = zeros(size(y)) + paaLocation(ipaa,1) + 0.01;
     
-    orientation = coordinateRotation([x', y', z'; x1', y' z'], paalocation(ipaa,:),...
-        paaorientation(ipaa,:)); 
+    orientedPaa = coordinateRotation([x', y', z'; x1', y' z'],...
+        paaLocation(ipaa,:), paaOrientation(ipaa,:)); 
  
-    rotation = coordinateRotation(orientation, paalocation(ipaa,:),...
-        noderotation);
-    paasBackNodePlotHandle(ipaa) = fill3(UIAxes,rotation(1:4,1), rotation(1:4,2),...
-        rotation(1:4,3),'k'); % Back Face
-    paasFrontNodePlotHandle(ipaa) = fill3(UIAxes, rotation(5:8,1), rotation(5:8,2),...
-        rotation(5:8,3), color{ipaa});  % Front Face 
+    rotatedNode = coordinateRotation(orientedPaa, paaLocation(ipaa,:),...
+        nodeRotation);
+    paaBackNodePlotHandle(ipaa) = fill3(UIAxes,rotatedNode(1:4,1),...
+        rotatedNode(1:4,2), rotatedNode(1:4,3),'k'); % Back Face
+    paaFrontNodePlotHandle(ipaa) = fill3(UIAxes, rotatedNode(5:8,1),...
+        rotatedNode(5:8,2), rotatedNode(5:8,3), color{ipaa});  % Front Face 
  
 end
 

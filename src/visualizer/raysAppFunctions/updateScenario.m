@@ -119,14 +119,14 @@ end
 
 function extractQdFilesInfo(app)
 qdFiles = dir(sprintf('%s/QdFiles',app.ns3Path));
-qdfileName = qdFiles(3).name;
-[~,~,extension]=fileparts(qdfileName);
+qdFileName = qdFiles(3).name;
+[~,~,extension]=fileparts(qdFileName);
 switch extension
     case '.json'
-        qdFile = readQdJsonFile(sprintf('%s/QdFiles/qdOutput.json',...
+        qdOutput = readQdJsonFile(sprintf('%s/QdFiles/qdOutput.json',...
             app.ns3Path));
-        for i = 1:size(qdFile,2)
-            for timestep = 1:size(qdFile(1).Delay,1)
+        for i = 1:size(qdOutput,2)
+            for timestep = 1:size(qdOutput(1).Delay,1)
                 out = struct('TX', cell(1,1), ...
                     'RX', cell(1,1), ...
                     'PAA_TX', cell(1,1), ...
@@ -139,26 +139,26 @@ switch extension
                     'AOAEL', cell(1,1), ...
                     'AOAAZ', cell(1,1) ...
                     );
-                out.TX = qdFile(i).TX + 1;
-                out.RX = qdFile(i).RX + 1;
-                out.PAA_TX = qdFile(i).PAA_TX + 1;
-                out.PAA_RX = qdFile(i).PAA_RX + 1;
-                if size(qdFile(1).Delay,1)> 1
-                    out.Delay =  cell2mat(qdFile(i).Delay(timestep, :));
-                    out.Gain =   cell2mat(qdFile(i).Gain(timestep, :));
-                    out.Phase =  cell2mat(qdFile(i).Phase(timestep, :));
-                    out.AODEL =  cell2mat(qdFile(i).AODEL(timestep, :));
-                    out.AODAZ =  cell2mat(qdFile(i).AODAZ(timestep, :));
-                    out.AOAEL =  cell2mat(qdFile(i).AOAEL(timestep, :));
-                    out.AOAAZ =  cell2mat(qdFile(i).AOAAZ(timestep, :));
+                out.TX = qdOutput(i).TX + 1;
+                out.RX = qdOutput(i).RX + 1;
+                out.PAA_TX = qdOutput(i).PAA_TX + 1;
+                out.PAA_RX = qdOutput(i).PAA_RX + 1;
+                if size(qdOutput(1).Delay,1)> 1
+                    out.Delay =  cell2mat(qdOutput(i).Delay(timestep, :));
+                    out.Gain =   cell2mat(qdOutput(i).Gain(timestep, :));
+                    out.Phase =  cell2mat(qdOutput(i).Phase(timestep, :));
+                    out.AODEL =  cell2mat(qdOutput(i).AODEL(timestep, :));
+                    out.AODAZ =  cell2mat(qdOutput(i).AODAZ(timestep, :));
+                    out.AOAEL =  cell2mat(qdOutput(i).AOAEL(timestep, :));
+                    out.AOAAZ =  cell2mat(qdOutput(i).AOAAZ(timestep, :));
                 else
-                    out.Delay =  (qdFile(i).Delay(timestep, :));
-                    out.Gain =   (qdFile(i).Gain(timestep, :));
-                    out.Phase =  (qdFile(i).Phase(timestep, :));
-                    out.AODEL =  (qdFile(i).AODEL(timestep, :));
-                    out.AODAZ =  (qdFile(i).AODAZ(timestep, :));
-                    out.AOAEL =  (qdFile(i).AOAEL(timestep, :));
-                    out.AOAAZ =  (qdFile(i).AOAAZ(timestep, :));
+                    out.Delay =  (qdOutput(i).Delay(timestep, :));
+                    out.Gain =   (qdOutput(i).Gain(timestep, :));
+                    out.Phase =  (qdOutput(i).Phase(timestep, :));
+                    out.AODEL =  (qdOutput(i).AODEL(timestep, :));
+                    out.AODAZ =  (qdOutput(i).AODAZ(timestep, :));
+                    out.AOAEL =  (qdOutput(i).AOAEL(timestep, :));
+                    out.AOAAZ =  (qdOutput(i).AOAAZ(timestep, :));
                 end
                 
                 app.timestepInfo(timestep).paaInfo(out.PAA_TX,out.PAA_RX)...
@@ -173,14 +173,14 @@ switch extension
             end
             
             % else
-            Tx = str2double(token{1}{1}) + 1;
-            Rx = str2double(token{1}{2}) + 1;
+            tx = str2double(token{1}{1}) + 1;
+            rx = str2double(token{1}{2}) + 1;
             
             qd = readQdFile(sprintf('%s/%s',...
                 qdFiles(i).folder,qdFiles(i).name));
             
             for t = 1:length(qd)
-                app.timestepInfo(t).qdInfo(Tx,Rx) = qd(t);
+                app.timestepInfo(t).qdInfo(tx,rx) = qd(t);
             end
         end
 end
@@ -189,25 +189,25 @@ end
 
 
 function extractMpcCoordinatesInfo(app)
-mpcFile = readMpcJsonFile(sprintf('%s/Mpc.json',...
+mpcOutput = readMpcJsonFile(sprintf('%s/Mpc.json',...
     app.visualizerPath));
-TxList = [mpcFile.TX];
-RxList = [mpcFile.RX];
-PaaTxList = [mpcFile.PAA_TX];
-PaaRxList = [mpcFile.PAA_RX];
-RefOrder = [mpcFile.Rorder];
-app.RefOrderDropdown.Items = array2cellstr([1:max(RefOrder),0]);
-for i = 1:size(mpcFile,2)
+txList = [mpcOutput.TX];
+rxList = [mpcOutput.RX];
+paaTxList = [mpcOutput.PAA_TX];
+paaRxList = [mpcOutput.PAA_RX];
+reflOrder = [mpcOutput.Rorder];
+app.RefOrderDropdown.Items = array2cellstr([1:max(reflOrder),0]);
+for i = 1:size(mpcOutput,2)
 
-    Tx = TxList(i) + 1;
-    Rx = RxList(i) + 1;
-    PaaTx = PaaTxList(i) + 1;
-    PaaRx = PaaRxList(i) + 1;    
-    Refl = RefOrder(i) + 1;
+    tx = txList(i) + 1;
+    rx = rxList(i) + 1;
+    paaTx = paaTxList(i) + 1;
+    paaRx = paaRxList(i) + 1;    
+    refl = reflOrder(i) + 1;
     
-    for timestep = 1:size(mpcFile(i).MPC,1)
-        if ~iscell(mpcFile(i).MPC)
-            switch Refl 
+    for timestep = 1:size(mpcOutput(i).MPC,1)
+        if ~iscell(mpcOutput(i).MPC)
+            switch refl 
                 case 1
                     numColumns = 6;
                 case 2
@@ -217,10 +217,10 @@ for i = 1:size(mpcFile,2)
                 case 4
                     numColumns = 15;
             end
-            app.timestepInfo(timestep).paaInfo(PaaTx,PaaRx).mpcs{Tx,Rx,Refl} ...
-                        = reshape(mpcFile(i).MPC(timestep,:,:),[],numColumns);
+            app.timestepInfo(timestep).paaInfo(paaTx,paaRx).mpcs{tx,rx,refl} ...
+                        = reshape(mpcOutput(i).MPC(timestep,:,:),[],numColumns);
          else
-             app.timestepInfo(timestep).PaaInfo(PaaTx,PaaRx).mpcs{Tx,Rx,Refl} = [];
+             app.timestepInfo(timestep).paaInfo(paaTx,paaRx).mpcs{tx,rx,refl} = [];
         end
 
     end
@@ -230,14 +230,15 @@ end
 
 
 function extractNodePositionsInfo(app)
-posFile = readNodeJsonFile(sprintf('%s/NodePositions.json',app.visualizerPath));
+posOutput = readNodeJsonFile(sprintf('%s/NodePositions.json',...
+    app.visualizerPath));
 
-for timestep = 1:size(posFile(1).Position,1) 
-    pos = zeros(size(posFile,2),3);
-    rot = zeros(size(posFile,2),3);
-    for i = 1:size(posFile,2)
-        pos(i,:) = posFile(i).Position(timestep,:,:);
-        rot(i,:) = posFile(i).Rotation(timestep,:,:);
+for timestep = 1:size(posOutput(1).Position,1) 
+    pos = zeros(size(posOutput,2),3);
+    rot = zeros(size(posOutput,2),3);
+    for i = 1:size(posOutput,2)
+        pos(i,:) = posOutput(i).Position(timestep,:,:);
+        rot(i,:) = posOutput(i).Rotation(timestep,:,:);
 
     end
     app.timestepInfo(timestep).pos = pos;
@@ -248,10 +249,11 @@ end
 end
 
 function setupPaas(app)
-% get number of PAAs per node e.g., [2;2]- 2 nodes each has 2 PAAs
-paaPosFile = readPaaJsonFile(sprintf('%s/PAAPosition.json',app.visualizerPath));
 
-getPaaInfo = tabulate([paaPosFile.Node]);
+paaOutput = readPaaJsonFile(sprintf('%s/PAAPosition.json',...
+    app.visualizerPath));
+
+getPaaInfo = tabulate([paaOutput.Node]);
 
 app.numPaas = getPaaInfo(:,2);
 
@@ -262,16 +264,18 @@ end
 end
 
 function extractPaasInfo(app)
-paaPosFile = readPaaJsonFile(sprintf('%s/PAAPosition.json',app.visualizerPath));
-getPaaInfo = tabulate([paaPosFile.Node]);
-for timestep = 1:size(paaPosFile(1).Position,1) 
+
+paaPosOutput = readPaaJsonFile(sprintf('%s/PAAPosition.json',...
+    app.visualizerPath));
+getPaaInfo = tabulate([paaPosOutput.Node]);
+for timestep = 1:size(paaPosOutput(1).Position,1) 
     index  = 1;
     paaPos = cell(max(getPaaInfo(:,2)),size(getPaaInfo,1));
     paaOri = cell(max(getPaaInfo(:,2)),size(getPaaInfo,1));
     for iNode = 1:size(getPaaInfo,1)       
         for iPaa = 1:getPaaInfo(iNode,2)           
-            paaPos{iPaa,iNode} = paaPosFile(index).Position(timestep,:,:);
-            paaOri{iPaa,iNode} = reshape(paaPosFile(index).Orientation,1,[]);
+            paaPos{iPaa,iNode} = paaPosOutput(index).Position(timestep,:,:);
+            paaOri{iPaa,iNode} = reshape(paaPosOutput(index).Orientation,1,[]);
 
             index = index+1;
         end        
