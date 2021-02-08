@@ -136,8 +136,8 @@ function [paaFrontNodePlotHandle,paaBackNodePlotHandle] = plotPaa(UIAxes,...
     paaLocation, paaOrientation, nodeRotation)
 paaFrontNodePlotHandle = zeros(1,size(paaLocation,1));
 paaBackNodePlotHandle = zeros(1,size(paaLocation,1));
-
-color = {'y','c','m','g'}; % color for PAAs
+rng(4); % Seed to fix the same PAA face color at each time instant
+color =  rand(size(paaLocation,1),3);
 for ipaa = 1:size(paaLocation,1)
     % Back Face
     left = paaLocation(ipaa,2) - 0.25;
@@ -159,8 +159,7 @@ for ipaa = 1:size(paaLocation,1)
     paaBackNodePlotHandle(ipaa) = fill3(UIAxes,rotatedNode(1:4,1),...
         rotatedNode(1:4,2), rotatedNode(1:4,3),'k'); % Back Face
     paaFrontNodePlotHandle(ipaa) = fill3(UIAxes, rotatedNode(5:8,1),...
-        rotatedNode(5:8,2), rotatedNode(5:8,3), color{ipaa});  % Front Face 
- 
+        rotatedNode(5:8,2), rotatedNode(5:8,3), color(ipaa,:));  % Front Face 
 end
 
 end
