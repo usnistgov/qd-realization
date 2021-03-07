@@ -39,9 +39,9 @@ close(fig)
 % activate 3D rotations
 view(app.UIAxes, [45,45])
 
-app.UIAxes.XLabel.String = 'x (meter)';
-app.UIAxes.YLabel.String = 'y (meter)';
-app.UIAxes.ZLabel.String = 'z (meter)';
+app.UIAxes.XLabel.String = 'x [m]';
+app.UIAxes.YLabel.String = 'y [m]';
+app.UIAxes.ZLabel.String = 'z [m]';
 
 axis(app.UIAxes, 'equal')
 
