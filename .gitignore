@@ -20,7 +20,3 @@
 # MATLAB
 *.asv
 *.m~
-src/examples/L-Room-rotation-multiPAAs/Input/node0paa.dat
-src/examples/L-Room-rotation-multiPAAs/Input/node1paa.dat
-src/examples/L-Room-rotation-multiPAAs/Output/Visualizer/NodePositions.json
-src/examples/SpatialSharing/Output/Visualizer/RoomCoordinates/RoomCoordinates.csv
