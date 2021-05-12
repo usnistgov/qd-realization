@@ -9,7 +9,9 @@ function reflectionLossdB = getTgayReflectionLoss(MaterialLibrary,...
 % horizontal polarization for each reflection using the incident angle and  
 % relative permittivity of the material in the Fresnel equation.
 % Subsequently, the reflection loss for each reflection is calculated by 
-% the taking the average of the vertical and horizontal reflectances.
+% the taking the average of the vertical and horizontal reflectance powers.
+% For REFLECTIONCOEFFICIENT calculation, refer to equation 7.4.2 
+% https://www.ece.rutgers.edu/~orfanidi/ewa/
 %
 % Inputs:
 % MaterialLibrary - contains each of the reflectors along with their
