@@ -252,7 +252,7 @@ if intraClusterParams.n ~= 0
         output(i, 1) = (dRayOutput(1)+(i)./10^ceil(log10(intraClusterParams.n)));
         
         diff = randomExponetialGenerator(intraClusterParams.lambda);
-		taus(i+1) = taus(i) + intraClusterParams.delayMultiplier*diff;
+        taus(i+1) = taus(i) + intraClusterParams.delayMultiplier*diff;
         % regenerate MPC when arrives before LOS
         while taus(i+1) < delayLos
             diff = randomExponetialGenerator(intraClusterParams.lambda);

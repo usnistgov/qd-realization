@@ -98,7 +98,7 @@ if isLOS==1 % if DoA exists
     % doa - direction of arrival
     output1(5:7) = doa;
     % Time delay
-    output1(1,8)=distance/c;
+    output1(1,8) = delayLOS;
     % Path gain
     output1(1,9) = 20*log10(lambda/(4*pi*distance));
     % Aod azimuth
