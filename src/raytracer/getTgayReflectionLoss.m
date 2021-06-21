@@ -98,15 +98,19 @@ for reflectionOrderIndex = 1:orderReflection
         'reflection. Thus, order of reflection cannot be considered ',... 
         'higher than second order reflection.'));
     end
-    % Use Fresnel equation to derive power reflectivity                
-    relativePermittivity = MaterialLibrary.RelativePermittivity...
-                            (reflectionMaterialIndex); 
-    aor = incidentAngle(reflectionOrderIndex);
-    B_h =  relativePermittivity - sind(aor)^2;                
-    B_v = (relativePermittivity - sind(aor)^2)/relativePermittivity^2; 
-    reflectionCoefficient(:, reflectionOrderIndex) = [ ...
-        (-cosd(aor) + sqrt(B_v))/(cosd(aor) + sqrt(B_v)); ... % Vertical 
-        (cosd(aor) - sqrt(B_h))/(cosd(aor) + sqrt(B_h))];    % Horizontal
+    % Use Fresnel equation to derive power reflectivity
+    if isnan(reflectionMaterialIndex)
+        reflectionCoefficient(:, reflectionOrderIndex) = [0.3162; 0.3162]; % to calculate reflection loss = 10 dB when material not found in the material library
+    else
+        relativePermittivity = MaterialLibrary.RelativePermittivity...
+                                (reflectionMaterialIndex); 
+        aor = incidentAngle(reflectionOrderIndex);
+        B_h =  relativePermittivity - sind(aor)^2;                
+        B_v = (relativePermittivity - sind(aor)^2)/relativePermittivity^2; 
+        reflectionCoefficient(:, reflectionOrderIndex) = [ ...
+            (-cosd(aor) + sqrt(B_v))/(cosd(aor) + sqrt(B_v)); ... % Vertical 
+            (cosd(aor) - sqrt(B_h))/(cosd(aor) + sqrt(B_h))];    % Horizontal
+    end
 end     
 end
 

@@ -112,59 +112,63 @@ end
 %% Utils
 function output = getNistQdOutput(delayLos, dRayOutput, arrayOfMaterials, ...
     materialLibrary, diffusePathGainThreshold, prePostParam)
-params = getParams(arrayOfMaterials, materialLibrary, prePostParam);
-
-% delays
-tau0 = dRayOutput(8); % main cursor's delay [s]
-pg0db = dRayOutput(9); % main cursor's path gain [dB]
-aodAzCursor = dRayOutput(10); % main cursor's AoD azimuth [deg]
-aodElCursor = dRayOutput(11); % main cursor's AoD elevation [deg]
-aoaAzCursor = dRayOutput(12); % main cursor's AoA azimuth [deg]
-aoaElCursor = dRayOutput(13); % main cursor's AoA elevation [deg]
-
-lambda = rndRician(params.s_lambda, params.sigma_lambda, 1, 1) * 1e9; % [1/s]
-
-if isnan(lambda) || lambda == 0
-    % No pre/post cursors
+if isnan(arrayOfMaterials(end)) 
     output = [];
-    return;
+else
+
+    params = getParams(arrayOfMaterials, materialLibrary, prePostParam);
+    % delays
+    tau0 = dRayOutput(8); % main cursor's delay [s]
+    pg0db = dRayOutput(9); % main cursor's path gain [dB]
+    aodAzCursor = dRayOutput(10); % main cursor's AoD azimuth [deg]
+    aodElCursor = dRayOutput(11); % main cursor's AoD elevation [deg]
+    aoaAzCursor = dRayOutput(12); % main cursor's AoA azimuth [deg]
+    aoaElCursor = dRayOutput(13); % main cursor's AoA elevation [deg]
+
+    lambda = rndRician(params.s_lambda, params.sigma_lambda, 1, 1) * 1e9; % [1/s]
+
+    if isnan(lambda) || lambda == 0
+        % No pre/post cursors
+        output = [];
+        return;
+    end
+
+    interArrivalTime = rndExp(lambda, params.nRays, 1); % [s]
+    taus = tau0 + params.delayMultiplier*cumsum(interArrivalTime); % [s]
+
+    % path gains
+    Kdb = rndRician(params.s_K, params.sigma_K, 1, 1); % [dB]
+    gamma = rndRician(params.s_gamma, params.sigma_gamma, 1, 1) * 1e-9; % [s]
+    sigma_s = rndRician(params.s_sigmaS, params.sigma_sigmaS, 1, 1); % [std.err in exp]
+
+    s = sigma_s * randn(params.nRays, 1);
+    pg = pg0db - Kdb + 10*log10(exp(1)) * (-abs(taus - tau0)/gamma + s);
+
+    % Remove MPCs with more power than main cursor and  consider only MPCs up 
+    % to diffusePathGainThreshold dB below the main cursor. Further, remove 
+    % MPCs that are arriving before LOS 
+    removeMpcMask = pg >= pg0db | pg <= pg0db + diffusePathGainThreshold | taus < delayLos;
+    taus(removeMpcMask) = [];
+    pg(removeMpcMask) = [];
+    mpcRemoved = sum(removeMpcMask);
+    params.nRays = length(taus);
+
+    % angle spread
+    aodAzimuthSpread = rndRician(params.s_sigmaAlphaAz, params.sigma_sigmaAlphaAz, 1, 1);
+    aodElevationSpread = rndRician(params.s_sigmaAlphaEl, params.sigma_sigmaAlphaEl, 1, 1);
+    aoaAzimuthSpread = rndRician(params.s_sigmaAlphaAz, params.sigma_sigmaAlphaAz, 1, 1);
+    aoaElevationSpread = rndRician(params.s_sigmaAlphaEl, params.sigma_sigmaAlphaEl, 1, 1);
+    [aodAz, aodEl] = getDiffusedAngles(aodAzCursor, aodElCursor,...
+        aodAzimuthSpread, aodElevationSpread, params.nRays);
+    [aoaAz, aoaEl] = getDiffusedAngles(aoaAzCursor, aoaElCursor,...
+        aoaAzimuthSpread, aoaElevationSpread, params.nRays);
+
+    % Combine results into output matrix
+    phase = rand(params.nRays, 1) * 2*pi;
+    dopplerShift = zeros(params.nRays, 1);
+    output = fillOutputQd(taus, pg, aodAz, aodEl, aoaAz, aoaEl, phase, dopplerShift, dRayOutput(1));
+    output(end+1:end+mpcRemoved, :) = nan(mpcRemoved,size(dRayOutput,2));
 end
-
-interArrivalTime = rndExp(lambda, params.nRays, 1); % [s]
-taus = tau0 + params.delayMultiplier*cumsum(interArrivalTime); % [s]
-
-% path gains
-Kdb = rndRician(params.s_K, params.sigma_K, 1, 1); % [dB]
-gamma = rndRician(params.s_gamma, params.sigma_gamma, 1, 1) * 1e-9; % [s]
-sigma_s = rndRician(params.s_sigmaS, params.sigma_sigmaS, 1, 1); % [std.err in exp]
-
-s = sigma_s * randn(params.nRays, 1);
-pg = pg0db - Kdb + 10*log10(exp(1)) * (-abs(taus - tau0)/gamma + s);
-
-% Remove MPCs with more power than main cursor and  consider only MPCs up 
-% to diffusePathGainThreshold dB below the main cursor. Further, remove 
-% MPCs that are arriving before LOS 
-removeMpcMask = pg >= pg0db | pg <= pg0db + diffusePathGainThreshold | taus < delayLos;
-taus(removeMpcMask) = [];
-pg(removeMpcMask) = [];
-mpcRemoved = sum(removeMpcMask);
-params.nRays = length(taus);
-
-% angle spread
-aodAzimuthSpread = rndRician(params.s_sigmaAlphaAz, params.sigma_sigmaAlphaAz, 1, 1);
-aodElevationSpread = rndRician(params.s_sigmaAlphaEl, params.sigma_sigmaAlphaEl, 1, 1);
-aoaAzimuthSpread = rndRician(params.s_sigmaAlphaAz, params.sigma_sigmaAlphaAz, 1, 1);
-aoaElevationSpread = rndRician(params.s_sigmaAlphaEl, params.sigma_sigmaAlphaEl, 1, 1);
-[aodAz, aodEl] = getDiffusedAngles(aodAzCursor, aodElCursor,...
-    aodAzimuthSpread, aodElevationSpread, params.nRays);
-[aoaAz, aoaEl] = getDiffusedAngles(aoaAzCursor, aoaElCursor,...
-    aoaAzimuthSpread, aoaElevationSpread, params.nRays);
-
-% Combine results into output matrix
-phase = rand(params.nRays, 1) * 2*pi;
-dopplerShift = zeros(params.nRays, 1);
-output = fillOutputQd(taus, pg, aodAz, aodEl, aoaAz, aoaEl, phase, dopplerShift, dRayOutput(1));
-output(end+1:end+mpcRemoved, :) = nan(mpcRemoved,size(dRayOutput,2));
 
 end
 
@@ -195,7 +199,7 @@ switch(prePostParam)
         params.s_lambda = materialLibrary.s_lambda_Postcursor(materialIdx);
         params.sigma_lambda = materialLibrary.sigma_lambda_Postcursor(materialIdx);
         params.delayMultiplier = 1;
-        params.nRays = materialLibrary.n_Postcursor(materialIdx);;
+        params.nRays = materialLibrary.n_Postcursor(materialIdx);
         
     otherwise
         error('prePostParam=''%s''. Should be ''pre'' or ''post''', prePostParam)
