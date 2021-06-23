@@ -155,9 +155,7 @@ para = fieldToNum(para, 'reflectionLoss', [], 10);
 
 % Reflection Coefficient used if material is not present in material
 % library
-if strcmp(para.switchQDModel,'tgayMeasurements')
-    para = fieldToNum(para, 'reflectionCoefficient', [], [0.3162; 0.3162]); % [0.3162; 0.3162] for RL 10 dB
-end
+para = fieldToNum(para, 'reflectionCoefficient', [], [0.3162; 0.3162]); % [0.3162; 0.3162] for RL 10 dB
 
 % Use output in Json format. Json output reduces number of output files and
 % reduces execution time as output is written only once at the end of the 
