@@ -179,9 +179,8 @@ for iterateObjects = 1:lengthObject                            % For multiple ob
                 % Part where output file is created. It contains the triangle vertices
                 % in first nine columns, plane equations in the next four columns
                 if ~materialFound
-%                     materialSwitch=0;
                     CADOutputTemp(14) = NaN;
-                    warning('Material ''%s'' not found in material library file. Disabling this material', material)
+                    warning('Reflector ''%s'' or corresponding material not found in material library file. Disabling diffuse components for this material', material)
                 end
                 
             end
