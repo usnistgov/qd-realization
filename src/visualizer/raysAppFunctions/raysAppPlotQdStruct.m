@@ -1,4 +1,4 @@
-function raysAppPlotQdStruct(app, qd, ipaatx, ipaarx, direction)
+function raysAppPlotQdStruct(app, qd, direction)
 %RAYSAPPPLOTQDSTRUCT Plot rays on AoA/AoD spheres
 %
 % INPUTS:
@@ -30,17 +30,13 @@ switch(direction)
         el = qd.AODEL;
         az = qd.AODAZ;
         ax = app.AodAxes;
-        %if ipaatx == 1 && ipaarx == 1
-            delete(app.aodPlotHandle)
-%         end
+%         delete(app.aodPlotHandle)
         
     case 'aoa'
         el = qd.AOAEL;
         az = qd.AOAAZ;
         ax = app.AoaAxes;
-        if ipaatx == 1 && ipaarx == 1
-            delete(app.aoaPlotHandle)            
-        end
+%         delete(app.aoaPlotHandle)
         
     otherwise
         error('direction should be either ''aoa'' or ''aod''')
