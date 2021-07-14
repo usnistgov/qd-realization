@@ -87,6 +87,7 @@ end
 
 
 function setupTimestepInfo(app)
+
 app.timestepInfo = struct();
 
 extractQdFilesInfo(app);
@@ -119,8 +120,15 @@ end
 
 function extractQdFilesInfo(app)
 qdFiles = dir(sprintf('%s/QdFiles',app.ns3Path));
-qdFileName = qdFiles(3).name;
-[~,~,extension]=fileparts(qdFileName);
+cd(sprintf('%s/QdFiles',app.ns3Path));
+if isfile(fullfile(cd, 'qdOutput.json'))
+   extension = '.json';
+else
+    qdFileName = qdFiles(3).name;
+    [~,~,extension]=fileparts(qdFileName);    
+end
+% qdFileName = qdFiles(3).name;
+% [~,~,extension]=fileparts(qdFileName); 
 switch extension
     case '.json'
         qdOutput = readQdJsonFile(sprintf('%s/QdFiles/qdOutput.json',...
@@ -180,7 +188,7 @@ switch extension
                 qdFiles(i).folder,qdFiles(i).name));
             
             for t = 1:length(qd)
-                app.timestepInfo(t).qdInfo(tx,rx) = qd(t);
+                app.timestepInfo(t).paaInfo(tx,rx).qdInfo(tx,rx) = qd(t);
             end
         end
 end

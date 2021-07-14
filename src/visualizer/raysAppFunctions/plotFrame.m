@@ -116,7 +116,7 @@ for ipaatx = 1:numPaasTx
     for ipaarx = 1:numPaasRx
         if ~isempty(timestampInfo.paaInfo(ipaatx,ipaarx).qdInfo)
             qd = timestampInfo.paaInfo(ipaatx,ipaarx).qdInfo(tx,rx);
-            raysAppPlotQdStruct(app, qd, direction)
+            raysAppPlotQdStruct(app, qd, ipaatx, ipaarx, direction)
         else
             switch(direction)
                 case 'aoa'
