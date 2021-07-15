@@ -30,13 +30,13 @@ switch(direction)
         el = qd.AODEL;
         az = qd.AODAZ;
         ax = app.AodAxes;
-%         delete(app.aodPlotHandle)
+        delete(app.aodPlotHandle)
         
     case 'aoa'
         el = qd.AOAEL;
         az = qd.AOAAZ;
         ax = app.AoaAxes;
-%         delete(app.aoaPlotHandle)
+        delete(app.aoaPlotHandle)
         
     otherwise
         error('direction should be either ''aoa'' or ''aod''')
